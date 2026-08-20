@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wealify-guardian"
+version = "0.1.0"
+description = "Wealify Guardian - AI Financial Assistant and Transaction Reconciliation Copilot"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.110.0",
+    "uvicorn[standard]>=0.28.0",
+    "pydantic>=2.6.0",
+    "pydantic-settings>=2.2.0",
+    "sqlalchemy>=2.0.28",
+    "alembic>=1.13.1",
+    "httpx>=0.27.0",
+    "python-dotenv>=1.0.1",
+    "python-multipart>=0.0.9",
+    "pandas>=2.2.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.1.0",
+    "pytest-asyncio>=0.23.5",
+    "ruff>=0.3.2",
+    "mypy>=1.9.0",
+]
+llm = [
+    "openai>=1.14.0",
+    "google-generativeai>=0.4.1",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+asyncio_mode = "auto"
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"

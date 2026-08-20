@@ -1,0 +1,35 @@
+[
+  {
+    "id": "em_001",
+    "date": "2026-08-18 09:15:00",
+    "sender": "info@mailer.netflix.com",
+    "subject": "Your Netflix Membership Renewal",
+    "merchant": "Netflix",
+    "amount": 9.99,
+    "currency": "USD",
+    "body_snippet": "Your monthly streaming membership was renewed for $9.99.",
+    "email_type": "receipt"
+  },
+  {
+    "id": "em_002",
+    "date": "2026-08-15 11:20:00",
+    "sender": "billing@adobe.com",
+    "subject": "Adobe Creative Cloud Plan Renewal Notice",
+    "merchant": "Adobe",
+    "amount": 54.99,
+    "currency": "USD",
+    "body_snippet": "Your annual plan is billed monthly at $54.99.",
+    "email_type": "subscription_update"
+  },
+  {
+    "id": "em_003",
+    "date": "2026-08-19 14:06:00",
+    "sender": "no-reply@grab.com",
+    "subject": "Grab E-Receipt for Trip #8291",
+    "merchant": "Grab",
+    "amount": 24.50,
+    "currency": "USD",
+    "body_snippet": "Thank you for riding with Grab. Fare charged: $24.50.",
+    "email_type": "receipt"
+  }
+]

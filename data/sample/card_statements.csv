@@ -1,0 +1,9 @@
+id,date,merchant,amount,currency,direction,type,ref_id
+card_tx_001,2026-06-18,NETFLIX.COM* 109238,9.99,USD,debit,subscription,CARD_REF_01
+card_tx_002,2026-07-18,NETFLIX.COM* 109238,9.99,USD,debit,subscription,CARD_REF_02
+card_tx_003,2026-08-18,NETFLIX.COM* 109238,9.99,USD,debit,subscription,CARD_REF_03
+card_tx_004,2026-07-15,ADOBE *CREATIVE CLOUD,49.99,USD,debit,subscription,CARD_REF_04
+card_tx_005,2026-08-15,ADOBE *CREATIVE CLOUD,54.99,USD,debit,subscription,CARD_REF_05
+card_tx_006,2026-08-19 14:05:00,GRAB* TRANSPORT RIDE,24.50,USD,debit,card_purchase,CARD_REF_06
+card_tx_007,2026-08-19 14:07:30,GRAB* TRANSPORT RIDE,24.50,USD,debit,card_purchase,CARD_REF_07
+card_tx_008,2026-08-17,STARBUCKS COFFEE #491,5.75,USD,debit,card_purchase,CARD_REF_08
