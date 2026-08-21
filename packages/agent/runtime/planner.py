@@ -25,7 +25,15 @@ class IntentPlanner:
                 arguments={},
             )
 
-        # 2. Overdue / Missing Payout Radar
+        # 2. Email Alert Explanation & Support Inquiry (Giải thích lý do gửi mail cảnh báo)
+        if any(k in msg for k in ["tại sao gửi mail", "lý do gửi mail", "tại sao nhận được mail", "giải thích email", "email cảnh báo", "support", "hướng dẫn khiếu nại", "thư cảnh báo"]):
+            return ExecutionPlan(
+                intent="EXPLAIN_ALERT_EMAIL",
+                target_tool="detect_overdue_payouts",
+                arguments={},
+            )
+
+        # 3. Overdue / Missing Payout Radar
         if any(k in msg for k in ["payout", "chưa về", "chưa tới", "bên bán", "amazon", "stripe", "shopify", "14 ngày", "15 ngày", "chậm tiền", "giải ngân", "settlement"]):
             return ExecutionPlan(
                 intent="OVERDUE_PAYOUT_CHECK",
@@ -33,7 +41,7 @@ class IntentPlanner:
                 arguments={},
             )
 
-        # 3. Business Health & Financial Advisory
+        # 4. Business Health & Financial Advisory
         if any(k in msg for k in ["kinh doanh", "lợi nhuận", "lãi", "lỗ", "hiệu quả", "có nên tiếp tục", "sức khỏe", "tư vấn", "roas", "burn rate", "tình hình tài chính"]):
             return ExecutionPlan(
                 intent="BUSINESS_HEALTH_ADVISORY",
@@ -41,7 +49,7 @@ class IntentPlanner:
                 arguments={},
             )
 
-        # 4. Duplicate Detection (Virtual Cards / Multi-charge)
+        # 5. Duplicate Detection (Virtual Cards / Multi-charge)
         if any(k in msg for k in ["trùng", "hai lần", "2 lần", "cà 2 lần", "quẹt 2 lần", "duplicate", "bị trừ đúp", "cà thẻ"]):
             return ExecutionPlan(
                 intent="DUPLICATE_CHECK",
@@ -49,7 +57,7 @@ class IntentPlanner:
                 arguments={"time_window_hours": 48},
             )
 
-        # 5. Subscriptions & Price Hike Inquiry
+        # 6. Subscriptions & Price Hike Inquiry
         if any(k in msg for k in ["subscription", "tăng giá", "định kỳ", "gói tháng", "hàng tháng", "netflix", "spotify", "adobe", "openai", "chatgpt"]):
             return ExecutionPlan(
                 intent="SUBSCRIPTION_INQUIRY",
@@ -57,7 +65,7 @@ class IntentPlanner:
                 arguments={},
             )
 
-        # 6. Multi-Source Reconciliation
+        # 7. Multi-Source Reconciliation
         if any(k in msg for k in ["đối soát", "lệch", "chưa lên", "reconcile", "rời account", "wallet"]):
             return ExecutionPlan(
                 intent="RECONCILIATION_CHECK",
@@ -65,7 +73,7 @@ class IntentPlanner:
                 arguments={},
             )
 
-        # 7. Monthly Summary / Report
+        # 8. Monthly Summary / Report
         if any(k in msg for k in ["chi bao nhiêu", "tổng chi", "báo cáo", "tháng này", "summary", "report"]):
             return ExecutionPlan(
                 intent="MONTHLY_SUMMARY",
@@ -73,7 +81,7 @@ class IntentPlanner:
                 arguments={},
             )
 
-        # 8. Specific Transaction Search
+        # 9. Specific Transaction Search
         if any(k in msg for k in ["tìm", "khoản", "search", "giao dịch", "grab", "apple", "facebook"]):
             query_match = re.search(r"(?:tìm|khoản|search)\s+([a-zA-Z0-9\$\.\s]+)", msg)
             query = query_match.group(1).strip() if query_match else ""

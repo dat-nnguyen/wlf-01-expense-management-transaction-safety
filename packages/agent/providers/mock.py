@@ -28,7 +28,19 @@ class MockLLMProvider(BaseLLMProvider):
                 "💡 **Khuyến nghị:** Bạn có thể tự thực hiện thao tác này trực tiếp trên ứng dụng ngân hàng hoặc trang quản lý của nhà cung cấp."
             )
 
-        # 2. Overdue / Missing Payout Radar
+        # 2. Explain Alert Email (Dành cho Khách hàng & Đội Support Wealify)
+        elif intent == "EXPLAIN_ALERT_EMAIL":
+            text = (
+                "📧 **Giải Thích Chi Tiết Lý Do Hệ Thống Gửi Email Cảnh Báo:**\n\n"
+                "• **Căn cứ gửi mail:** Hệ thống phát hiện email thông báo giải ngân từ **Amazon Seller Central** ($4,250.00 USD) ngày 05/08/2026 với mã đối soát `AMZ-DISB-20260805-9182`.\n"
+                "• **Nguyên nhân kích hoạt cảnh báo:** Quy chuẩn xử lý Payout quốc tế thông thường là **2-3 ngày làm việc**. Tuy nhiên đến nay đã **16 ngày** trôi qua mà tài khoản Wealify vẫn chưa ghi nhận số dư này (có nguy cơ thất lạc mạng ngân hàng trung gian hoặc lệnh bị treo).\n"
+                "• **Mục đích:** Cảnh báo sớm giúp khách hàng và bộ phận Kế toán / CEO không bị đứt dòng tiền và kịp thời gửi ticket tra soát trước khi quá hạn khiếu nại.\n\n"
+                "💡 **Hướng dẫn cho Khách hàng & Support:**\n"
+                "1. Kiểm tra lại thông tin số tài khoản nhận (4 số cuối: ...8821).\n"
+                "2. Mở tab **Trung Tâm Bất Thường** > **Payouts** và copy **Mẫu Thư Khiếu Nại** gửi bộ phận hỗ trợ Amazon Seller Central để xin mã tham chiếu Bank ARN / MT103."
+            )
+
+        # 3. Overdue / Missing Payout Radar
         elif intent == "OVERDUE_PAYOUT_CHECK":
             payouts = tool_result.get("overdue_payouts", [])
             if payouts:
@@ -44,12 +56,12 @@ class MockLLMProvider(BaseLLMProvider):
                         f"  - Lý do: {p.get('reason')}\n"
                         f"  - 💡 **Hành động đề xuất:** {p.get('action_suggestion', 'Gửi ticket khiếu nại.')}"
                     )
-                lines.append("\n📝 *Hệ thống đã tự động tạo sẵn bản thảo email tra soát (Dispute Letter) để bạn gửi cho sàn trong tab Khiếu Nại.*")
+                lines.append("\n📝 *Hệ thống đã tự động gửi email thông báo và tạo sẵn bản thảo email tra soát (Dispute Letter) trong tab Khiếu Nại.*")
                 text = "\n".join(lines)
             else:
                 text = "✅ **Không có Payout nào bị trễ:** Tất cả các khoản giải ngân từ sàn đối tác (Amazon, Stripe, Shopify...) đều đã về đúng hạn."
 
-        # 3. Business Health & Unit Economics Advisory
+        # 4. Business Health & Unit Economics Advisory
         elif intent == "BUSINESS_HEALTH_ADVISORY":
             report = tool_result.get("health_report", {})
             metrics = report.get("metrics", {})
@@ -79,7 +91,7 @@ class MockLLMProvider(BaseLLMProvider):
             lines.append("\n👉 *Vui lòng xem chi tiết và xác nhận các hành động gợi ý tại tab Human-in-the-Loop Review Queue.*")
             text = "\n".join(lines)
 
-        # 4. Duplicate Check
+        # 5. Duplicate Check
         elif intent == "DUPLICATE_CHECK":
             dups = tool_result.get("duplicates", [])
             if dups:
@@ -92,12 +104,12 @@ class MockLLMProvider(BaseLLMProvider):
                         f"  - Độ tin cậy: **{item.get('confidence_label', 'Mức độ tin cậy cao')}** ({item.get('confidence', 0.95)*100:.0f}%)\n"
                         f"  - Hạn định tra soát ngân hàng: **60 ngày**"
                     )
-                lines.append("\n📌 *Lưu ý: Mẫu đơn tra soát đã được tạo sẵn trong hệ thống để bạn bấm xác nhận gửi ngân hàng.*")
+                lines.append("\n📌 *Lưu ý: Mẫu đơn tra soát đã được gửi về email thông báo và lưu sẵn trong hệ thống để bạn bấm gửi ngân hàng.*")
                 text = "\n".join(lines)
             else:
                 text = "✅ **Không phát hiện giao dịch trùng lặp:** Tất cả các khoản chi tiêu trên thẻ ảo và tài khoản đều hợp lệ và không có dấu hiệu bị cà 2 lần."
 
-        # 5. Subscriptions Inquiry & Price Hike
+        # 6. Subscriptions Inquiry & Price Hike
         elif intent == "SUBSCRIPTION_INQUIRY":
             subs = tool_result.get("subscriptions", [])
             if subs:
@@ -113,7 +125,7 @@ class MockLLMProvider(BaseLLMProvider):
             else:
                 text = "Hiện tại hệ thống chưa ghi nhận gói đăng ký định kỳ nào đang hoạt động."
 
-        # 6. Reconciliation Check
+        # 7. Reconciliation Check
         elif intent == "RECONCILIATION_CHECK":
             alerts = tool_result.get("discrepancies", [])
             if alerts:
@@ -124,7 +136,7 @@ class MockLLMProvider(BaseLLMProvider):
             else:
                 text = "✅ **Đối soát hoàn tất:** Dòng tiền giữa tài khoản ngân hàng, ví điện tử, thẻ tín dụng và email xác nhận hoàn toàn khớp nhau."
 
-        # 7. Monthly Summary
+        # 8. Monthly Summary
         elif intent == "MONTHLY_SUMMARY":
             summary = tool_result.get("summary", {})
             text = (
@@ -135,7 +147,7 @@ class MockLLMProvider(BaseLLMProvider):
                 f"• **Số lượng giao dịch:** {summary.get('transaction_count', 0)} giao dịch."
             )
 
-        # 8. Specific Transaction Search
+        # 9. Specific Transaction Search
         elif intent == "TRANSACTION_SEARCH":
             txs = tool_result.get("transactions", [])
             if txs:
@@ -149,9 +161,9 @@ class MockLLMProvider(BaseLLMProvider):
         # Default QA
         else:
             text = (
-                "Xin chào! Tôi là **Wealify Guardian**, trợ lý AI bảo vệ giao dịch & quản trị dòng tiền doanh nghiệp. "
-                "Tôi có thể giúp bạn: (1) Rà soát Payouts bị trễ từ Amazon/Stripe, (2) Phát hiện quẹt thẻ ảo 2 lần, "
-                "(3) Cảnh báo tool SaaS tăng giá, (4) Đối soát dòng tiền đa nguồn, và (5) Cố vấn hiệu quả kinh doanh & P&L."
+                "Xin chào! Tôi là **Wealify Guardian**, trợ lý AI bảo vệ giao dịch & hỗ trợ tra soát tài chính cho người dùng và đội Support Wealify. "
+                "Tôi có thể giúp bạn: (1) Giải thích lý do tại sao gửi email cảnh báo về hộp thư, (2) Tra soát Payout Amazon/Stripe bị trễ, "
+                "(3) Tra cứu thẻ ảo bị trừ tiền 2 lần, (4) Hướng dẫn quy trình gửi khiếu nại ngân hàng và (5) Cố vấn hiệu quả kinh doanh & P&L."
             )
 
         return LLMResponse(

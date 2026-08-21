@@ -13,12 +13,12 @@ from apps.api.routes import (
     reports_router,
     advisory_router,
     hitl_router,
+    notifications_router,
 )
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Initialize DB schemas on startup
     logger.info("Initializing database tables...")
     try:
         init_db()
@@ -54,6 +54,7 @@ app.include_router(alerts_router)
 app.include_router(reports_router)
 app.include_router(advisory_router)
 app.include_router(hitl_router)
+app.include_router(notifications_router)
 
 
 @app.get("/")
@@ -70,6 +71,7 @@ def root():
             "business_health_unit_economics_advisory",
             "self_reflection_grounding_verification",
             "human_in_the_loop_review_queue",
+            "automated_email_alert_dispatcher",
         ],
     }
 
