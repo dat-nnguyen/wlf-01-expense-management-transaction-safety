@@ -259,7 +259,8 @@ class UnifiedLLMProvider(BaseLLMProvider):
         api_key: Optional[str] = None,
         base_url: Optional[str] = None,
     ):
-        self.provider = (provider or os.getenv("LLM_PROVIDER", "mock")).lower().strip()
+        load_dotenv(override=True)
+        self.provider = (provider or os.getenv("LLM_PROVIDER", "openrouter")).lower().strip()
         self.model = model or os.getenv("LLM_MODEL") or self._default_model_for_provider()
         self.api_key = api_key or self._resolve_api_key()
         self.base_url = base_url or self._resolve_base_url()
