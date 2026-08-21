@@ -1,4 +1,5 @@
 import os
+import re
 import json
 from typing import Any, Dict, List, Optional
 from abc import ABC, abstractmethod
@@ -387,7 +388,16 @@ class UnifiedLLMProvider(BaseLLMProvider):
             res.raise_for_status()
             data = res.json()
 
-            content = data["choices"][0]["message"]["content"]
+            content = data["choices"][0]["message"]["content"] or ""
+            # Strip reasoning/thinking preamble if model outputs reasoning tokens
+            content = re.sub(r"<think>.*?</think>", "", content, flags=re.DOTALL)
+            if "Here's a thinking process:" in content:
+                parts = content.split("\n\n")
+                filtered = [p for p in parts if not p.strip().startswith("1.") and not p.strip().startswith("2.") and not p.strip().startswith("3.") and not "thinking process" in p.lower()]
+                if filtered:
+                    content = "\n\n".join(filtered)
+            content = content.strip()
+
             usage = data.get("usage", {})
             return LLMResponse(
                 content=content,
