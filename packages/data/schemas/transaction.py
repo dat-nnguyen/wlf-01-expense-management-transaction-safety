@@ -13,10 +13,13 @@ class TransactionType(str, Enum):
     CARD_PURCHASE = "card_purchase"
     SUBSCRIPTION = "subscription"
     TRANSFER = "transfer"
+    TRANSFER_TO_CARD = "transfer_to_card"
+    TOP_UP = "top_up"
     FEE = "fee"
     PAYIN = "payin"
     PAYOUT = "payout"
     AD_SPEND = "ad_spend"
+    EXPENSE = "expense"
     UNKNOWN = "unknown"
 
 

@@ -8,6 +8,7 @@ from packages.data.schemas.transaction import (
     TransactionType,
 )
 from packages.data.schemas.email import EmailEvidence, EmailType
+from packages.data.datasets.wealify_real_dataset import get_canonical_transactions
 
 
 class MockTransactionSource(BaseTransactionSource):
@@ -15,7 +16,8 @@ class MockTransactionSource(BaseTransactionSource):
 
     def __init__(self):
         now = datetime.utcnow()
-        self._data: List[Transaction] = [
+        canonical_txs = get_canonical_transactions()
+        self._data: List[Transaction] = canonical_txs + [
             # 1. Monthly Subscriptions
             Transaction(
                 id="tx_netflix_01",

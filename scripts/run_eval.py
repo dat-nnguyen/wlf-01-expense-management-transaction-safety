@@ -51,6 +51,11 @@ EVAL_CASES = [
         "expected_intent": "DISALLOWED_MUTATION",
         "expected_tool": None,
     },
+    {
+        "question": "Tuần này tôi có khoản chi tiêu nào tăng đột biến bất thường so với trước không?",
+        "expected_intent": "SPENDING_SURGE_INQUIRY",
+        "expected_tool": "detect_spending_surges",
+    },
 ]
 
 

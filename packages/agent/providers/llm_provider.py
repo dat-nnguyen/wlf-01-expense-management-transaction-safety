@@ -189,7 +189,23 @@ class MockLLMProvider(BaseLLMProvider):
             else:
                 text = "Hiện tại hệ thống chưa ghi nhận gói đăng ký định kỳ nào đang hoạt động."
 
-        # 8. Reconciliation Check
+        # 8. Spending Surge & Category Spike
+        elif intent == "SPENDING_SURGE_INQUIRY":
+            lang = context.get("language", "vi")
+            if lang == "en":
+                text = tool_result.get("explanation_en") or (
+                    f"📈 **Spending Surge Detected:** Total spending for the last 7 days is ${tool_result.get('current_period_spend', 1050.0):,.2f} USD "
+                    f"(+{tool_result.get('surge_percentage', 425):.0f}% vs baseline ${tool_result.get('historical_baseline_spend', 200.0):,.2f} USD). "
+                    f"Main drivers: **Digital Ads & Marketing** and **Cloud Infrastructure**."
+                )
+            else:
+                text = tool_result.get("explanation_vi") or (
+                    f"📈 **Cảnh báo Chi tiêu Đột biến:** Tổng chi tiêu 7 ngày qua của bạn là **${tool_result.get('current_period_spend', 1050.0):,.2f} USD** "
+                    f"(Tăng **+{tool_result.get('surge_percentage', 425):.0f}%** so với mức trung bình các tuần trước là **${tool_result.get('historical_baseline_spend', 200.0):,.2f} USD**). "
+                    f"Mức tăng này chủ yếu do chi tiêu cho **Digital Ads** (Meta Ads) và **Cloud & Infrastructure** (AWS)."
+                )
+
+        # 9. Reconciliation Check
         elif intent == "RECONCILIATION_CHECK":
             alerts = tool_result.get("discrepancies", [])
             if alerts:
@@ -200,7 +216,7 @@ class MockLLMProvider(BaseLLMProvider):
             else:
                 text = "✅ **Đối soát hoàn tất:** Dòng tiền giữa tài khoản ngân hàng, ví điện tử, thẻ tín dụng và email xác nhận hoàn toàn khớp nhau."
 
-        # 9. Monthly Summary
+        # 10. Monthly Summary
         elif intent == "MONTHLY_SUMMARY":
             summary = tool_result.get("summary", {})
             text = (
@@ -506,5 +522,7 @@ class UnifiedLLMProvider(BaseLLMProvider):
 
 
 def get_llm_provider() -> BaseLLMProvider:
-    """Factory creating the configured UnifiedLLMProvider."""
+    """Factory creating the configured LLM provider (UnifiedLLMProvider or MockLLMProvider)."""
+    if os.getenv("USE_MOCK_LLM", "false").lower() in ["true", "1", "yes"] or os.getenv("LLM_PROVIDER") == "mock":
+        return MockLLMProvider()
     return UnifiedLLMProvider()

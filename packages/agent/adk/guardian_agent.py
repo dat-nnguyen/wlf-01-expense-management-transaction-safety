@@ -153,6 +153,28 @@ def scan_mailbox_evidence(
     }
 
 
+def detect_spending_surges(
+    account_id: str = "acc_main",
+    window_days: int = 7,
+) -> Dict[str, Any]:
+    """
+    Detects abnormal spending surges by comparing current period spending against historical baseline,
+    breaking down categories and explaining root cause drivers.
+
+    Args:
+        account_id: The account identifier to inspect.
+        window_days: Number of days in the current evaluation window (e.g. 7 for weekly, 30 for monthly).
+
+    Returns:
+        Dict with spending surge report, multiplier, category breakdown and root cause attribution.
+    """
+    from packages.agent.tools.surge import DetectSpendingSurgesTool
+    tool = DetectSpendingSurgesTool()
+    ctx = ToolContext(session_id="adk_session", account_id=account_id)
+    res = asyncio.run(tool.execute(ctx, {"window_days": window_days}))
+    return res.data if res.success else {"error": res.error}
+
+
 # ==============================================================================
 # GOOGLE ADK ROOT AGENT
 # ==============================================================================
@@ -166,6 +188,7 @@ Nguyên tắc hoạt động bất biến:
 4. Sử dụng 3 trạng thái phân loại chuẩn: 'Định kỳ đã xác định', 'Cần bạn tự xác nhận', 'Chưa đủ dữ liệu'.
 5. Nhắc nhở người dùng về thời hạn khiếu nại quy định 60 ngày theo luật ngân hàng Mỹ (Regulation E).
 6. Khi phát hiện email lừa đảo (như mạo danh wea1ify-support.com), cảnh báo rủi ro cao ngay lập tức.
+7. Phát hiện chi tiêu đột biến so với baseline lịch sử và giải thích nguyên nhân theo từng danh mục.
 """
 
 root_agent = Agent(
@@ -179,5 +202,6 @@ root_agent = Agent(
         find_active_subscriptions,
         analyze_business_health,
         scan_mailbox_evidence,
+        detect_spending_surges,
     ],
 )
