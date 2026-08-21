@@ -219,6 +219,7 @@ Wealify Guardian Financial Safety Team`,
         let finalIntent = 'GENERAL_QA';
         let finalTool = '';
         let policyAllowed = true;
+        let dynamicFollowups: string[] = [];
 
         while (!streamDone) {
           const { done, value } = await reader.read();
