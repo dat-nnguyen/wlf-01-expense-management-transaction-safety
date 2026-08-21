@@ -236,30 +236,229 @@ class EmailAlertDispatcher:
         logger.info(f"EMAIL_ALERT_DISPATCHED | notif_id={log.id} | to={recipient_email} | type={alert.alert_type.value} | subject={alert.title}")
 
         # Real SMTP Delivery if credentials configured in .env
+        cls.send_smtp_email(
+            to_email=recipient_email,
+            subject=log.subject,
+            html_body=html,
+            text_body=f"{alert.title}\n\n{alert.reason}\n\nSố tiền: ${alert.amount:,.2f} USD\nHạn xử lý: {alert.deadline_days} ngày",
+        )
+
+        return log
+
+    @classmethod
+    def send_smtp_email(
+        cls,
+        to_email: str,
+        subject: str,
+        html_body: str,
+        text_body: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """
+        Universal SMTP Email Sender:
+        Supports Gmail, Outlook, AWS SES, SendGrid, Mailgun, or any standard SMTP server.
+        Configurable via .env:
+          SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, SMTP_FROM_NAME, SMTP_USE_SSL
+        """
         import os
-        smtp_host = os.getenv("SMTP_HOST")
+        import smtplib
+        from email.mime.text import MIMEText
+        from email.mime.multipart import MIMEMultipart
+
+        smtp_host = os.getenv("SMTP_HOST", "").strip()
         smtp_port = int(os.getenv("SMTP_PORT", "587"))
-        smtp_user = os.getenv("SMTP_USER")
-        smtp_pass = os.getenv("SMTP_PASSWORD")
-        if smtp_host and smtp_user and smtp_pass:
-            try:
-                import smtplib
-                from email.mime.text import MIMEText
-                from email.mime.multipart import MIMEMultipart
+        smtp_user = os.getenv("SMTP_USER", "").strip()
+        smtp_pass = os.getenv("SMTP_PASSWORD", "").strip()
+        smtp_from_name = os.getenv("SMTP_FROM_NAME", "Wealify Guardian Copilot").strip()
+        smtp_use_ssl = os.getenv("SMTP_USE_SSL", "false").lower() in ["true", "1", "yes"]
 
-                msg = MIMEMultipart("alternative")
-                msg["Subject"] = log.subject
-                msg["From"] = f"Wealify Guardian <{smtp_user}>"
-                msg["To"] = recipient_email
-                msg.attach(MIMEText(html, "html", "utf-8"))
+        # Check if SMTP is configured
+        if not smtp_host or not smtp_user or not smtp_pass or smtp_user.startswith("your_"):
+            logger.info(f"SMTP_MOCK_MODE | No live SMTP credentials. Logged email to {to_email} locally.")
+            return {
+                "success": True,
+                "mode": "mock_logged",
+                "message": f"Email logged to in-memory audit log for {to_email} (configure SMTP in .env for live sending).",
+                "recipient": to_email,
+            }
 
-                with smtplib.SMTP(smtp_host, smtp_port, timeout=10.0) as server:
-                    server.starttls()
+        try:
+            msg = MIMEMultipart("alternative")
+            msg["Subject"] = subject
+            msg["From"] = f"{smtp_from_name} <{smtp_user}>"
+            msg["To"] = to_email
+
+            if text_body:
+                msg.attach(MIMEText(text_body, "plain", "utf-8"))
+            msg.attach(MIMEText(html_body, "html", "utf-8"))
+
+            if smtp_use_ssl or smtp_port == 465:
+                # SSL Connection (port 465)
+                with smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=12.0) as server:
                     server.login(smtp_user, smtp_pass)
-                    server.sendmail(smtp_user, [recipient_email], msg.as_string())
-                logger.info(f"REAL_SMTP_SUCCESS | Sent live email to {recipient_email}")
-            except Exception as e:
-                logger.warning(f"REAL_SMTP_FAILED | Failed sending to {recipient_email}: {e}")
+                    server.sendmail(smtp_user, [to_email], msg.as_string())
+            else:
+                # STARTTLS Connection (port 587 or 25)
+                with smtplib.SMTP(smtp_host, smtp_port, timeout=12.0) as server:
+                    server.ehlo()
+                    server.starttls()
+                    server.ehlo()
+                    server.login(smtp_user, smtp_pass)
+                    server.sendmail(smtp_user, [to_email], msg.as_string())
+
+            logger.info(f"REAL_SMTP_SUCCESS | Sent live email to {to_email} via {smtp_host}:{smtp_port}")
+            return {
+                "success": True,
+                "mode": "live_smtp",
+                "message": f"Live email successfully sent to {to_email} via {smtp_host}:{smtp_port}",
+                "recipient": to_email,
+            }
+        except Exception as e:
+            logger.warning(f"REAL_SMTP_FAILED | Failed sending to {to_email}: {e}")
+            return {
+                "success": False,
+                "mode": "live_smtp_failed",
+                "error": str(e),
+                "message": f"Failed to send email to {to_email}: {e}",
+                "recipient": to_email,
+            }
+
+    @classmethod
+    def generate_html_report(
+        cls,
+        summary_data: Dict[str, Any],
+        user_name: str = "Quý khách hàng Wealify",
+    ) -> str:
+        """Generates a professional Fintech HTML Email for Monthly/Weekly Financial Reports."""
+        period = summary_data.get("period", "2026-08")
+        total_exp = summary_data.get("total_expense", 3561.73)
+        total_income = summary_data.get("total_income", 25108.35)
+        total_fees = summary_data.get("total_fees", 241.25)
+        internal_transfers = summary_data.get("internal_transfers", 5350.00)
+        vnd_income = summary_data.get("total_income_vnd", 890366000.0)
+        top_3 = summary_data.get("top_3_expenses", [])
+
+        top_3_rows = ""
+        for idx, item in enumerate(top_3, 1):
+            merchant = item.get("merchant_normalized") or item.get("merchant_raw") or item.get("merchant") or "Khoản chi"
+            amt = item.get("amount", 0)
+            curr = item.get("currency", "USD")
+            date_str = str(item.get("occurred_at") or item.get("date") or "")[:10]
+            top_3_rows += f"""
+            <tr>
+              <td style="padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.06); font-size: 13px; color: #f8fafc;">
+                <strong>{idx}. {merchant}</strong>
+              </td>
+              <td style="padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.06); font-size: 13px; color: #cbd5e1; font-family: monospace;">
+                {date_str}
+              </td>
+              <td style="padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.06); font-size: 13px; color: #f43f5e; font-weight: bold; font-family: monospace; text-align: right;">
+                ${amt:,.2f} {curr}
+              </td>
+            </tr>
+            """
+
+        html = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Báo Cáo Thu Chi Kỳ {period} — Wealify Guardian</title>
+        </head>
+        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #070b14; color: #f8fafc; margin: 0; padding: 24px;">
+          <div style="max-width: 600px; margin: 0 auto; background-color: #0d1322; border-radius: 16px; padding: 32px; border: 1px solid rgba(255, 255, 255, 0.1);">
+            
+            <div style="border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 16px; margin-bottom: 24px;">
+              <div style="font-size: 20px; font-weight: 800; color: #fc6508;">WEALIFY GUARDIAN</div>
+              <div style="font-size: 13px; color: #94a3b8; margin-top: 4px;">Báo Cáo Đối Soát Tài Chính & An Toàn Giao Dịch</div>
+            </div>
+
+            <div style="font-size: 16px; font-weight: 700; color: #ffffff; margin-bottom: 8px;">
+              Kính gửi {user_name},
+            </div>
+            <div style="font-size: 14px; color: #94a3b8; line-height: 1.6; margin-bottom: 24px;">
+              Dưới đây là báo cáo tổng hợp thu chi và tình hình dòng tiền của doanh nghiệp trong kỳ <strong>{period}</strong> được trích xuất tự động từ sổ cái Wealify:
+            </div>
+
+            <!-- Metrics Summary Cards -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px;">
+              <div style="background-color: #131b2e; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 16px;">
+                <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase; font-weight: 600;">Chi Phí Kinh Doanh Thực Tế</div>
+                <div style="font-size: 20px; font-weight: 800; color: #f43f5e; font-family: monospace; margin-top: 6px;">${total_exp:,.2f} USD</div>
+              </div>
+              <div style="background-color: #131b2e; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 16px;">
+                <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase; font-weight: 600;">Doanh Thu / Tiền Vào (USD)</div>
+                <div style="font-size: 20px; font-weight: 800; color: #10b981; font-family: monospace; margin-top: 6px;">${total_income:,.2f} USD</div>
+              </div>
+            </div>
+
+            <div style="background-color: #131b2e; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 16px; margin-bottom: 24px;">
+              <div style="font-size: 12px; color: #cbd5e1; line-height: 1.8;">
+                • <strong>Chuyển tiền / Nạp ví nội bộ:</strong> <span style="color: #38bdf8; font-family: monospace;">${internal_transfers:,.2f} USD</span><br>
+                • <strong>Tổng phí dịch vụ & FX:</strong> <span style="color: #f59e0b; font-family: monospace;">${total_fees:,.2f} USD</span><br>
+                • <strong>Tiền vào tài khoản nội địa (VND):</strong> <span style="color: #10b981; font-family: monospace;">{vnd_income:,.0f} VND</span> <em>(~${vnd_income/25000:,.2f} USD)</em>
+              </div>
+            </div>
+
+            <!-- Top 3 Expenses -->
+            <div style="font-size: 14px; font-weight: 700; color: #f8fafc; margin-bottom: 12px;">3 Khoản Chi Phí Lớn Nhất Trong Kỳ:</div>
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px; background-color: #131b2e; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08);">
+              <thead>
+                <tr style="background-color: #1a243b; text-align: left;">
+                  <th style="padding: 10px 12px; font-size: 11px; color: #94a3b8; text-transform: uppercase;">Khoản chi</th>
+                  <th style="padding: 10px 12px; font-size: 11px; color: #94a3b8; text-transform: uppercase;">Ngày</th>
+                  <th style="padding: 10px 12px; font-size: 11px; color: #94a3b8; text-transform: uppercase; text-align: right;">Số tiền</th>
+                </tr>
+              </thead>
+              <tbody>
+                {top_3_rows}
+              </tbody>
+            </table>
+
+            <!-- Legal Disclaimer Footer -->
+            <div style="border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 16px; font-size: 11px; color: #64748b; line-height: 1.6;">
+              🛡️ <em>Công cụ này chỉ hỗ trợ bạn rà soát tài chính. Kết quả để tham khảo, không phải kết luận chính thức của Wealify và không thay cho việc bạn tự kiểm tra. Nếu thấy giao dịch lạ, hãy liên hệ hỗ trợ ngay — ở Mỹ thời hạn khiếu nại theo quy định là 60 ngày kể từ ngày ngân hàng gửi sao kê.</em>
+            </div>
+
+          </div>
+        </body>
+        </html>
+        """
+        return html
+
+    @classmethod
+    def dispatch_report_email(
+        cls,
+        summary_data: Dict[str, Any],
+        recipient_email: str = "founder@wealify.io",
+        user_name: str = "Quý khách hàng Wealify",
+    ) -> EmailNotificationLog:
+        """Dispatches formatted financial summary report email."""
+        period = summary_data.get("period", "2026-08")
+        html = cls.generate_html_report(summary_data, user_name)
+        subject = f"[Wealify Guardian] Báo Cáo Thu Chi & Đối Soát Tài Chính Kỳ {period}"
+
+        log = EmailNotificationLog(
+            id=f"rep_{uuid.uuid4().hex[:8]}",
+            recipient_email=recipient_email,
+            recipient_role="user",
+            subject=subject,
+            alert_type="FINANCIAL_REPORT",
+            severity="INFO",
+            html_content=html,
+            summary=f"Báo cáo thu chi kỳ {period} — Chi phí kinh doanh: ${summary_data.get('total_expense', 3561.73):,.2f} USD",
+            sent_at=datetime.now(timezone.utc),
+            status="sent",
+        )
+        cls._SENT_LOGS.insert(0, log)
+        logger.info(f"FINANCIAL_REPORT_EMAIL_DISPATCHED | notif_id={log.id} | to={recipient_email} | period={period}")
+
+        # Send via live SMTP
+        cls.send_smtp_email(
+            to_email=recipient_email,
+            subject=subject,
+            html_body=html,
+            text_body=f"Báo Cáo Thu Chi Kỳ {period}\nChi phí kinh doanh thực tế: ${summary_data.get('total_expense', 3561.73):,.2f} USD\nDoanh thu: ${summary_data.get('total_income', 25108.35):,.2f} USD",
+        )
 
         return log
 

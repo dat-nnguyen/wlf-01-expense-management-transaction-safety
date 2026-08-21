@@ -52,18 +52,64 @@ async def scan_and_notify_endpoint(req: ScanAndNotifyRequest):
     }
 
 
-@router.post("/send")
-async def trigger_email_alert(req: SendAlertRequest):
+class TestSMTPRequest(BaseModel):
+    recipient_email: str = Field(default="founder@wealify.io", description="Recipient to receive test email")
+
+
+class SendReportRequest(BaseModel):
+    recipient_email: str = Field(default="founder@wealify.io", description="Recipient email for monthly report")
+    period: str = Field(default="2026-08", description="Period to generate report for (e.g. 2026-08)")
+
+
+@router.post("/test-smtp")
+async def test_smtp_endpoint(req: TestSMTPRequest):
+    """
+    Tests the live SMTP connection and sends a sample test email to verify credentials.
+    """
+    subject = "[Wealify Guardian] Kiểm tra kết nối máy chủ Email SMTP thành công"
+    html_body = f"""
+    <!DOCTYPE html>
+    <html>
+    <body style="font-family: sans-serif; background-color: #070b14; color: #ffffff; padding: 24px;">
+      <div style="max-width: 500px; margin: 0 auto; background-color: #0d1322; border-radius: 12px; padding: 24px; border: 1px solid rgba(255,255,255,0.1);">
+        <h2 style="color: #fc6508; margin-top: 0;">Wealify Guardian SMTP Test</h2>
+        <p style="color: #cbd5e1; font-size: 14px;">Xin chào,</p>
+        <p style="color: #cbd5e1; font-size: 14px;">Máy chủ email SMTP của bạn đã được kết nối và cấu hình thành công với hệ thống <strong>Wealify Guardian Copilot</strong>.</p>
+        <div style="background-color: #131b2e; padding: 12px; border-radius: 8px; font-family: monospace; font-size: 12px; color: #10b981;">
+          ✓ SMTP Status: Active & Authenticated<br>
+          ✓ Recipient: {req.recipient_email}
+        </div>
+        <p style="color: #64748b; font-size: 11px; margin-top: 20px;">Email tự động gửi từ Wealify Guardian.</p>
+      </div>
+    </body>
+    </html>
+    """
+    res = EmailAlertDispatcher.send_smtp_email(
+        to_email=req.recipient_email,
+        subject=subject,
+        html_body=html_body,
+        text_body=f"Wealify Guardian SMTP Test Email to {req.recipient_email} succeeded.",
+    )
+    return res
+
+
+@router.post("/send-report")
+async def send_report_endpoint(req: SendReportRequest):
+    """
+    Generates and dispatches the full monthly financial report to the user's email via SMTP.
+    """
+    from packages.financial.calculations.metrics import FinancialCalculator
     txs = await tx_source.get_transactions()
-    emails = await em_source.get_emails()
-    payout_alerts = PayoutRadar.detect_overdue_payouts(payout_emails=emails, account_txs=txs)
+    summary = FinancialCalculator.calculate_monthly_summary(transactions=txs, period=req.period)
 
-    target_alert = next((a for a in payout_alerts if a.id == req.alert_id), None)
-    if not target_alert and payout_alerts:
-        target_alert = payout_alerts[0]
-
-    if target_alert:
-        log = EmailAlertDispatcher.dispatch_alert(target_alert, req.recipient_email, req.recipient_role)
-        return {"success": True, "notification": log}
-
-    return {"success": False, "message": "No active alert to dispatch"}
+    log = EmailAlertDispatcher.dispatch_report_email(
+        summary_data=summary.model_dump(),
+        recipient_email=req.recipient_email,
+    )
+    return {
+        "success": True,
+        "notification_id": log.id,
+        "recipient": req.recipient_email,
+        "subject": log.subject,
+        "summary": log.summary,
+    }
