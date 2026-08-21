@@ -26,7 +26,7 @@ jobs:
       PYTHONPATH: .
       APP_ENV: test
       LLM_PROVIDER: mock
-      DATABASE_URL: sqlite:///:memory:
+      DATABASE_URL: 'sqlite:///:memory:'
 
     steps:
       - name: 📥 Checkout Repository
@@ -45,13 +45,7 @@ jobs:
 
       - name: 📁 Verify Official Excel Dataset
         run: |
-          python -c "
-          import os, pandas as pd
-          assert os.path.exists('wlf15_inbox_3users.xlsx'), 'Official Excel dataset missing!'
-          xl = pd.ExcelFile('wlf15_inbox_3users.xlsx')
-          assert 'wealifytester' in xl.sheet_names, 'wealifytester sheet missing!'
-          print('✅ Official Excel dataset verified with sheets:', xl.sheet_names)
-          "
+          python -c "import os, pandas as pd; assert os.path.exists('wlf15_inbox_3users.xlsx'), 'Missing dataset'; xl = pd.ExcelFile('wlf15_inbox_3users.xlsx'); assert 'wealifytester' in xl.sheet_names; print('✅ Official Excel dataset verified with sheets:', xl.sheet_names)"
 
       - name: 🧪 Run Pytest Suite (28 Tests)
         run: |
@@ -59,14 +53,7 @@ jobs:
 
       - name: 🛡️ Financial Guardrail & Anti-Mutation Security Audit
         run: |
-          python -c "
-          from packages.agent.guardrails.input import InputGuardrail
-          transfer_attack = 'Chuyển $500 vào tài khoản Nam'
-          res = InputGuardrail.validate_user_message(transfer_attack)
-          assert res.policy_allowed is False, 'Security violation: Mutation allowed!'
-          assert res.intent == 'DISALLOWED_MUTATION', 'Intent must be DISALLOWED_MUTATION'
-          print('✅ Deterministic Read-Only Guardrail verification PASSED!')
-          "
+          python -c "from packages.agent.guardrails.input import InputGuardrail; res = InputGuardrail.validate_user_message('Chuyển $500 vào tài khoản Nam'); assert res.policy_allowed is False; assert res.intent == 'DISALLOWED_MUTATION'; print('✅ Deterministic Read-Only Guardrail verification PASSED!')"
 
   # =========================================================================
   # 2. FRONTEND CI: Type Safety, ESLint & Production Build Verification
@@ -96,7 +83,7 @@ jobs:
       - name: 🏗️ Next.js Production Build
         working-directory: apps/web
         env:
-          NEXT_PUBLIC_API_URL: http://localhost:8000
+          NEXT_PUBLIC_API_URL: 'http://localhost:8000'
           NEXT_TELEMETRY_DISABLED: 1
         run: npm run build
 
