@@ -52,9 +52,14 @@ Wealify Guardian Financial Safety Team`,
   const chatEndRef = useRef<HTMLDivElement>(null);
   const t = TRANSLATIONS[language];
 
-  // Initialize theme & language from localStorage on client
+  // Initialize active tab from sessionStorage, and theme & language from localStorage on client
   useEffect(() => {
     try {
+      const savedTab = sessionStorage.getItem('wealify_active_tab');
+      if (savedTab) {
+        setUserNav(savedTab);
+      }
+
       const savedTheme = localStorage.getItem('wealify_theme') as 'dark' | 'light' | null;
       if (savedTheme) {
         setTheme(savedTheme);
@@ -72,6 +77,15 @@ Wealify Guardian Financial Safety Team`,
       // Ignore
     }
   }, []);
+
+  const handleNavChange = (newNav: string) => {
+    setUserNav(newNav);
+    try {
+      sessionStorage.setItem('wealify_active_tab', newNav);
+    } catch {
+      // Ignore
+    }
+  };
 
   const handleThemeChange = (newTheme: 'dark' | 'light') => {
     setTheme(newTheme);
@@ -274,7 +288,7 @@ Wealify Guardian Financial Safety Team`,
         {/* Left Navigation Sidebar */}
         <UserSidebar
           activeNav={userNav}
-          setActiveNav={setUserNav}
+          setActiveNav={handleNavChange}
           isBalanceMasked={isBalanceMasked}
           setIsBalanceMasked={setIsBalanceMasked}
           language={language}
@@ -285,9 +299,9 @@ Wealify Guardian Financial Safety Team`,
           <main className="flex-1 flex flex-col bg-[var(--bg-primary)] overflow-y-auto">
             <DashboardView
               language={language}
-              onNavigate={setUserNav}
+              onNavigate={handleNavChange}
               onAskCopilot={(prompt) => {
-                setUserNav('chat');
+                handleNavChange('chat');
                 handleSendMessage(prompt);
               }}
             />
