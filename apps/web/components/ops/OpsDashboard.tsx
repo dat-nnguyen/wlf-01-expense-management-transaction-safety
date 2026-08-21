@@ -1,314 +1,322 @@
 import React from 'react';
 import {
-  ArrowUpRight,
-  TrendingUp,
-  Users,
-  Bot,
-  Zap,
-  AlertTriangle,
+  CreditCard,
   Clock,
   CheckCircle2,
+  Mail,
+  DollarSign,
+  AlertTriangle,
+  ArrowRight,
+  ShieldCheck,
 } from 'lucide-react';
-import {
-  BOT_PERFORMANCES,
-  RECENT_BOTS,
-  NEW_USERS,
-} from '../../data/mockData';
+import { Language } from '../../types';
+import { TRANSLATIONS } from '../../data/translations';
 
-export const OpsDashboard: React.FC = () => {
+interface OpsDashboardProps {
+  language: Language;
+}
+
+export const OpsDashboard: React.FC<OpsDashboardProps> = ({ language }) => {
+  const t = TRANSLATIONS[language];
+
+  // Specific Customer Profile Data (The User Themselves)
+  const targetCustomer = {
+    id: 'acc_main',
+    name: 'Dat Nguyen',
+    company: 'Volcano Ecom LLC',
+    email: 'founder@wealify.io',
+    tier: 'Wealify Pro Seller',
+    registeredDate: '15/01/2025',
+    availableBalance: 128490.5,
+    creditLimit: 250000.0,
+    riskScore: 92,
+    riskLevel: 'Cần bạn tự xác nhận',
+  };
+
+  // Virtual Cards for this specific customer
+  const customerCards = [
+    {
+      id: 'vcard_ad_fb',
+      name: 'Volcano Ads Facebook',
+      number: '•••• 4812',
+      bank: 'VPBank Virtual',
+      spendMonth: '$15,480.00',
+      status: 'ALERT_DUP',
+      statusLabel: 'Quẹt đúp ($150 x 2)',
+      statusColor: 'bg-rose-500/15 text-rose-400 border-rose-500/25',
+    },
+    {
+      id: 'vcard_tiktok',
+      name: 'Volcano TikTok Ads',
+      number: '•••• 9102',
+      bank: 'VPBank Virtual',
+      spendMonth: '$8,240.00',
+      status: 'OPTIMAL',
+      statusLabel: 'Hoạt động',
+      statusColor: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+    },
+    {
+      id: 'vcard_aws',
+      name: 'AWS Cloud & Infra',
+      number: '•••• 3341',
+      bank: 'VPBank Virtual',
+      spendMonth: '$890.00',
+      status: 'OPTIMAL',
+      statusLabel: 'Hoạt động',
+      statusColor: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+    },
+    {
+      id: 'vcard_dhl',
+      name: 'DHL Global Logistics',
+      number: '•••• 7712',
+      bank: 'VPBank Virtual',
+      spendMonth: '$3,150.00',
+      status: 'OPTIMAL',
+      statusLabel: 'Hoạt động',
+      statusColor: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+    },
+  ];
+
+  // Specific customer's active anomalies
+  const customerAnomalies = [
+    {
+      id: 'AN-2026-08-01',
+      title: 'Quẹt đúp thẻ ảo Facebook Ads ($150.00 x 2)',
+      category: 'CÀ THẺ TRÙNG LẶP',
+      amount: '$150.00 USD',
+      detectedAt: '15:47 (Hôm nay)',
+      deadline: 'Còn 42 ngày',
+      card: 'Thẻ Volcano Ads •••• 4812',
+      badge: 'Cần xác nhận',
+      badgeStyle: 'bg-rose-500/15 text-rose-400 border-rose-500/25',
+      actionPrompt: 'Gửi tra soát hoàn tiền VPBank',
+    },
+    {
+      id: 'AN-2026-08-02',
+      title: 'Thuê bao Adobe Creative Cloud tăng giá +10.0%',
+      category: 'SUBSCRIPTION HIKE',
+      amount: '$54.99 USD/tháng',
+      detectedAt: '14:20 (Hôm nay)',
+      deadline: 'Còn 60 ngày',
+      card: 'Tài khoản chính',
+      badge: 'Đã xác định',
+      badgeStyle: 'bg-amber-500/15 text-amber-400 border-amber-500/25',
+      actionPrompt: 'Xem đề xuất đàm phán tier',
+    },
+    {
+      id: 'AN-2026-08-03',
+      title: 'Payout sàn Amazon chậm trễ 16 ngày',
+      category: 'PAYOUT QUÁ HẠN',
+      amount: '$4,250.00 USD',
+      detectedAt: '09:15 (Hôm nay)',
+      deadline: 'Trễ 16 ngày',
+      card: 'Ví Wealify USD',
+      badge: 'Khẩn cấp',
+      badgeStyle: 'bg-rose-500/15 text-rose-400 border-rose-500/25',
+      actionPrompt: 'Gửi ticket MT103 tới Amazon',
+    },
+    {
+      id: 'AN-2026-08-04',
+      title: 'Giám định ảnh chuyển khoản $2,500 không khớp sổ cái',
+      category: 'AUTHENTICITY CONFLICT',
+      amount: '$2,500.00 USD',
+      detectedAt: 'Hôm qua',
+      deadline: 'Xung đột 92/100',
+      card: 'Ref: WF-839291',
+      badge: 'Rủi ro cao',
+      badgeStyle: 'bg-rose-500/15 text-rose-400 border-rose-500/25',
+      actionPrompt: 'Xem bằng chứng đối soát',
+    },
+  ];
+
   return (
-    <div className="p-6 space-y-6">
-      {/* 5 Top KPI Cards */}
-      <div className="grid grid-cols-5 gap-4">
-        <div className="p-4 rounded-2xl bg-[#0c111e] border border-[rgba(255,255,255,0.08)] shadow-lg space-y-2">
-          <div className="flex items-center justify-between text-xs text-[#94a3b8]">
-            <span>Tổng cuộc hội thoại</span>
-            <ArrowUpRight className="w-3.5 h-3.5 text-purple-400" />
+    <div className="p-6 space-y-5 transition-colors min-h-0 overflow-y-auto">
+      {/* Customer Header Identity Card */}
+      <div className="p-4 rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] space-y-2">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-subtle)] flex items-center justify-center text-[var(--text-primary)] font-bold text-sm font-mono shrink-0">
+              DN
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-sm font-bold text-[var(--text-primary)]">
+                  {targetCustomer.name}
+                </h1>
+                <span className="text-xs text-[var(--text-muted)] font-normal">({targetCustomer.company})</span>
+                <span className="badge-wealify-orange text-[10px] font-medium px-2 py-0.2 rounded">
+                  {targetCustomer.tier}
+                </span>
+                <span className="px-2 py-0.2 rounded bg-[var(--bg-secondary)] text-[var(--text-muted)] text-[10px] font-mono border border-[var(--border-subtle)]">
+                  Account ID: {targetCustomer.id}
+                </span>
+              </div>
+              <div className="text-[11px] text-[var(--text-muted)] font-mono mt-0.5">
+                Email nhận cảnh báo: <span className="text-[var(--text-primary)] font-medium">{targetCustomer.email}</span> • Ngày đăng ký: {targetCustomer.registeredDate}
+              </div>
+            </div>
           </div>
-          <div className="text-2xl font-extrabold text-white tracking-tight">128,540</div>
-          <div className="text-[11px] text-emerald-400 font-semibold flex items-center gap-1">
-            <TrendingUp className="w-3 h-3" />
-            <span>↑ 18.6% so với 7 ngày trước</span>
+
+          <div className="flex items-center gap-2">
+            <div className="p-2 px-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-right">
+              <div className="text-[10px] text-rose-400 font-medium uppercase">
+                {language === 'vi' ? 'Điểm an toàn tài khoản' : 'Account Safety Score'}
+              </div>
+              <div className="text-base font-bold text-rose-400 font-mono">
+                {targetCustomer.riskScore}/100 <span className="text-xs font-normal">({targetCustomer.riskLevel})</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 5 Personal KPI Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-3.5">
+        {/* KPI 1: Available Balance */}
+        <div className="p-3.5 rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] space-y-1">
+          <div className="flex items-center justify-between text-xs text-[var(--text-muted)]">
+            <span className="font-medium">{language === 'vi' ? 'Số Dư Khả Dụng' : 'Available Balance'}</span>
+            <DollarSign className="w-3.5 h-3.5 text-[var(--text-muted)]" />
+          </div>
+          <div className="text-xl font-bold text-[var(--text-primary)] tracking-tight font-mono">
+            ${targetCustomer.availableBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+          </div>
+          <div className="text-[10px] text-[var(--text-muted)] font-mono">
+            ≈ 3.26 Tỷ VNĐ (Hạn mức $250k)
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-[#0c111e] border border-[rgba(255,255,255,0.08)] shadow-lg space-y-2">
-          <div className="flex items-center justify-between text-xs text-[#94a3b8]">
-            <span>Người dùng hoạt động</span>
-            <Users className="w-3.5 h-3.5 text-cyan-400" />
-          </div>
-          <div className="text-2xl font-extrabold text-white tracking-tight">8,432</div>
-          <div className="text-[11px] text-emerald-400 font-semibold flex items-center gap-1">
-            <TrendingUp className="w-3 h-3" />
-            <span>↑ 12.3% so với 7 ngày trước</span>
-          </div>
-        </div>
-
-        <div className="p-4 rounded-2xl bg-[#0c111e] border border-[rgba(255,255,255,0.08)] shadow-lg space-y-2">
-          <div className="flex items-center justify-between text-xs text-[#94a3b8]">
-            <span>Bot đang hoạt động</span>
-            <Bot className="w-3.5 h-3.5 text-purple-400" />
-          </div>
-          <div className="text-2xl font-extrabold text-white tracking-tight">12</div>
-          <div className="text-[11px] text-[#94a3b8]">Trong tổng số 15 bot</div>
-        </div>
-
-        <div className="p-4 rounded-2xl bg-[#0c111e] border border-[rgba(255,255,255,0.08)] shadow-lg space-y-2">
-          <div className="flex items-center justify-between text-xs text-[#94a3b8]">
-            <span>Tổng tokens sử dụng</span>
-            <Zap className="w-3.5 h-3.5 text-amber-400" />
-          </div>
-          <div className="text-2xl font-extrabold text-white tracking-tight">45.2M</div>
-          <div className="text-[11px] text-emerald-400 font-semibold flex items-center gap-1">
-            <TrendingUp className="w-3 h-3" />
-            <span>↑ 22.7% so với 7 ngày trước</span>
-          </div>
-        </div>
-
-        <div className="p-4 rounded-2xl bg-[#0c111e] border border-[rgba(255,255,255,0.08)] shadow-lg space-y-2">
-          <div className="flex items-center justify-between text-xs text-[#94a3b8]">
-            <span>Cảnh báo hệ thống</span>
+        {/* KPI 2: Active Anomalies */}
+        <div className="p-3.5 rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] space-y-1">
+          <div className="flex items-center justify-between text-xs text-[var(--text-muted)]">
+            <span className="font-medium">{language === 'vi' ? 'Sự Cố Cần Bạn Xác Nhận' : 'Pending Anomalies'}</span>
             <AlertTriangle className="w-3.5 h-3.5 text-rose-400" />
           </div>
-          <div className="text-2xl font-extrabold text-rose-400 tracking-tight">7</div>
-          <div className="text-[11px] text-rose-400 font-semibold">
-            ↓ 28.6% so với 7 ngày trước
+          <div className="text-xl font-bold text-rose-400 tracking-tight font-mono">3 Sự Cố</div>
+          <div className="text-[10px] text-[var(--text-muted)] font-medium">
+            1 Quẹt đúp, 1 Payout, 1 Tăng giá
+          </div>
+        </div>
+
+        {/* KPI 3: Virtual Cards Fleet */}
+        <div className="p-3.5 rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] space-y-1">
+          <div className="flex items-center justify-between text-xs text-[var(--text-muted)]">
+            <span className="font-medium">{language === 'vi' ? 'Thẻ Ảo Hoạt Động' : 'Virtual Cards'}</span>
+            <CreditCard className="w-3.5 h-3.5 text-[var(--text-muted)]" />
+          </div>
+          <div className="text-xl font-bold text-[var(--text-primary)] tracking-tight font-mono">4 Thẻ Ảo</div>
+          <div className="text-[10px] text-[var(--text-muted)] font-medium">VPBank Virtual Card</div>
+        </div>
+
+        {/* KPI 4: Dispute Deadline Window */}
+        <div className="p-3.5 rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] space-y-1">
+          <div className="flex items-center justify-between text-xs text-[var(--text-muted)]">
+            <span className="font-medium">{language === 'vi' ? 'Hạn Tra Soát Gần Nhất' : 'Nearest Deadline'}</span>
+            <Clock className="w-3.5 h-3.5 text-[var(--text-muted)]" />
+          </div>
+          <div className="text-xl font-bold text-[var(--text-primary)] tracking-tight font-mono">Còn 42 Ngày</div>
+          <div className="text-[10px] text-[var(--text-muted)] font-mono">Hạn chót: 17/10/2026 (Luật 60 ngày)</div>
+        </div>
+
+        {/* KPI 5: Dispatched Alerts */}
+        <div className="p-3.5 rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] space-y-1">
+          <div className="flex items-center justify-between text-xs text-[var(--text-muted)]">
+            <span className="font-medium">{language === 'vi' ? 'Email Cảnh Báo Đã Gửi' : 'Email Alerts Sent'}</span>
+            <Mail className="w-3.5 h-3.5 text-[var(--text-muted)]" />
+          </div>
+          <div className="text-xl font-bold text-[var(--text-primary)] tracking-tight font-mono">3 Email</div>
+          <div className="text-[10px] text-emerald-400 font-medium flex items-center gap-1">
+            <CheckCircle2 className="w-3 h-3" />
+            <span>Gửi tới founder@wealify.io</span>
           </div>
         </div>
       </div>
 
-      {/* Charts Row */}
-      <div className="grid grid-cols-12 gap-5">
-        {/* Line Chart: Lượt hội thoại */}
-        <div className="col-span-5 p-5 rounded-2xl bg-[#0c111e] border border-[rgba(255,255,255,0.08)] shadow-lg space-y-4">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-white">Lượt hội thoại</span>
-            <span className="text-[11px] text-[#64748b] bg-white/5 px-2 py-0.5 rounded">7 ngày qua</span>
-          </div>
-
-          {/* SVG Line Chart */}
-          <div className="h-44 w-full relative">
-            <svg viewBox="0 0 400 150" className="w-full h-full">
-              <defs>
-                <linearGradient id="purpleGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.4" />
-                  <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.0" />
-                </linearGradient>
-              </defs>
-              <path
-                d="M 10 130 Q 80 40, 150 90 T 250 30 T 380 50"
-                fill="none"
-                stroke="#a855f7"
-                strokeWidth="3"
-              />
-              <path
-                d="M 10 130 Q 80 40, 150 90 T 250 30 T 380 50 L 380 150 L 10 150 Z"
-                fill="url(#purpleGrad)"
-              />
-              <circle cx="250" cy="30" r="5" fill="#ffffff" stroke="#a855f7" strokeWidth="3" />
-            </svg>
-            <div className="absolute top-2 left-1/2 -translate-x-1/2 bg-black/80 border border-purple-500/40 px-2.5 py-1 rounded-lg text-[10px] text-white">
-              12/08/2026 • Lượt hội thoại: <span className="font-bold text-purple-300">14,480</span>
-            </div>
-          </div>
-          <div className="flex justify-between text-[10px] text-[#64748b] pt-1">
-            <span>01/08</span>
-            <span>05/08</span>
-            <span>09/08</span>
-            <span>13/08</span>
-            <span>17/08</span>
-            <span>19/08</span>
-          </div>
+      {/* Your Virtual Cards Fleet Matrix */}
+      <div className="p-4 rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xs font-bold text-[var(--text-primary)] uppercase tracking-wider">
+            {language === 'vi' ? 'Danh Sách Thẻ Ảo & Ví Của Bạn' : 'Your Virtual Cards & Wallets'}
+          </h2>
+          <span className="text-[11px] font-mono text-[var(--text-muted)]">4 Thẻ VPBank</span>
         </div>
 
-        {/* Donut Chart: Phân bổ hội thoại theo bot */}
-        <div className="col-span-4 p-5 rounded-2xl bg-[#0c111e] border border-[rgba(255,255,255,0.08)] shadow-lg space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-white">Phân bổ hội thoại theo bot</span>
-            <span className="text-[11px] text-purple-400 cursor-pointer">Xem chi tiết</span>
-          </div>
-
-          <div className="flex items-center gap-4 pt-2">
-            <div className="relative w-32 h-32 shrink-0">
-              <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
-                <circle cx="50" cy="50" r="38" fill="none" stroke="#6366f1" strokeWidth="14" strokeDasharray="110 240" />
-                <circle cx="50" cy="50" r="38" fill="none" stroke="#10b981" strokeWidth="14" strokeDasharray="58 240" strokeDashoffset="-110" />
-                <circle cx="50" cy="50" r="38" fill="none" stroke="#f59e0b" strokeWidth="14" strokeDasharray="36 240" strokeDashoffset="-168" />
-                <circle cx="50" cy="50" r="38" fill="none" stroke="#ec4899" strokeWidth="14" strokeDasharray="21 240" strokeDashoffset="-204" />
-                <circle cx="50" cy="50" r="38" fill="none" stroke="#06b6d4" strokeWidth="14" strokeDasharray="15 240" strokeDashoffset="-225" />
-              </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                <span className="text-[9px] text-[#64748b]">Tổng</span>
-                <span className="text-xs font-bold text-white">128,540</span>
-              </div>
-            </div>
-
-            <div className="space-y-1.5 text-[11px] flex-1">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+          {customerCards.map((card) => (
+            <div
+              key={card.id}
+              className="p-3 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-subtle)] space-y-2"
+            >
               <div className="flex items-center justify-between">
-                <span className="flex items-center gap-1.5 text-[#94a3b8]">
-                  <span className="w-2 h-2 rounded-full bg-indigo-500"></span> Guardian Finance
-                </span>
-                <span className="text-white font-medium">46.2%</span>
+                <span className="font-mono text-xs font-bold text-[var(--text-primary)]">{card.number}</span>
+                <CreditCard className="w-3.5 h-3.5 text-[var(--text-muted)]" />
               </div>
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-1.5 text-[#94a3b8]">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500"></span> Guardian Support
-                </span>
-                <span className="text-white font-medium">24.1%</span>
+              <div>
+                <div className="font-semibold text-xs text-[var(--text-primary)] truncate">{card.name}</div>
+                <div className="text-[10px] text-[var(--text-muted)]">{card.bank}</div>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-1.5 text-[#94a3b8]">
-                  <span className="w-2 h-2 rounded-full bg-amber-500"></span> Guardian Sales
-                </span>
-                <span className="text-white font-medium">15.3%</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-1.5 text-[#94a3b8]">
-                  <span className="w-2 h-2 rounded-full bg-pink-500"></span> Guardian HR
-                </span>
-                <span className="text-white font-medium">8.7%</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-1.5 text-[#94a3b8]">
-                  <span className="w-2 h-2 rounded-full bg-cyan-500"></span> Khác
-                </span>
-                <span className="text-white font-medium">5.7%</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Bot hiệu suất cao nhất */}
-        <div className="col-span-3 p-5 rounded-2xl bg-[#0c111e] border border-[rgba(255,255,255,0.08)] shadow-lg space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-white">Bot hiệu suất cao nhất</span>
-            <span className="text-[11px] text-purple-400 cursor-pointer">Xem tất cả</span>
-          </div>
-
-          <div className="space-y-3 pt-1">
-            {BOT_PERFORMANCES.length > 0 ? (
-              BOT_PERFORMANCES.map((b, idx) => (
-                <div key={idx} className="space-y-1 text-xs">
-                  <div className="flex items-center justify-between">
-                    <span className="text-white font-medium">{idx + 1}. {b.name}</span>
-                    <span className="text-emerald-400 font-bold">{b.rate}%</span>
-                  </div>
-                  <div className="w-full h-1.5 rounded-full bg-white/10 overflow-hidden">
-                    <div className="h-full bg-emerald-400 rounded-full" style={{ width: `${b.rate}%` }}></div>
-                  </div>
+              <div className="pt-2 border-t border-[var(--border-subtle)] flex items-center justify-between">
+                <div>
+                  <div className="text-[9px] text-[var(--text-muted)] uppercase">Chi tiêu:</div>
+                  <div className="font-mono font-bold text-xs text-[var(--text-primary)]">{card.spendMonth}</div>
                 </div>
-              ))
-            ) : (
-              <div className="py-6 text-center text-xs text-[#64748b]">
-                Chưa có dữ liệu hiệu suất
+                <span className={`px-1.5 py-0.2 rounded text-[9px] font-medium border ${card.statusColor}`}>
+                  {card.status === 'ALERT_DUP' ? 'Quẹt đúp' : 'Hoạt động'}
+                </span>
               </div>
-            )}
-          </div>
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* Bottom Row Tables */}
-      <div className="grid grid-cols-12 gap-5">
-        {/* Table: Bot hoạt động gần đây */}
-        <div className="col-span-6 p-5 rounded-2xl bg-[#0c111e] border border-[rgba(255,255,255,0.08)] shadow-lg space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-white">Bot hoạt động gần đây</span>
-            <span className="text-[11px] text-purple-400 cursor-pointer">Xem tất cả</span>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead>
-                <tr className="text-[#64748b] border-b border-white/5 pb-2">
-                  <th className="pb-2">Tên bot</th>
-                  <th className="pb-2">Trạng thái</th>
-                  <th className="pb-2">Hội thoại</th>
-                  <th className="pb-2">Thành công</th>
-                  <th className="pb-2">Phản hồi</th>
+      {/* Customer Active Anomaly Queue */}
+      <div className="p-4 rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xs font-bold text-[var(--text-primary)] uppercase tracking-wider">
+            {language === 'vi' ? 'Hàng Đợi Sự Cố Bất Thường Của Bạn' : 'Your Active Anomaly & Dispute Queue'}
+          </h2>
+          <span className="text-xs font-mono text-rose-400 font-medium">4 Sự Cố</span>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead>
+              <tr className="border-b border-[var(--border-subtle)] text-[var(--text-muted)]">
+                <th className="pb-2.5 font-semibold uppercase text-[10px]">MÃ SỰ CỐ</th>
+                <th className="pb-2.5 font-semibold uppercase text-[10px]">TIÊU ĐỀ BẤT THƯỜNG</th>
+                <th className="pb-2.5 font-semibold uppercase text-[10px]">SỐ TIỀN</th>
+                <th className="pb-2.5 font-semibold uppercase text-[10px]">THẺ / TÀI KHOẢN</th>
+                <th className="pb-2.5 font-semibold uppercase text-[10px]">HẠN TRA SOÁT</th>
+                <th className="pb-2.5 font-semibold uppercase text-[10px]">TRẠNG THÁI</th>
+                <th className="pb-2.5 font-semibold uppercase text-[10px]">THAO TÁC</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[var(--border-subtle)]">
+              {customerAnomalies.map((anom) => (
+                <tr key={anom.id} className="hover:bg-[var(--bg-card-hover)] transition-colors">
+                  <td className="py-3 font-mono font-medium text-[var(--text-muted)]">{anom.id}</td>
+                  <td className="py-3">
+                    <div className="font-semibold text-[var(--text-primary)]">{anom.title}</div>
+                    <div className="text-[10px] text-[var(--text-muted)] font-mono">{anom.detectedAt}</div>
+                  </td>
+                  <td className="py-3 font-mono font-bold text-[var(--text-primary)]">{anom.amount}</td>
+                  <td className="py-3 font-mono text-[var(--text-secondary)]">{anom.card}</td>
+                  <td className="py-3 font-mono text-[var(--text-muted)]">{anom.deadline}</td>
+                  <td className="py-3">
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-medium border ${anom.badgeStyle}`}>
+                      {anom.badge}
+                    </span>
+                  </td>
+                  <td className="py-3">
+                    <button className="px-2.5 py-1 rounded-lg bg-[var(--bg-secondary)] hover:bg-[var(--bg-card)] text-[var(--text-primary)] font-medium text-[11px] border border-[var(--border-subtle)] transition-colors flex items-center gap-1">
+                      <span>{anom.actionPrompt}</span>
+                      <ArrowRight className="w-3 h-3" />
+                    </button>
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5">
-                {RECENT_BOTS.length > 0 ? (
-                  RECENT_BOTS.map((row, rIdx) => (
-                    <tr key={rIdx} className="hover:bg-white/5 transition-colors">
-                      <td className="py-2.5 font-medium text-white">{row.name}</td>
-                      <td className="py-2.5">
-                        <span
-                          className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
-                            row.status === 'Hoạt động'
-                              ? 'bg-emerald-500/20 text-emerald-300'
-                              : 'bg-amber-500/20 text-amber-300'
-                          }`}
-                        >
-                          {row.status}
-                        </span>
-                      </td>
-                      <td className="py-2.5 text-[#94a3b8]">{row.total}</td>
-                      <td className="py-2.5 text-emerald-400 font-semibold">{row.succ}</td>
-                      <td className="py-2.5 text-[#94a3b8]">{row.latency}</td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={5} className="py-8 text-center text-xs text-[#64748b]">
-                      Chưa có lịch sử hoạt động
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Table: Người dùng mới */}
-        <div className="col-span-4 p-5 rounded-2xl bg-[#0c111e] border border-[rgba(255,255,255,0.08)] shadow-lg space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-white">Người dùng mới</span>
-            <span className="text-[11px] text-purple-400 cursor-pointer">Xem tất cả</span>
-          </div>
-          <div className="space-y-2.5 text-xs">
-            {NEW_USERS.length > 0 ? (
-              NEW_USERS.map((u, uIdx) => (
-                <div key={uIdx} className="flex items-center justify-between p-2 rounded-lg bg-[#131b2e] border border-white/5">
-                  <div>
-                    <div className="text-white font-medium">{u.email}</div>
-                    <div className="text-[10px] text-[#94a3b8]">{u.bot} • {u.channel}</div>
-                  </div>
-                  <span className="text-[10px] text-[#64748b]">{u.time}</span>
-                </div>
-              ))
-            ) : (
-              <div className="py-8 text-center text-xs text-[#64748b]">
-                Chưa có người dùng mới
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* List: Cảnh báo gần đây */}
-        <div className="col-span-2 p-5 rounded-2xl bg-[#0c111e] border border-[rgba(255,255,255,0.08)] shadow-lg space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-white">Cảnh báo gần đây</span>
-          </div>
-          <div className="space-y-2 text-[11px]">
-            <div className="p-2 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-300 space-y-0.5">
-              <div className="font-semibold flex items-center gap-1">
-                <AlertTriangle className="w-3 h-3 text-rose-400" /> Tỷ lệ lỗi bot Legal
-              </div>
-              <div className="text-[10px] text-[#94a3b8]">2 phút trước</div>
-            </div>
-            <div className="p-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-300 space-y-0.5">
-              <div className="font-semibold flex items-center gap-1">
-                <Clock className="w-3 h-3 text-amber-400" /> API OpenAI chậm
-              </div>
-              <div className="text-[10px] text-[#94a3b8]">8 phút trước</div>
-            </div>
-            <div className="p-2 rounded-lg bg-purple-500/10 border border-purple-500/20 text-purple-300 space-y-0.5">
-              <div className="font-semibold flex items-center gap-1">
-                <CheckCircle2 className="w-3 h-3 text-purple-400" /> Backup hoàn tất
-              </div>
-              <div className="text-[10px] text-[#94a3b8]">30 phút trước</div>
-            </div>
-          </div>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

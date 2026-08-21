@@ -1,12 +1,15 @@
 import React from 'react';
-import { Shield, Bot, LayoutDashboard } from 'lucide-react';
+import { ShieldCheck, Bot, LayoutDashboard, Sun, Moon, Globe, Lock, Activity } from 'lucide-react';
 import { AppMode, Language } from '../../types';
+import { TRANSLATIONS } from '../../data/translations';
 
 interface HeaderProps {
   appMode: AppMode;
   setAppMode: (mode: AppMode) => void;
   language: Language;
   setLanguage: (lang: Language) => void;
+  theme: 'dark' | 'light';
+  setTheme: (theme: 'dark' | 'light') => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -14,61 +17,104 @@ export const Header: React.FC<HeaderProps> = ({
   setAppMode,
   language,
   setLanguage,
+  theme,
+  setTheme,
 }) => {
+  const t = TRANSLATIONS[language];
+
   return (
-    <header className="h-14 border-b border-[rgba(255,255,255,0.08)] bg-[#090e1a]/90 backdrop-blur-md px-5 flex items-center justify-between z-30 sticky top-0">
+    <header className="h-16 border-b border-[var(--border-subtle)] bg-[var(--bg-header)] backdrop-blur-md px-6 flex items-center justify-between z-30 sticky top-0 transition-colors">
+      {/* Left: Wealify Brand Logo */}
       <div className="flex items-center gap-3">
-        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 via-purple-600 to-cyan-400 flex items-center justify-center shadow-lg shadow-purple-500/20">
-          <Shield className="w-5 h-5 text-white" />
+        <div className="w-8 h-8 rounded-lg bg-[#FC6508] flex items-center justify-center text-white shrink-0 shadow-sm">
+          <ShieldCheck className="w-5 h-5 stroke-[2.2]" />
         </div>
         <div className="flex items-center gap-2">
-          <span className="font-extrabold text-base tracking-wider bg-gradient-to-r from-white via-slate-200 to-indigo-300 bg-clip-text text-transparent">
-            WEALIFY GUARDIAN
+          <span className="font-bold text-base tracking-tight text-[var(--text-primary)]">
+            WEALIFY <span className="text-[#FC6508]">GUARDIAN</span>
           </span>
-          <span className="text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">
-            WLF-01 Copilot
+          <span className="text-[10px] text-[var(--text-muted)] font-mono border border-[var(--border-subtle)] px-1.5 py-0.5 rounded">
+            v2.4
           </span>
         </div>
       </div>
 
-      {/* Center Mode Switcher Tabs */}
-      <div className="flex items-center bg-[#060913] p-1 rounded-xl border border-[rgba(255,255,255,0.08)]">
+      {/* Center: Unified Mode Switcher Segmented Control */}
+      <div className="flex items-center bg-[var(--bg-input)] p-1 rounded-xl border border-[var(--border-subtle)]">
         <button
           onClick={() => setAppMode('user_copilot')}
           className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
             appMode === 'user_copilot'
-              ? 'bg-[#3b2a6f] text-white shadow-md shadow-purple-900/40 border border-purple-500/40'
-              : 'text-[#94a3b8] hover:text-white'
+              ? 'bg-[#FC6508] text-white shadow-sm'
+              : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
           }`}
         >
-          <Bot className="w-4 h-4 text-purple-400" />
-          <span>Khách hàng (User Copilot)</span>
+          <Bot className="w-3.5 h-3.5" />
+          <span>{language === 'vi' ? 'Chatbot Copilot' : 'Chatbot Copilot'}</span>
         </button>
         <button
           onClick={() => setAppMode('ops_console')}
           className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
             appMode === 'ops_console'
-              ? 'bg-[#3b2a6f] text-white shadow-md shadow-purple-900/40 border border-purple-500/40'
-              : 'text-[#94a3b8] hover:text-white'
+              ? 'bg-[#FC6508] text-white shadow-sm'
+              : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
           }`}
         >
-          <LayoutDashboard className="w-4 h-4 text-cyan-400" />
-          <span>Wealify Operations &amp; Security Center</span>
+          <LayoutDashboard className="w-3.5 h-3.5" />
+          <span>{language === 'vi' ? 'Security Center' : 'Security Center'}</span>
         </button>
       </div>
 
-      {/* Right Status Controls */}
-      <div className="flex items-center gap-3">
+      {/* Right Controls: FX Rate, Theme Toggle, VI/EN */}
+      <div className="flex items-center gap-2.5">
+        {/* FX Reference Badge */}
+        <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[var(--bg-card)] border border-[var(--border-subtle)] text-xs font-mono text-[var(--text-secondary)]">
+          <Globe className="w-3 h-3 text-[var(--text-muted)]" />
+          <span>$1 = 25,400₫</span>
+        </div>
+
+        {/* Read-Only Safety Guard Pill */}
+        <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[var(--bg-card)] border border-[var(--border-subtle)] text-xs font-medium text-[var(--text-secondary)]">
+          <Lock className="w-3 h-3 text-[#FC6508]" />
+          <span>Read-Only Guard</span>
+        </div>
+
+        {/* Dark / Light Mode Toggle Button */}
         <button
-          onClick={() => setLanguage(language === 'vi' ? 'en' : 'vi')}
-          className="px-2.5 py-1 rounded-md text-xs font-medium bg-white/5 hover:bg-white/10 border border-white/10 text-[#94a3b8] hover:text-white transition-colors"
+          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+          title={theme === 'dark' ? t.lightMode : t.darkMode}
+          aria-label="Toggle Theme"
+          className="p-1.5 rounded-lg bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
         >
-          {language === 'vi' ? 'VN' : 'EN'}
+          {theme === 'dark' ? (
+            <Sun className="w-4 h-4 text-[var(--text-secondary)]" />
+          ) : (
+            <Moon className="w-4 h-4 text-[var(--text-secondary)]" />
+          )}
         </button>
 
-        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-medium">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span>API Online</span>
+        {/* VI / EN Language Switcher */}
+        <div className="flex items-center bg-[var(--bg-input)] p-0.5 rounded-lg border border-[var(--border-subtle)] text-xs font-bold">
+          <button
+            onClick={() => setLanguage('vi')}
+            className={`px-2 py-0.5 rounded transition-colors ${
+              language === 'vi'
+                ? 'bg-[#FC6508] text-white'
+                : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
+            }`}
+          >
+            VI
+          </button>
+          <button
+            onClick={() => setLanguage('en')}
+            className={`px-2 py-0.5 rounded transition-colors ${
+              language === 'en'
+                ? 'bg-[#FC6508] text-white'
+                : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
+            }`}
+          >
+            EN
+          </button>
         </div>
       </div>
     </header>

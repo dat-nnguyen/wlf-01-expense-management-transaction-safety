@@ -92,3 +92,52 @@ export interface RelatedTransaction {
   badgeStyle: string;
   isAlert?: boolean;
 }
+
+export interface BotMetricItem {
+  id: string;
+  name: string;
+  engine: string;
+  category: string;
+  requests: number;
+  successRate: number;
+  groundingRate: number;
+  avgLatency: number;
+  p95Latency: number;
+  tokensUsed: string;
+  blockedMutations: number;
+  status: 'optimal' | 'good' | 'warning';
+  description: string;
+}
+
+export interface IntentAnalyticsItem {
+  intent: string;
+  label: string;
+  percentage: number;
+  count: number;
+  color: string;
+  tool: string;
+}
+
+export interface ExecutionLogItem {
+  id: string;
+  timestamp: string;
+  userPrompt: string;
+  intent: string;
+  toolCalled: string;
+  latencyMs: number;
+  groundingVerified: boolean;
+  policyDecision: 'ALLOW' | 'DENY';
+}
+
+export interface EmailNotificationLogItem {
+  id: string;
+  recipient_email: string;
+  recipient_role: string;
+  subject: string;
+  alert_type: string;
+  severity: string;
+  html_content: string;
+  summary: string;
+  sent_at: string;
+  status: string;
+}
