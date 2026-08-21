@@ -347,7 +347,7 @@ class TransactionAuthenticityEngine:
         email_matched = False
         matched_email: Optional[EmailEvidence] = None
         for em in all_emails:
-            if abs(em.amount - claim.claimed_amount) < 0.01 or (claim.reference and claim.reference.lower() in em.body_snippet.lower()):
+            if (em.amount is not None and abs(em.amount - claim.claimed_amount) < 0.01) or (claim.reference and claim.reference.lower() in (em.body_snippet or "").lower()):
                 email_matched = True
                 matched_email = em
                 break

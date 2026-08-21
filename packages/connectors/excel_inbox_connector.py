@@ -5,6 +5,7 @@ supporting all 3 user personas (wealifytester, wealifyjunior, wealifysenior).
 """
 
 import os
+import re
 from datetime import datetime, timezone
 from typing import Dict, List, Optional
 import pandas as pd
@@ -67,6 +68,11 @@ class ExcelInboxConnector(BaseEmailSource):
                     body = str(row.get("body", ""))
                     matched_txn = str(row.get("matched_txn_id", "")) if pd.notna(row.get("matched_txn_id")) else None
 
+                    amt_match = re.search(r"(?:USD|\$)\s*([\d,]+\.?\d*)", f"{body} {snippet}")
+                    if not amt_match:
+                        amt_match = re.search(r"([\d,]+\.?\d*)\s*(?:USD|\$)", f"{body} {snippet}")
+                    amt = float(amt_match.group(1).replace(",", "")) if amt_match else None
+
                     merchant = str(row.get("from", "Unknown"))
                     if "payoneer" in merchant.lower():
                         merchant = "Payoneer Payouts"
@@ -88,6 +94,8 @@ class ExcelInboxConnector(BaseEmailSource):
                             sender=str(row.get("from", "")),
                             subject=str(row.get("subject", "")),
                             merchant=merchant,
+                            amount=amt,
+                            currency="USD",
                             body_snippet=snippet or body[:200],
                             email_type=email_type,
                             payout_ref=matched_txn,

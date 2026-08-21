@@ -16,7 +16,7 @@ class SearchTransactionsTool(BaseTool):
     async def execute(self, context: ToolContext, arguments: Dict[str, Any]) -> ToolResult:
         start = time.perf_counter()
         query = arguments.get("query", "").lower().strip()
-        limit = arguments.get("limit", 50)
+        limit = arguments.get("limit", 15)
 
         acc_id = context.account_id or "acc_main"
         txs = await self.source.get_transactions(account_id=acc_id, limit=limit)
