@@ -216,7 +216,9 @@ class MockLLMProvider(BaseLLMProvider):
             if txs:
                 lines = [f"🔎 **Tìm thấy {len(txs)} giao dịch liên quan:**\n"]
                 for t in txs:
-                    lines.append(f"• `{t.get('date')}` | **{t.get('merchant')}**: ${t.get('amount', 0):.2f} ({t.get('source')})")
+                    date_str = str(t.get('occurred_at') or t.get('date') or '')[:10]
+                    merchant_name = t.get('merchant_normalized') or t.get('merchant_raw') or t.get('merchant') or 'Giao dịch'
+                    lines.append(f"• `{date_str}` | **{merchant_name}**: ${t.get('amount', 0):.2f} USD ({t.get('source', 'card')})")
                 text = "\n".join(lines)
             else:
                 text = "Không tìm thấy giao dịch nào phù hợp với từ khóa của bạn."
