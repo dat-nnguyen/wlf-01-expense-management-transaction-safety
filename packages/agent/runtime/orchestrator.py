@@ -79,25 +79,34 @@ class AgentOrchestrator:
         session_id: str = "ses_default",
         account_id: str = "acc_main",
         user_email: str = "founder@wealify.io",
+        language: str = "vi",
     ) -> AgentRunResult:
         run_id = f"run_{uuid.uuid4().hex[:10]}"
         steps: List[ExecutionStep] = []
-        logger.info(f"[{run_id}] Agent Run Started: '{user_message}'")
+        logger.info(f"[{run_id}] Agent Run Started: '{user_message}' (lang={language})")
 
         # 1. State: RECEIVED
-        steps.append(ExecutionStep(step_name="RECEIVED", status="SUCCESS", details={"user_message": user_message}))
+        steps.append(ExecutionStep(step_name="RECEIVED", status="SUCCESS", details={"user_message": user_message, "language": language}))
 
         # 2. State: CLASSIFIED (Input Guardrail Check)
         is_safe, action, reason = InputGuardrail.validate_user_message(user_message)
         if not is_safe:
             logger.warning(f"[{run_id}] Blocked by Input Guardrail: {reason}")
             steps.append(ExecutionStep(step_name="POLICY_DENIED", status="BLOCKED", details={"reason": reason}))
-            policy_text = (
-                "⚠️ **Chính sách an toàn tài chính (Policy Denied):**\n"
-                "Wealify Guardian hoạt động ở chế độ **Read-Only** nhằm bảo vệ an toàn tài sản của bạn. "
-                "Hệ thống không được phép trực tiếp chuyển tiền, thay đổi số dư hoặc liên hệ ngân hàng thay bạn.\n\n"
-                "💡 **Khuyến nghị:** Bạn có thể tự thực hiện thao tác này trực tiếp trên ứng dụng ngân hàng hoặc trang quản lý của nhà cung cấp."
-            )
+            if language == "en":
+                policy_text = (
+                    "⚠️ **Financial Safety Policy (Policy Denied):**\n"
+                    "Wealify Guardian operates in **Read-Only** mode to safeguard your financial assets. "
+                    "The system is strictly not permitted to directly transfer money, modify balances, or contact banks on your behalf.\n\n"
+                    "💡 **Recommendation:** You can perform this action directly within your banking application or the merchant's customer portal."
+                )
+            else:
+                policy_text = (
+                    "⚠️ **Chính sách an toàn tài chính (Policy Denied):**\n"
+                    "Wealify Guardian hoạt động ở chế độ **Read-Only** nhằm bảo vệ an toàn tài sản của bạn. "
+                    "Hệ thống không được phép trực tiếp chuyển tiền, thay đổi số dư hoặc liên hệ ngân hàng thay bạn.\n\n"
+                    "💡 **Khuyến nghị:** Bạn có thể tự thực hiện thao tác này trực tiếp trên ứng dụng ngân hàng hoặc trang quản lý của nhà cung cấp."
+                )
             return AgentRunResult(
                 run_id=run_id,
                 session_id=session_id,
@@ -199,7 +208,7 @@ class AgentOrchestrator:
         conv_context = session_memory.get_formatted_context(session_id)
         steps.append(ExecutionStep(step_name="EVIDENCE_CHECK", status="SUCCESS", details={"evidence_count": len(tool_data), "rag_active": bool(rag_context)}))
 
-        # 6. State: RESPONSE_GENERATION (with Memory Context & RAG Grounding)
+        # 6. State: RESPONSE_GENERATION (with Memory Context & RAG Grounding & Language)
         enriched_prompt = user_message
         if conv_context:
             enriched_prompt = f"{conv_context}\n\n{enriched_prompt}"
@@ -215,6 +224,7 @@ class AgentOrchestrator:
                 "rag_context": rag_context,
                 "email_dispatched": email_dispatched,
                 "recipient_email": user_email,
+                "language": language,
             },
         )
         metrics_tracker.record_tokens(llm_response.prompt_tokens, llm_response.completion_tokens)
