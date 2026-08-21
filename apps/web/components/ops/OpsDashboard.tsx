@@ -1,16 +1,28 @@
 import React from 'react';
 import {
-  CreditCard,
+  Activity,
+  Bot,
+  Zap,
+  ShieldCheck,
+  ShieldAlert,
   Clock,
   CheckCircle2,
-  Mail,
-  DollarSign,
+  TrendingUp,
+  Cpu,
+  Layers,
+  ArrowUpRight,
   AlertTriangle,
   ArrowRight,
-  ShieldCheck,
+  Database,
+  Search,
+  Check,
 } from 'lucide-react';
 import { Language } from '../../types';
 import { TRANSLATIONS } from '../../data/translations';
+import {
+  BOT_METRIC_ITEMS,
+  INTENT_ANALYTICS,
+} from '../../data/mockData';
 
 interface OpsDashboardProps {
   language: Language;
@@ -19,297 +31,314 @@ interface OpsDashboardProps {
 export const OpsDashboard: React.FC<OpsDashboardProps> = ({ language }) => {
   const t = TRANSLATIONS[language];
 
-  // Specific Customer Profile Data (The User Themselves)
-  const targetCustomer = {
-    id: 'acc_main',
-    name: 'Dat Nguyen',
-    company: 'Volcano Ecom LLC',
-    email: 'founder@wealify.io',
-    tier: 'Wealify Pro Seller',
-    registeredDate: '15/01/2025',
-    availableBalance: 128490.5,
-    creditLimit: 250000.0,
-    riskScore: 92,
-    riskLevel: 'Cần bạn tự xác nhận',
-  };
-
-  // Virtual Cards for this specific customer
-  const customerCards = [
+  // System-wide Incident Queue for Admin
+  const systemIncidents = [
     {
-      id: 'vcard_ad_fb',
-      name: 'Volcano Ads Facebook',
-      number: '•••• 4812',
-      bank: 'VPBank Virtual',
-      spendMonth: '$15,480.00',
-      status: 'ALERT_DUP',
-      statusLabel: 'Quẹt đúp ($150 x 2)',
-      statusColor: 'bg-rose-500/15 text-rose-400 border-rose-500/25',
-    },
-    {
-      id: 'vcard_tiktok',
-      name: 'Volcano TikTok Ads',
-      number: '•••• 9102',
-      bank: 'VPBank Virtual',
-      spendMonth: '$8,240.00',
-      status: 'OPTIMAL',
-      statusLabel: 'Hoạt động',
-      statusColor: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-    },
-    {
-      id: 'vcard_aws',
-      name: 'AWS Cloud & Infra',
-      number: '•••• 3341',
-      bank: 'VPBank Virtual',
-      spendMonth: '$890.00',
-      status: 'OPTIMAL',
-      statusLabel: 'Hoạt động',
-      statusColor: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-    },
-    {
-      id: 'vcard_dhl',
-      name: 'DHL Global Logistics',
-      number: '•••• 7712',
-      bank: 'VPBank Virtual',
-      spendMonth: '$3,150.00',
-      status: 'OPTIMAL',
-      statusLabel: 'Hoạt động',
-      statusColor: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-    },
-  ];
-
-  // Specific customer's active anomalies
-  const customerAnomalies = [
-    {
-      id: 'AN-2026-08-01',
+      id: 'SEC-2026-0801',
+      user: 'Dat Nguyen (Volcano Ecom LLC - acc_main)',
       title: 'Quẹt đúp thẻ ảo Facebook Ads ($150.00 x 2)',
       category: 'CÀ THẺ TRÙNG LẶP',
       amount: '$150.00 USD',
       detectedAt: '15:47 (Hôm nay)',
-      deadline: 'Còn 42 ngày',
       card: 'Thẻ Volcano Ads •••• 4812',
-      badge: 'Cần xác nhận',
-      badgeStyle: 'bg-rose-500/15 text-rose-400 border-rose-500/25',
-      actionPrompt: 'Gửi tra soát hoàn tiền VPBank',
+      risk: 'Cần xác nhận',
+      riskStyle: 'bg-rose-500/15 text-rose-400 border-rose-500/25',
+      botAgent: 'Duplicate Detector Agent',
     },
     {
-      id: 'AN-2026-08-02',
+      id: 'SEC-2026-0802',
+      user: 'Dat Nguyen (Volcano Ecom LLC - acc_main)',
+      title: 'Payout sàn Amazon chậm trễ 16 ngày',
+      category: 'PAYOUT TRỄ HẠN',
+      amount: '$4,250.00 USD',
+      detectedAt: '09:15 (Hôm nay)',
+      card: 'Ví Wealify USD',
+      risk: 'Khẩn cấp',
+      riskStyle: 'bg-[#FC6508]/15 text-[#FC6508] border-[#FC6508]/25',
+      botAgent: 'Payout Radar Sentinel',
+    },
+    {
+      id: 'SEC-2026-0803',
+      user: 'Dat Nguyen (Volcano Ecom LLC - acc_main)',
+      title: 'Giám định ảnh chuyển khoản $2,500 không khớp sổ cái',
+      category: 'CHỨNG TỪ XUNG ĐỘT',
+      amount: '$2,500.00 USD',
+      detectedAt: 'Hôm qua',
+      card: 'Ref: WF-839291',
+      risk: 'Rủi ro 92/100',
+      riskStyle: 'bg-rose-500/15 text-rose-400 border-rose-500/25',
+      botAgent: 'Authenticity Forensic Engine',
+    },
+    {
+      id: 'SEC-2026-0804',
+      user: 'Alex Tran (Global Dropship Ltd - acc_02)',
       title: 'Thuê bao Adobe Creative Cloud tăng giá +10.0%',
       category: 'SUBSCRIPTION HIKE',
       amount: '$54.99 USD/tháng',
       detectedAt: '14:20 (Hôm nay)',
-      deadline: 'Còn 60 ngày',
       card: 'Tài khoản chính',
-      badge: 'Đã xác định',
-      badgeStyle: 'bg-amber-500/15 text-amber-400 border-amber-500/25',
-      actionPrompt: 'Xem đề xuất đàm phán tier',
-    },
-    {
-      id: 'AN-2026-08-03',
-      title: 'Payout sàn Amazon chậm trễ 16 ngày',
-      category: 'PAYOUT QUÁ HẠN',
-      amount: '$4,250.00 USD',
-      detectedAt: '09:15 (Hôm nay)',
-      deadline: 'Trễ 16 ngày',
-      card: 'Ví Wealify USD',
-      badge: 'Khẩn cấp',
-      badgeStyle: 'bg-rose-500/15 text-rose-400 border-rose-500/25',
-      actionPrompt: 'Gửi ticket MT103 tới Amazon',
-    },
-    {
-      id: 'AN-2026-08-04',
-      title: 'Giám định ảnh chuyển khoản $2,500 không khớp sổ cái',
-      category: 'AUTHENTICITY CONFLICT',
-      amount: '$2,500.00 USD',
-      detectedAt: 'Hôm qua',
-      deadline: 'Xung đột 92/100',
-      card: 'Ref: WF-839291',
-      badge: 'Rủi ro cao',
-      badgeStyle: 'bg-rose-500/15 text-rose-400 border-rose-500/25',
-      actionPrompt: 'Xem bằng chứng đối soát',
+      risk: 'Đã xác định',
+      riskStyle: 'bg-amber-500/15 text-amber-400 border-amber-500/25',
+      botAgent: 'Subscription Price Hike Radar',
     },
   ];
 
   return (
     <div className="p-6 space-y-5 transition-colors min-h-0 overflow-y-auto">
-      {/* Customer Header Identity Card */}
-      <div className="p-4 rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] space-y-2">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-subtle)] flex items-center justify-center text-[var(--text-primary)] font-bold text-sm font-mono shrink-0">
-              DN
-            </div>
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-sm font-bold text-[var(--text-primary)]">
-                  {targetCustomer.name}
-                </h1>
-                <span className="text-xs text-[var(--text-muted)] font-normal">({targetCustomer.company})</span>
-                <span className="badge-wealify-orange text-[10px] font-medium px-2 py-0.2 rounded">
-                  {targetCustomer.tier}
-                </span>
-                <span className="px-2 py-0.2 rounded bg-[var(--bg-secondary)] text-[var(--text-muted)] text-[10px] font-mono border border-[var(--border-subtle)]">
-                  Account ID: {targetCustomer.id}
-                </span>
-              </div>
-              <div className="text-[11px] text-[var(--text-muted)] font-mono mt-0.5">
-                Email nhận cảnh báo: <span className="text-[var(--text-primary)] font-medium">{targetCustomer.email}</span> • Ngày đăng ký: {targetCustomer.registeredDate}
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <div className="p-2 px-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-right">
-              <div className="text-[10px] text-rose-400 font-medium uppercase">
-                {language === 'vi' ? 'Điểm an toàn tài khoản' : 'Account Safety Score'}
-              </div>
-              <div className="text-base font-bold text-rose-400 font-mono">
-                {targetCustomer.riskScore}/100 <span className="text-xs font-normal">({targetCustomer.riskLevel})</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* 5 Personal KPI Cards */}
+      {/* 5 Global System & Bot Health Telemetry KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-3.5">
-        {/* KPI 1: Available Balance */}
+        {/* KPI 1: System Reliability / Health */}
         <div className="p-3.5 rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] space-y-1">
           <div className="flex items-center justify-between text-xs text-[var(--text-muted)]">
-            <span className="font-medium">{language === 'vi' ? 'Số Dư Khả Dụng' : 'Available Balance'}</span>
-            <DollarSign className="w-3.5 h-3.5 text-[var(--text-muted)]" />
+            <span className="font-medium">{t.systemHealth}</span>
+            <Activity className="w-3.5 h-3.5 text-emerald-400" />
           </div>
-          <div className="text-xl font-bold text-[var(--text-primary)] tracking-tight font-mono">
-            ${targetCustomer.availableBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-          </div>
-          <div className="text-[10px] text-[var(--text-muted)] font-mono">
-            ≈ 3.26 Tỷ VNĐ (Hạn mức $250k)
-          </div>
+          <div className="text-xl font-bold text-emerald-400 tracking-tight font-mono">99.8%</div>
+          <div className="text-[10px] text-[var(--text-muted)] font-mono">{t.latencyAvg}</div>
         </div>
 
-        {/* KPI 2: Active Anomalies */}
+        {/* KPI 2: Total AI Invocations */}
         <div className="p-3.5 rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] space-y-1">
           <div className="flex items-center justify-between text-xs text-[var(--text-muted)]">
-            <span className="font-medium">{language === 'vi' ? 'Sự Cố Cần Bạn Xác Nhận' : 'Pending Anomalies'}</span>
-            <AlertTriangle className="w-3.5 h-3.5 text-rose-400" />
+            <span className="font-medium">{t.totalConversations}</span>
+            <Zap className="w-3.5 h-3.5 text-[#FC6508]" />
           </div>
-          <div className="text-xl font-bold text-rose-400 tracking-tight font-mono">3 Sự Cố</div>
-          <div className="text-[10px] text-[var(--text-muted)] font-medium">
-            1 Quẹt đúp, 1 Payout, 1 Tăng giá
-          </div>
+          <div className="text-xl font-bold text-[var(--text-primary)] tracking-tight font-mono">128,450</div>
+          <div className="text-[10px] text-emerald-400 font-medium">{t.vs7DaysAgo}</div>
         </div>
 
-        {/* KPI 3: Virtual Cards Fleet */}
+        {/* KPI 3: Active Bot Fleet */}
         <div className="p-3.5 rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] space-y-1">
           <div className="flex items-center justify-between text-xs text-[var(--text-muted)]">
-            <span className="font-medium">{language === 'vi' ? 'Thẻ Ảo Hoạt Động' : 'Virtual Cards'}</span>
-            <CreditCard className="w-3.5 h-3.5 text-[var(--text-muted)]" />
+            <span className="font-medium">{t.activeBots}</span>
+            <Bot className="w-3.5 h-3.5 text-cyan-400" />
           </div>
-          <div className="text-xl font-bold text-[var(--text-primary)] tracking-tight font-mono">4 Thẻ Ảo</div>
-          <div className="text-[10px] text-[var(--text-muted)] font-medium">VPBank Virtual Card</div>
-        </div>
-
-        {/* KPI 4: Dispute Deadline Window */}
-        <div className="p-3.5 rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] space-y-1">
-          <div className="flex items-center justify-between text-xs text-[var(--text-muted)]">
-            <span className="font-medium">{language === 'vi' ? 'Hạn Tra Soát Gần Nhất' : 'Nearest Deadline'}</span>
-            <Clock className="w-3.5 h-3.5 text-[var(--text-muted)]" />
-          </div>
-          <div className="text-xl font-bold text-[var(--text-primary)] tracking-tight font-mono">Còn 42 Ngày</div>
-          <div className="text-[10px] text-[var(--text-muted)] font-mono">Hạn chót: 17/10/2026 (Luật 60 ngày)</div>
-        </div>
-
-        {/* KPI 5: Dispatched Alerts */}
-        <div className="p-3.5 rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] space-y-1">
-          <div className="flex items-center justify-between text-xs text-[var(--text-muted)]">
-            <span className="font-medium">{language === 'vi' ? 'Email Cảnh Báo Đã Gửi' : 'Email Alerts Sent'}</span>
-            <Mail className="w-3.5 h-3.5 text-[var(--text-muted)]" />
-          </div>
-          <div className="text-xl font-bold text-[var(--text-primary)] tracking-tight font-mono">3 Email</div>
+          <div className="text-xl font-bold text-cyan-400 tracking-tight font-mono">12 Agents</div>
           <div className="text-[10px] text-emerald-400 font-medium flex items-center gap-1">
             <CheckCircle2 className="w-3 h-3" />
-            <span>Gửi tới founder@wealify.io</span>
+            <span>{t.outOfTotalBots}</span>
           </div>
         </div>
-      </div>
 
-      {/* Your Virtual Cards Fleet Matrix */}
-      <div className="p-4 rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xs font-bold text-[var(--text-primary)] uppercase tracking-wider">
-            {language === 'vi' ? 'Danh Sách Thẻ Ảo & Ví Của Bạn' : 'Your Virtual Cards & Wallets'}
-          </h2>
-          <span className="text-[11px] font-mono text-[var(--text-muted)]">4 Thẻ VPBank</span>
+        {/* KPI 4: Grounding Fidelity */}
+        <div className="p-3.5 rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] space-y-1">
+          <div className="flex items-center justify-between text-xs text-[var(--text-muted)]">
+            <span className="font-medium">{language === 'vi' ? 'Độ chuẩn xác số học' : 'Grounding Fidelity'}</span>
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+          </div>
+          <div className="text-xl font-bold text-emerald-400 tracking-tight font-mono">100.0%</div>
+          <div className="text-[10px] text-[var(--text-muted)] font-medium">Zero Hallucination Rate</div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-          {customerCards.map((card) => (
-            <div
-              key={card.id}
-              className="p-3 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-subtle)] space-y-2"
-            >
-              <div className="flex items-center justify-between">
-                <span className="font-mono text-xs font-bold text-[var(--text-primary)]">{card.number}</span>
-                <CreditCard className="w-3.5 h-3.5 text-[var(--text-muted)]" />
-              </div>
-              <div>
-                <div className="font-semibold text-xs text-[var(--text-primary)] truncate">{card.name}</div>
-                <div className="text-[10px] text-[var(--text-muted)]">{card.bank}</div>
-              </div>
-              <div className="pt-2 border-t border-[var(--border-subtle)] flex items-center justify-between">
-                <div>
-                  <div className="text-[9px] text-[var(--text-muted)] uppercase">Chi tiêu:</div>
-                  <div className="font-mono font-bold text-xs text-[var(--text-primary)]">{card.spendMonth}</div>
-                </div>
-                <span className={`px-1.5 py-0.2 rounded text-[9px] font-medium border ${card.statusColor}`}>
-                  {card.status === 'ALERT_DUP' ? 'Quẹt đúp' : 'Hoạt động'}
-                </span>
-              </div>
-            </div>
-          ))}
+        {/* KPI 5: Policy Guardrail Blocks */}
+        <div className="p-3.5 rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] space-y-1">
+          <div className="flex items-center justify-between text-xs text-[var(--text-muted)]">
+            <span className="font-medium">{language === 'vi' ? 'Chặn ranh giới an toàn' : 'Guardrail Blocks'}</span>
+            <ShieldAlert className="w-3.5 h-3.5 text-rose-400" />
+          </div>
+          <div className="text-xl font-bold text-rose-400 tracking-tight font-mono">1.2%</div>
+          <div className="text-[10px] text-[var(--text-muted)] font-medium">Strict Read-Only Guard</div>
         </div>
       </div>
 
-      {/* Customer Active Anomaly Queue */}
+      {/* Section 1: Bot Fleet Health & Performance Matrix */}
       <div className="p-4 rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-xs font-bold text-[var(--text-primary)] uppercase tracking-wider">
-            {language === 'vi' ? 'Hàng Đợi Sự Cố Bất Thường Của Bạn' : 'Your Active Anomaly & Dispute Queue'}
-          </h2>
-          <span className="text-xs font-mono text-rose-400 font-medium">4 Sự Cố</span>
+          <div>
+            <h2 className="text-xs font-bold text-[var(--text-primary)] uppercase tracking-wider">
+              {t.botPerformanceTitle}
+            </h2>
+            <p className="text-xs text-[var(--text-muted)]">
+              {language === 'vi'
+                ? 'Giám sát thời gian thực trạng thái, tỷ lệ thành công, độ trễ và số lượng request của từng Agent'
+                : 'Real-time monitoring of status, success rate, latency, and throughput per AI Agent'}
+            </p>
+          </div>
+          <span className="text-xs font-mono text-emerald-400 font-medium bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full">
+            12/12 Online
+          </span>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="border-b border-[var(--border-subtle)] text-[var(--text-muted)]">
-                <th className="pb-2.5 font-semibold uppercase text-[10px]">MÃ SỰ CỐ</th>
-                <th className="pb-2.5 font-semibold uppercase text-[10px]">TIÊU ĐỀ BẤT THƯỜNG</th>
+                <th className="pb-2.5 font-semibold uppercase text-[10px]">{t.botName}</th>
+                <th className="pb-2.5 font-semibold uppercase text-[10px]">{t.status}</th>
+                <th className="pb-2.5 font-semibold uppercase text-[10px]">{t.totalRequests}</th>
+                <th className="pb-2.5 font-semibold uppercase text-[10px]">{t.successRate}</th>
+                <th className="pb-2.5 font-semibold uppercase text-[10px]">{t.latency}</th>
+                <th className="pb-2.5 font-semibold uppercase text-[10px]">ENGINE / MODEL</th>
+                <th className="pb-2.5 font-semibold uppercase text-[10px]">GIÁM SÁT</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[var(--border-subtle)]">
+              {BOT_METRIC_ITEMS.map((bot) => (
+                <tr key={bot.id} className="hover:bg-[var(--bg-card-hover)] transition-colors">
+                  <td className="py-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-7 h-7 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-subtle)] flex items-center justify-center text-[#FC6508]">
+                        <Bot className="w-3.5 h-3.5" />
+                      </div>
+                      <div>
+                        <div className="font-semibold text-[var(--text-primary)]">{bot.name}</div>
+                        <div className="text-[10px] text-[var(--text-muted)] font-mono">{bot.category}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="py-3">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                      {bot.status}
+                    </span>
+                  </td>
+                  <td className="py-3 font-mono font-bold text-[var(--text-primary)]">
+                    {bot.requests.toLocaleString()}
+                  </td>
+                  <td className="py-3 font-mono font-bold text-emerald-400">
+                    {bot.successRate}%
+                  </td>
+                  <td className="py-3 font-mono text-[var(--text-secondary)]">
+                    {bot.avgLatency}ms
+                  </td>
+                  <td className="py-3">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-[var(--bg-secondary)] text-[var(--text-secondary)] border border-[var(--border-subtle)]">
+                      {bot.engine}
+                    </span>
+                  </td>
+                  <td className="py-3">
+                    <span className="text-[10px] text-emerald-400 font-mono flex items-center gap-1">
+                      <Check className="w-3 h-3" />
+                      <span>Healthy</span>
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Section 2: Intent Routing Distribution & Telemetry Breakdown */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Intent Distribution */}
+        <div className="p-4 rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-bold text-[var(--text-primary)] uppercase tracking-wider">
+              {language === 'vi' ? 'Phân Bổ Ý Định (Intent Routing Accuracy)' : 'Intent Routing Breakdown'}
+            </h3>
+            <span className="text-[10px] font-mono text-[var(--text-muted)]">100% Zero-Leak</span>
+          </div>
+
+          <div className="space-y-2">
+            {INTENT_ANALYTICS.map((intent, idx) => (
+              <div key={idx} className="space-y-1">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-mono text-[11px] text-[var(--text-primary)]">{intent.intent}</span>
+                  <span className="font-mono text-[11px] text-[var(--text-secondary)]">
+                    {intent.percentage}% ({intent.count.toLocaleString()} reqs)
+                  </span>
+                </div>
+                <div className="w-full h-1.5 bg-[var(--bg-secondary)] rounded-full overflow-hidden border border-[var(--border-subtle)]">
+                  <div
+                    className="h-full bg-[#FC6508] rounded-full"
+                    style={{ width: `${intent.percentage}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Latency Percentiles & Boundary Safety */}
+        <div className="p-4 rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-bold text-[var(--text-primary)] uppercase tracking-wider">
+              {language === 'vi' ? 'Độ Trễ Phân Vị & Ranh Giới An Toàn' : 'Latency Percentiles & Policy'}
+            </h3>
+            <span className="text-[10px] font-mono text-emerald-400">Strict Read-Only</span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2.5">
+            <div className="p-3 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-subtle)] space-y-1">
+              <div className="text-[10px] text-[var(--text-muted)] uppercase font-mono">P50 (Median)</div>
+              <div className="text-lg font-bold font-mono text-emerald-400">120 ms</div>
+            </div>
+            <div className="p-3 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-subtle)] space-y-1">
+              <div className="text-[10px] text-[var(--text-muted)] uppercase font-mono">P90 Latency</div>
+              <div className="text-lg font-bold font-mono text-cyan-400">240 ms</div>
+            </div>
+            <div className="p-3 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-subtle)] space-y-1">
+              <div className="text-[10px] text-[var(--text-muted)] uppercase font-mono">P95 Latency</div>
+              <div className="text-lg font-bold font-mono text-amber-400">340 ms</div>
+            </div>
+            <div className="p-3 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-subtle)] space-y-1">
+              <div className="text-[10px] text-[var(--text-muted)] uppercase font-mono">P99 Tail Latency</div>
+              <div className="text-lg font-bold font-mono text-purple-400">580 ms</div>
+            </div>
+          </div>
+
+          <div className="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-[11px] text-emerald-400 flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4 shrink-0" />
+            <span>
+              {language === 'vi'
+                ? 'Bộ lọc Input/Output Guardrails đang hoạt động ở chế độ nghiêm ngặt'
+                : 'Input & Output Guardrails are actively enforcing Read-Only boundary'}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Section 3: System-Wide Security Incident Queue */}
+      <div className="p-4 rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] space-y-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xs font-bold text-[var(--text-primary)] uppercase tracking-wider">
+              {t.recentBotsTitle}
+            </h2>
+            <p className="text-xs text-[var(--text-muted)]">
+              {language === 'vi'
+                ? 'Các sự cố tài chính, quét thẻ đúp và đối soát chứng từ trên toàn hệ thống cần Admin kiểm toán'
+                : 'Active financial incidents, duplicate swipes, and conflicting receipts across all accounts'}
+            </p>
+          </div>
+          <span className="text-xs font-mono text-rose-400 font-medium bg-rose-500/10 border border-rose-500/20 px-2.5 py-0.5 rounded-full">
+            4 Sự Cố Cần Xử Lý
+          </span>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead>
+              <tr className="border-b border-[var(--border-subtle)] text-[var(--text-muted)]">
+                <th className="pb-2.5 font-semibold uppercase text-[10px]">MÃ CASE</th>
+                <th className="pb-2.5 font-semibold uppercase text-[10px]">TÀI KHOẢN KHÁCH HÀNG</th>
+                <th className="pb-2.5 font-semibold uppercase text-[10px]">SỰ CỐ AN NINH</th>
                 <th className="pb-2.5 font-semibold uppercase text-[10px]">SỐ TIỀN</th>
-                <th className="pb-2.5 font-semibold uppercase text-[10px]">THẺ / TÀI KHOẢN</th>
-                <th className="pb-2.5 font-semibold uppercase text-[10px]">HẠN TRA SOÁT</th>
-                <th className="pb-2.5 font-semibold uppercase text-[10px]">TRẠNG THÁI</th>
+                <th className="pb-2.5 font-semibold uppercase text-[10px]">AGENT PHÁT HIỆN</th>
+                <th className="pb-2.5 font-semibold uppercase text-[10px]">MỨC ĐỘ</th>
                 <th className="pb-2.5 font-semibold uppercase text-[10px]">THAO TÁC</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border-subtle)]">
-              {customerAnomalies.map((anom) => (
-                <tr key={anom.id} className="hover:bg-[var(--bg-card-hover)] transition-colors">
-                  <td className="py-3 font-mono font-medium text-[var(--text-muted)]">{anom.id}</td>
+              {systemIncidents.map((inc) => (
+                <tr key={inc.id} className="hover:bg-[var(--bg-card-hover)] transition-colors">
+                  <td className="py-3 font-mono font-medium text-[var(--text-muted)]">{inc.id}</td>
+                  <td className="py-3 font-semibold text-[var(--text-primary)]">{inc.user}</td>
                   <td className="py-3">
-                    <div className="font-semibold text-[var(--text-primary)]">{anom.title}</div>
-                    <div className="text-[10px] text-[var(--text-muted)] font-mono">{anom.detectedAt}</div>
+                    <div className="font-semibold text-[var(--text-primary)]">{inc.title}</div>
+                    <div className="text-[10px] text-[var(--text-muted)] font-mono">{inc.detectedAt}</div>
                   </td>
-                  <td className="py-3 font-mono font-bold text-[var(--text-primary)]">{anom.amount}</td>
-                  <td className="py-3 font-mono text-[var(--text-secondary)]">{anom.card}</td>
-                  <td className="py-3 font-mono text-[var(--text-muted)]">{anom.deadline}</td>
+                  <td className="py-3 font-mono font-bold text-[var(--text-primary)]">{inc.amount}</td>
+                  <td className="py-3 font-mono text-[var(--text-secondary)]">{inc.botAgent}</td>
                   <td className="py-3">
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-medium border ${anom.badgeStyle}`}>
-                      {anom.badge}
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-medium border ${inc.riskStyle}`}>
+                      {inc.risk}
                     </span>
                   </td>
                   <td className="py-3">
                     <button className="px-2.5 py-1 rounded-lg bg-[var(--bg-secondary)] hover:bg-[var(--bg-card)] text-[var(--text-primary)] font-medium text-[11px] border border-[var(--border-subtle)] transition-colors flex items-center gap-1">
-                      <span>{anom.actionPrompt}</span>
+                      <span>{language === 'vi' ? 'Kiểm toán' : 'Audit'}</span>
                       <ArrowRight className="w-3 h-3" />
                     </button>
                   </td>

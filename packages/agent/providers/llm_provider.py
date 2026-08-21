@@ -315,6 +315,10 @@ class UnifiedLLMProvider(BaseLLMProvider):
         system_prompt: Optional[str] = None,
         context: Optional[Dict[str, Any]] = None,
     ) -> LLMResponse:
+        # If disallowed mutation, return standard compliant policy response
+        if context and context.get("intent") == "DISALLOWED_MUTATION":
+            return await self.mock_fallback.generate(prompt, system_prompt, context)
+
         # If mock mode or missing API key, use safe mock generator
         if self.provider == "mock" or (not self.api_key and self.provider not in ["ollama", "local"]):
             if self.provider != "mock" and not self.api_key:

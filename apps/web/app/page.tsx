@@ -338,6 +338,8 @@ Wealify Guardian Financial Safety Team`,
               />
             ) : opsNav === 'notifications' ? (
               <EmailNotificationCenter language={language} />
+            ) : opsNav === 'bot_list' || opsNav === 'system_stats' ? (
+              <BotPerformanceDashboard language={language} />
             ) : (
               <OpsDashboard language={language} />
             )}
