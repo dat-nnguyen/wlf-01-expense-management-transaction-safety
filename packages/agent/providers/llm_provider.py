@@ -238,17 +238,22 @@ class MockLLMProvider(BaseLLMProvider):
         )
 
 
+MAINTENANCE_FALLBACK_TEXT = (
+    "🛠️ **Hệ thống AI đang bảo trì hoặc dịch vụ mô hình hiện không khả dụng.**\n\n"
+    "Vui lòng thử lại sau giây lát. Trong thời gian này, bạn vẫn có thể truy cập các tab "
+    "**Trung Tâm An Toàn**, **Cảnh Báo** và **Sao Kê Giao Dịch** để tự đối soát trực tiếp dữ liệu từ sổ cái Wealify."
+)
+
+
 class UnifiedLLMProvider(BaseLLMProvider):
     """
-    All-in-One LLM Provider supporting:
-    - OpenRouter (OpenRouter.ai: 200+ models with 1 key)
-    - OpenAI (GPT-4o, GPT-4o-mini, o1, o3-mini)
-    - Google Gemini (Gemini 1.5 Flash, 1.5 Pro, 2.0 Flash)
-    - Anthropic Claude (Claude 3.5 Sonnet, Claude 3 Haiku)
-    - Groq (Llama 3.3 70B, DeepSeek R1 Distill)
-    - DeepSeek (DeepSeek V3, DeepSeek R1)
-    - Ollama (Local offline models)
-    - Mock (Deterministic offline fallback)
+    Unified LLM Provider supporting:
+    - OpenRouter (Recommended for free/production multi-model access)
+    - Google Gemini (google-genai / Gemini 2.0 Flash)
+    - OpenAI
+    - Anthropic Claude
+    - Local Ollama
+    - Deterministic Mock (for testing)
     """
 
     def __init__(
@@ -258,36 +263,21 @@ class UnifiedLLMProvider(BaseLLMProvider):
         api_key: Optional[str] = None,
         base_url: Optional[str] = None,
     ):
-        self.provider = (provider or os.getenv("LLM_PROVIDER", "mock")).lower().strip()
-        self.model = model or os.getenv("LLM_MODEL") or self._default_model_for_provider()
+        self.provider = (provider or os.getenv("LLM_PROVIDER", "openrouter")).lower()
+        self.model = model or os.getenv("LLM_MODEL", "nvidia/nemotron-3.5-lightning:free")
         self.api_key = api_key or self._resolve_api_key()
         self.base_url = base_url or self._resolve_base_url()
         self.mock_fallback = MockLLMProvider()
 
-    def _default_model_for_provider(self) -> str:
-        defaults = {
-            "openrouter": "openai/gpt-4o-mini",
-            "openai": "gpt-4o-mini",
-            "gemini": "gemini-1.5-flash",
-            "google": "gemini-1.5-flash",
-            "claude": "claude-3-5-sonnet-20241022",
-            "anthropic": "claude-3-5-sonnet-20241022",
-            "groq": "llama-3.3-70b-versatile",
-            "deepseek": "deepseek-chat",
-            "ollama": "llama3",
-            "mock": "mock-guardian",
-        }
-        return defaults.get(self.provider, "openai/gpt-4o-mini")
-
     def _resolve_api_key(self) -> str:
         if self.provider == "openrouter":
-            return os.getenv("OPENROUTER_API_KEY") or os.getenv("OPENAI_API_KEY") or ""
+            return os.getenv("OPENROUTER_API_KEY") or ""
         elif self.provider in ["openai"]:
             return os.getenv("OPENAI_API_KEY") or ""
         elif self.provider in ["gemini", "google"]:
             return os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY") or ""
         elif self.provider in ["claude", "anthropic"]:
-            return os.getenv("ANTHROPIC_API_KEY") or os.getenv("CLAUDE_API_KEY") or ""
+            return os.getenv("ANTHROPIC_API_KEY") or ""
         elif self.provider == "groq":
             return os.getenv("GROQ_API_KEY") or ""
         elif self.provider == "deepseek":
@@ -313,11 +303,17 @@ class UnifiedLLMProvider(BaseLLMProvider):
         system_prompt: Optional[str] = None,
         context: Optional[Dict[str, Any]] = None,
     ) -> LLMResponse:
-        # If mock mode or missing API key, use safe mock generator
-        if self.provider == "mock" or (not self.api_key and self.provider not in ["ollama", "local"]):
-            if self.provider != "mock" and not self.api_key:
-                logger.warning(f"No API key provided for '{self.provider}'. Falling back to deterministic Mock provider.")
+        # If explicitly in mock testing mode, use mock generator
+        if self.provider == "mock":
             return await self.mock_fallback.generate(prompt, system_prompt, context)
+
+        # If missing API key in live mode, return maintenance message
+        if not self.api_key and self.provider not in ["ollama", "local"]:
+            logger.warning(f"No API key provided for '{self.provider}'. Returning maintenance status.")
+            return LLMResponse(
+                content=MAINTENANCE_FALLBACK_TEXT,
+                model="maintenance",
+            )
 
         # Build Financial Safety System Prompt
         sys_prompt = system_prompt or (
@@ -356,10 +352,16 @@ class UnifiedLLMProvider(BaseLLMProvider):
                 return await self._call_ollama(user_prompt, sys_prompt)
 
         except Exception as e:
-            logger.error(f"Error calling live LLM {self.provider} ({self.model}): {e}. Falling back to mock synthesis.")
-            return await self.mock_fallback.generate(prompt, system_prompt, context)
+            logger.error(f"Error calling live LLM {self.provider} ({self.model}): {e}. Returning maintenance status.")
+            return LLMResponse(
+                content=MAINTENANCE_FALLBACK_TEXT,
+                model="maintenance",
+            )
 
-        return await self.mock_fallback.generate(prompt, system_prompt, context)
+        return LLMResponse(
+            content=MAINTENANCE_FALLBACK_TEXT,
+            model="maintenance",
+        )
 
     async def _call_openai_compatible(self, prompt: str, system_prompt: Optional[str]) -> LLMResponse:
         messages: List[Dict[str, str]] = []
