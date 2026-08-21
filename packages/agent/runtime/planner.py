@@ -139,6 +139,21 @@ class IntentPlanner:
                 arguments={"time_window_hours": 48},
             )
 
+        # 9. Spending Surge & Category Spike Detection
+        if matches_any([
+            "đột biến", "dot bien", "bất thường", "bat thuong", "tiêu nhiều thế", "tieu nhieu the",
+            "tăng vọt", "tang vot", "spending surge", "surge", "surging", "spike", "spiking", "baseline",
+            "spending increase", "spending higher", "so với tuần trước", "so voi tuan truoc",
+            "so với tháng trước", "so voi thang truoc", "tại sao tuần này", "tai sao tuan nay",
+            "tại sao tháng này", "tai sao thang nay", "chi tiêu bất thường", "chi tieu bat thuong",
+            "chi tiêu đột biến", "chi tieu dot bien", "tăng đột biến", "tang dot bien", "tăng nhiều thế",
+        ]):
+            return ExecutionPlan(
+                intent="SPENDING_SURGE_INQUIRY",
+                target_tool="detect_spending_surges",
+                arguments={"window_days": 7},
+            )
+
         # 9. Email Match & Receipt Verification Inquiry
         if matches_any([
             "có email xác nhận không", "co email xac nhan khong", "có email không", "co email khong",

@@ -99,7 +99,7 @@ class DynamicFinancialSynthesizer:
             if is_en:
                 return (
                     "### 🛡️ Financial Safety & Ledger Risk Review\n\n"
-                    "> ℹ️ *The system provides objective reconciliation findings based on current ledger and mailbox evidence, and does not provide an absolute safety reassurance.*\n\n"
+                    "> ℹ️ *The system can only highlight transactions with potential risk indicators based on current ledger data, and does not provide an absolute safety guarantee.*\n\n"
                     "#### 📋 Summary of Items Requiring Your Review:\n"
                     "1. **Double charge detected:** 1 transaction of $75.00 (Volcano Ads) charged twice within 105 seconds ➔ *Needs your confirmation*.\n"
                     "2. **3-way source mismatch:** $5,350.00 moved out of Account but not yet settled on Virtual Card ➔ *Needs bank inquiry*.\n"
@@ -108,7 +108,7 @@ class DynamicFinancialSynthesizer:
                 )
             return (
                 "### 🛡️ Đánh Giá An Toàn Tài Chính & Rà Soát Sổ Cái\n\n"
-                "> ℹ️ *Hệ thống chỉ cung cấp thông tin đối soát khách quan dựa trên dữ liệu sao kê và hộp thư hiện có, không đưa ra kết luận an toàn tuyệt đối.*\n\n"
+                "> ℹ️ *Hệ thống chỉ có thể chỉ ra những giao dịch có dấu hiệu cần kiểm tra dựa trên dữ liệu hiện có, không đưa ra kết luận an toàn tuyệt đối.*\n\n"
                 "#### 📋 Tổng Hợp Các Điểm Cần Bạn Lưu Ý Kiểm Tra:\n"
                 "1. **Khoản quẹt đúp nghi vấn:** 1 giao dịch $75.00 (Volcano Ads) quẹt 2 lần cách nhau 105 giây ➔ *Cần bạn tự xác nhận*.\n"
                 "2. **Lệch dòng tiền 3 nguồn:** Khoản $5,350.00 rời Account nhưng chưa ghi nhận trên Card ➔ *Cần kiểm tra lại sao kê*.\n"
@@ -395,7 +395,42 @@ class DynamicFinancialSynthesizer:
                     merchant_name = t.get("merchant_normalized") or t.get("merchant_raw") or "Chưa xác định được"
                     lines.append(f"| `{date_str}` | **{merchant_name}** | **${t.get('amount', 0):,.2f}** | `{t.get('source', 'card')}` |")
                 return "\n".join(lines)
-            return ("Không tìm thấy giao dịch nào phù hợp với từ khóa của bạn." if not is_en else "No transactions found matching your search query.")
+        # Spending Surge Detection
+        if intent == "SPENDING_SURGE_INQUIRY":
+            exp = tool_result.get("explanation_en") if is_en else tool_result.get("explanation_vi")
+            if exp:
+                return exp
+            if is_en:
+                return (
+                    "### 📈 Spending Surge Analysis\n\n"
+                    "We detected a **Spending Surge** of **+58.3%** compared to your 30-day baseline.\n"
+                    "- **Primary Surge Drivers:** Digital Advertising & Cloud Infrastructure (Meta Ads, AWS).\n"
+                    "- **Recommendation:** Review active marketing campaigns and budget caps on virtual cards."
+                )
+            return (
+                "### 📈 Phân Tích Đột Biến Chi Tiêu\n\n"
+                "Phát hiện chi tiêu **đột biến +58.3%** so với mức trung bình 30 ngày trước đó.\n"
+                "- **Nhóm chi phí tăng mạnh nhất:** Quảng cáo trực tuyến & Hạ tầng đám mây (Meta Ads, AWS).\n"
+                "- **Khuyến nghị:** Kiểm tra ngân sách chiến dịch và đặt hạn mức thẻ ảo."
+            )
+
+        # Business Health Advisory
+        if intent == "BUSINESS_HEALTH_ADVISORY":
+            if is_en:
+                return (
+                    "### 📊 Business Financial Health & Unit Economics\n\n"
+                    "- **ROAS:** `2.63x` (Profitable marketing efficiency)\n"
+                    "- **Total Ad Spend:** `$720.00 USD`\n"
+                    "- **Total Payout Received:** `$1,890.00 USD`\n"
+                    "- **Health Score:** `78/100` (Good standing)"
+                )
+            return (
+                "### 📊 Báo Cáo Sức Khỏe Tài Chính & Hiệu Quả Kinh Doanh\n\n"
+                "- **Hiệu quả quảng cáo (ROAS):** `2.63x` (Chiến dịch sinh lời tốt)\n"
+                "- **Tổng chi tiêu Ads:** `$720.00 USD`\n"
+                "- **Doanh thu Payout nhận về:** `$1,890.00 USD`\n"
+                "- **Điểm sức khỏe tài chính:** `78/100` (Mức an toàn)"
+            )
 
         # Default General QA
         if is_en:
@@ -623,25 +658,32 @@ class GeminiLLMProvider(BaseLLMProvider):
 def get_llm_provider() -> BaseLLMProvider:
     """
     Auto-detects configured LLM provider from environment variables:
-    1. OPENROUTER_API_KEY (OpenRouter - GPT-4o-mini, Claude, Gemini, etc.)
-    2. GEMINI_API_KEY / GOOGLE_API_KEY (Google Gemini Direct)
-    3. LLM_PROVIDER = mock (Deterministic Offline Synthesizer)
+    1. APP_ENV == 'test' or LLM_PROVIDER == 'mock' -> Deterministic Mock
+    2. OPENROUTER_API_KEY -> OpenRouterLLMProvider
+    3. GEMINI_API_KEY / GOOGLE_API_KEY -> GeminiLLMProvider
+    4. Fallback -> MockLLMProvider
     """
+    app_env = (os.getenv("APP_ENV") or "").lower().strip()
     provider = (os.getenv("LLM_PROVIDER") or "").lower().strip()
     openrouter_key = os.getenv("OPENROUTER_API_KEY")
     gemini_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
     model = os.getenv("LLM_MODEL") or "openai/gpt-4o-mini"
 
-    if provider == "openrouter" or (provider != "mock" and openrouter_key):
+    if app_env == "test" or provider == "mock":
+        return MockLLMProvider()
+
+    if provider == "openrouter" or (not provider and openrouter_key):
         if openrouter_key:
             return OpenRouterLLMProvider(api_key=openrouter_key, model=model)
-    elif provider == "gemini" or (provider != "mock" and gemini_key):
+    elif provider == "gemini" or (not provider and gemini_key):
         if gemini_key:
             return GeminiLLMProvider(api_key=gemini_key)
 
-    if openrouter_key and provider != "mock":
+    if openrouter_key:
         return OpenRouterLLMProvider(api_key=openrouter_key, model=model)
-    if gemini_key and provider != "mock":
+    if gemini_key:
         return GeminiLLMProvider(api_key=gemini_key)
 
     return MockLLMProvider()
+
+
