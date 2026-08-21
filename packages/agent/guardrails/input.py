@@ -14,27 +14,27 @@ DISALLOWED_INPUT_PATTERNS = [
     ),
     # 2. Cancel Subscriptions
     (
-        r"(?:hãy\s+|tự\s+|vui lòng\s+)?(?:huỷ|hủy|dừng|ngắt|cancel|unsubscribe)\s+(?:subscription|gói|dịch vụ|membership|netflix|adobe|spotify)",
+        r"(?:hãy\s+|tự\s+|vui lòng\s+|hộ\s+)?(?:huỷ|hủy|huy|dừng|dung|ngắt|ngat|cancel|unsubscribe)\s+(?:mấy\s+|các\s+|những\s+|may\s+|cac\s+|nhung\s+)?(?:subscription|gói|goi|dịch vụ|dich vu|membership|netflix|adobe|spotify|tool)",
         ActionType.CANCEL_SUBSCRIPTION,
     ),
     # 3. Direct Chargeback / Immediate Refund
     (
-        r"chargeback|đòi tiền lại ngay|tự hoàn tiền trực tiếp|tự động hoàn tiền",
+        r"chargeback|đòi tiền lại ngay|doi tien lai ngay|tự hoàn tiền trực tiếp|tu hoan tien truc tiep|tự động hoàn tiền|tu dong hoan tien",
         ActionType.CHARGEBACK,
     ),
     # 4. Lock / Freeze / Block Card
     (
-        r"(?:hãy\s+|tự\s+|vui lòng\s+)?(?:khóa|khoá|block|freeze|lock)\s+thẻ|lock\s+card|block\s+card",
+        r"(?:hãy\s+|tự\s+|vui lòng\s+|hộ\s+)?(?:khóa|khoá|khoa|block|freeze|lock)\s+thẻ|lock\s+card|block\s+card|khoa\s+the",
         ActionType.LOCK_CARD,
     ),
     # 5. Direct Email Dispatch To Bank
     (
-        r"gửi\s+email\s+(?:khiếu nại\s+)?cho\s+(?:ngân hàng|bank)|email\s+to\s+bank",
+        r"(?:gửi|gui)\s+email\s+(?:khiếu nại\s+|khieu nai\s+)?(?:cho|to)\s+(?:ngân hàng|bank|ngan hang)|email\s+to\s+bank",
         ActionType.SEND_EMAIL_TO_BANK,
     ),
     # 6. Direct Email Dispatch To Merchant
     (
-        r"gửi\s+email\s+(?:khiếu nại\s+)?cho\s+(?:merchant|người bán|netflix|amazon|adobe)|email\s+to\s+merchant",
+        r"(?:gửi|gui)\s+email\s+(?:khiếu nại\s+|khieu nai\s+)?(?:cho|to)\s+(?:merchant|người bán|nguoi ban|netflix|amazon|adobe)|email\s+to\s+merchant",
         ActionType.SEND_EMAIL_TO_MERCHANT,
     ),
 ]
