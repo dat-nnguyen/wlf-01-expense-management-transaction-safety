@@ -12,9 +12,12 @@ Adheres strictly to WLF-01 Hackathon requirements:
 """
 
 import json
+import logging
 import os
 from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
+
+logger = logging.getLogger("wealify_guardian")
 
 
 MANDATORY_DISCLAIMER_VI = (
@@ -413,14 +416,143 @@ class GeminiLLMProvider(BaseLLMProvider):
                 completion_tokens=len(res_text.split()),
                 model=self.model,
             )
-        except Exception:
+        except Exception as exc:
+            logger.error(f"Gemini LLM Exception: {exc}")
             mock = MockLLMProvider()
             return await mock.generate_response(prompt, system_instruction, temperature, context)
 
 
+class OpenRouterLLMProvider(BaseLLMProvider):
+    """
+    OpenRouter Multi-Model LLM Provider.
+    Enables calling real LLM models (DeepSeek, Gemini, GPT-4o, Claude, LLaMA)
+    with full prompt grounding, strict WLF-01 contest safety, and transparent logging.
+    """
+
+    def __init__(
+        self,
+        api_key: Optional[str] = None,
+        model: Optional[str] = None,
+    ):
+        self.api_key = api_key or os.getenv("OPENROUTER_API_KEY")
+        self.model = model or os.getenv("LLM_MODEL", "deepseek/deepseek-chat")
+
+    async def generate_response(
+        self,
+        prompt: str,
+        system_instruction: Optional[str] = None,
+        temperature: float = 0.2,
+        context: Optional[Dict[str, Any]] = None,
+    ) -> LLMResponse:
+        if not self.api_key:
+            raise ValueError("OPENROUTER_API_KEY is not configured in .env file!")
+
+        import httpx
+
+        tool_data = context.get("tool_result", {}) if context else {}
+        language = context.get("language", "vi") if context else "vi"
+        intent = context.get("intent", "GENERAL_QA") if context else "GENERAL_QA"
+
+        sys_prompt = (
+            "You are Wealify Guardian AI, a strict, factual financial copilot for Wealify cross-border e-commerce users.\n"
+            "RULES (WLF-01 Contest Standard):\n"
+            "1. NEVER hallucinate financial figures. Rely strictly on the provided Tool Data and Context.\n"
+            "2. Format all financial figures cleanly using Markdown tables and bold badges.\n"
+            "3. Always cite data sources (e.g., Wealify Ledger, VPBank statement, Email invoices).\n"
+            "4. When categorizing alerts, use exactly one of the 3 standard labels: 'Định kỳ đã xác định', 'Cần bạn tự xác nhận', 'Chưa đủ dữ liệu'. Never assert '100% fraud' or '100% scam'.\n"
+            "5. Remind users of the 60-day statutory dispute deadline under US Regulation E for suspicious/unreconciled charges.\n"
+            "6. For 3-way reconciliation discrepancies, strictly phrase as: 'Lệch $X giữa [Source A] và [Source B] — chưa xác định nguyên nhân.'\n"
+            "7. For unknown merchants, use 'Chưa xác định được'.\n"
+            "8. Never provide absolute safety reassurance (e.g. do not say 'Your account is 100% safe'). State that you only highlight anomalies based on available data.\n"
+            "9. Never execute disallowed mutations (transfers, cancellations, chargebacks) directly.\n"
+            "10. Respond in Vietnamese if language is 'vi', or English if 'en'.\n"
+            "11. Always append the mandatory disclaimer at the end of every response."
+        )
+
+        full_content = (
+            f"Context Data from Financial Tools:\n{json.dumps(tool_data, default=str, ensure_ascii=False)}\n\n"
+            f"User Question: {prompt}\n"
+            f"Language: {language}\n"
+            f"Intent: {intent}"
+        )
+
+        logger.info(f"[REAL_LLM_CALL] Calling OpenRouter Model: '{self.model}' | Intent: {intent}")
+
+        try:
+            async with httpx.AsyncClient(timeout=25.0) as client:
+                res = await client.post(
+                    "https://openrouter.ai/api/v1/chat/completions",
+                    headers={
+                        "Authorization": f"Bearer {self.api_key}",
+                        "HTTP-Referer": "https://wealify.io",
+                        "X-Title": "Wealify Guardian",
+                        "Content-Type": "application/json",
+                    },
+                    json={
+                        "model": self.model,
+                        "messages": [
+                            {"role": "system", "content": sys_prompt},
+                            {"role": "user", "content": full_content},
+                        ],
+                        "temperature": temperature,
+                    },
+                )
+
+                if res.status_code == 200:
+                    data = res.json()
+                    res_text = data["choices"][0]["message"]["content"]
+                    usage = data.get("usage", {})
+                    prompt_tokens = usage.get("prompt_tokens", len(prompt.split()) + 50)
+                    completion_tokens = usage.get("completion_tokens", len(res_text.split()))
+
+                    disclaimer = MANDATORY_DISCLAIMER_EN if language == "en" else MANDATORY_DISCLAIMER_VI
+                    if "Công cụ này chỉ hỗ trợ bạn rà soát tài chính" not in res_text and "This tool only assists your financial review" not in res_text:
+                        res_text += disclaimer
+
+                    logger.info(f"[REAL_LLM_SUCCESS] Response received from {self.model} (Tokens: {prompt_tokens}+{completion_tokens})")
+
+                    return LLMResponse(
+                        content=res_text,
+                        prompt_tokens=prompt_tokens,
+                        completion_tokens=completion_tokens,
+                        model=self.model,
+                    )
+                else:
+                    err_msg = f"OpenRouter Error HTTP {res.status_code}: {res.text}"
+                    logger.error(f"[REAL_LLM_ERROR] {err_msg}")
+                    # Return error directly to user so they know LLM failed
+                    return LLMResponse(
+                        content=f"⚠️ **Lỗi kết nối LLM ({self.model}):**\n\nHTTP {res.status_code}: `{res.text}`\n\nVui lòng kiểm tra lại cấu hình OpenRouter API Key trong file `.env`.",
+                        prompt_tokens=0,
+                        completion_tokens=0,
+                        model=self.model,
+                    )
+        except Exception as exc:
+            err_msg = f"Connection Exception: {str(exc)}"
+            logger.error(f"[REAL_LLM_EXCEPTION] {err_msg}")
+            return LLMResponse(
+                content=f"⚠️ **Không thể kết nối đến máy chủ LLM ({self.model}):**\n\n`{err_msg}`\n\nVui lòng kiểm tra kết nối mạng hoặc API Key.",
+                prompt_tokens=0,
+                completion_tokens=0,
+                model=self.model,
+            )
+
+
 def get_llm_provider() -> BaseLLMProvider:
-    """Returns the default LLM provider (Gemini if API key present, otherwise deterministic Mock)."""
-    api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
-    if api_key:
-        return GeminiLLMProvider(api_key=api_key)
+    """Returns active LLM provider (Gemini -> OpenRouter -> Mock)."""
+    # 1. Direct Google Gemini SDK
+    gemini_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+    if gemini_key and gemini_key.strip():
+        logger.info("Using GeminiLLMProvider (Google Gemini SDK)")
+        return GeminiLLMProvider(api_key=gemini_key)
+
+    # 2. OpenRouter Multi-Model Provider
+    openrouter_key = os.getenv("OPENROUTER_API_KEY")
+    if openrouter_key and openrouter_key.startswith("sk-or-"):
+        logger.info(f"Using OpenRouterLLMProvider (Model: {os.getenv('LLM_MODEL', 'deepseek/deepseek-chat')})")
+        return OpenRouterLLMProvider(api_key=openrouter_key)
+
+    # 3. Deterministic Mock (Only if zero API key configured)
+    logger.warning("No LLM API keys found in environment. Falling back to MockLLMProvider.")
     return MockLLMProvider()
+
