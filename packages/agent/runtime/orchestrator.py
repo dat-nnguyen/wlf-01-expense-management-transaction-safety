@@ -84,16 +84,18 @@ class AgentOrchestrator:
         if not is_safe:
             logger.warning(f"[{run_id}] Blocked by Input Guardrail: {reason}")
             steps.append(ExecutionStep(step_name="POLICY_DENIED", status="BLOCKED", details={"reason": reason}))
-            llm_res = await self.llm.generate(
-                prompt=user_message,
-                context={"intent": "DISALLOWED_MUTATION", "reason": reason},
+            policy_text = (
+                "⚠️ **Chính sách an toàn tài chính (Policy Denied):**\n"
+                "Wealify Guardian hoạt động ở chế độ **Read-Only** nhằm bảo vệ an toàn tài sản của bạn. "
+                "Hệ thống không được phép trực tiếp chuyển tiền, thay đổi số dư hoặc liên hệ ngân hàng thay bạn.\n\n"
+                "💡 **Khuyến nghị:** Bạn có thể tự thực hiện thao tác này trực tiếp trên ứng dụng ngân hàng hoặc trang quản lý của nhà cung cấp."
             )
             return AgentRunResult(
                 run_id=run_id,
                 session_id=session_id,
                 user_message=user_message,
                 intent="DISALLOWED_MUTATION",
-                final_response=llm_res.content,
+                final_response=policy_text,
                 state=AgentState.COMPLETED,
                 policy_allowed=False,
                 grounding_verified=True,
