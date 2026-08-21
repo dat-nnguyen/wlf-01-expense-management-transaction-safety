@@ -1,15 +1,10 @@
 import React from 'react';
 import {
   MessagesSquare,
-  LayoutDashboard,
-  Receipt,
-  Repeat,
-  Mail,
   AlertTriangle,
-  Clock,
   BarChart3,
-  FileText,
-  Activity,
+  Receipt,
+  Cpu,
   Eye,
   EyeOff,
   ShieldCheck,
@@ -37,107 +32,62 @@ export const UserSidebar: React.FC<UserSidebarProps> = ({
   return (
     <aside className="w-64 bg-[var(--bg-sidebar)] border-r border-[var(--border-subtle)] flex flex-col justify-between p-3.5 shrink-0 overflow-y-auto min-h-0 transition-colors">
       <div className="space-y-4">
-        {/* Navigation Group 1: Core Financial & Reconciliation */}
+        {/* Workspace Group 1: Core Financial Operations (User-Facing) */}
         <div className="space-y-1">
           <div className="px-2 text-[10px] font-bold tracking-wider text-[var(--text-muted)] uppercase">
-            {t.navCategoryMain}
+            {language === 'vi' ? 'Không Gian Nghiệp Vụ' : 'Financial Workspaces'}
           </div>
 
-          {/* 1. AI Chat Copilot */}
+          {/* 1. AI Copilot Chat */}
           <button
             onClick={() => setActiveNav('chat')}
             className={`sidebar-link ${activeNav === 'chat' ? 'active' : ''}`}
           >
             <MessagesSquare className="w-4 h-4 text-[#FC6508]" />
-            <span>{t.tabChat}</span>
+            <span className="font-semibold">{language === 'vi' ? 'Trợ Lý AI Copilot' : 'AI Copilot Chat'}</span>
           </button>
 
-          {/* 2. Dashboard */}
-          <button
-            onClick={() => setActiveNav('dashboard')}
-            className={`sidebar-link ${activeNav === 'dashboard' ? 'active' : ''}`}
-          >
-            <LayoutDashboard className="w-4 h-4" />
-            <span>{t.tabDashboard}</span>
-          </button>
-
-          {/* 3. Statements & Analyzer */}
-          <button
-            onClick={() => setActiveNav('transactions')}
-            className={`sidebar-link ${activeNav === 'transactions' ? 'active' : ''}`}
-          >
-            <Receipt className="w-4 h-4" />
-            <span>{t.tabTransactions}</span>
-          </button>
-
-          {/* 4. 3-Way Reconciliation */}
-          <button
-            onClick={() => setActiveNav('reconciliation')}
-            className={`sidebar-link ${activeNav === 'reconciliation' ? 'active' : ''}`}
-          >
-            <Repeat className="w-4 h-4" />
-            <span>{t.tab3WayRecon}</span>
-          </button>
-
-          {/* 5. Email Reconciliation */}
-          <button
-            onClick={() => setActiveNav('email_matching')}
-            className={`sidebar-link ${activeNav === 'email_matching' ? 'active' : ''}`}
-          >
-            <Mail className="w-4 h-4" />
-            <span>{t.tabEmailMatching}</span>
-          </button>
-
-          {/* 6. Alerts 3 Levels */}
+          {/* 2. Discrepancy & Security Center (Alerts + 3-Way + Payout + 60 Days) */}
           <button
             onClick={() => setActiveNav('alerts')}
             className={`sidebar-link ${activeNav === 'alerts' ? 'active' : ''}`}
           >
             <AlertTriangle className="w-4 h-4 text-rose-400" />
-            <span>{t.tabAlerts}</span>
+            <span>{language === 'vi' ? 'Trung Tâm Tra Soát' : 'Discrepancy & Alerts'}</span>
           </button>
 
-          {/* 7. 60-Day Deadlines & Reminders */}
-          <button
-            onClick={() => setActiveNav('reminders')}
-            className={`sidebar-link ${activeNav === 'reminders' ? 'active' : ''}`}
-          >
-            <Clock className="w-4 h-4 text-[#FC6508]" />
-            <span>{t.tabReminders}</span>
-          </button>
-
-          {/* 8. Reports & Forecast */}
+          {/* 3. Financial Reports & Unit Economics */}
           <button
             onClick={() => setActiveNav('reports')}
             className={`sidebar-link ${activeNav === 'reports' ? 'active' : ''}`}
           >
-            <BarChart3 className="w-4 h-4" />
-            <span>{t.tabReports}</span>
+            <BarChart3 className="w-4 h-4 text-blue-400" />
+            <span>{language === 'vi' ? 'Báo Cáo & Dòng Tiền' : 'Reports & Cash Flow'}</span>
+          </button>
+
+          {/* 4. Multi-source Ledger & Audit Trail */}
+          <button
+            onClick={() => setActiveNav('transactions')}
+            className={`sidebar-link ${activeNav === 'transactions' ? 'active' : ''}`}
+          >
+            <Receipt className="w-4 h-4 text-purple-400" />
+            <span>{language === 'vi' ? 'Sổ Cái & Kiểm Toán' : 'Ledger & Audit Trail'}</span>
           </button>
         </div>
 
-        {/* Navigation Group 2: System & Compliance */}
+        {/* Workspace Group 2: Agent Administration & Oversight (Admin-Facing) */}
         <div className="space-y-1">
           <div className="px-2 text-[10px] font-bold tracking-wider text-[var(--text-muted)] uppercase">
-            {t.navCategorySystem}
+            {language === 'vi' ? 'Quản Trị & Giám Sát Agent' : 'Agent Governance'}
           </div>
 
-          {/* 9. Audit Trail & Export */}
+          {/* 5. Agent Control Panel */}
           <button
-            onClick={() => setActiveNav('audit')}
-            className={`sidebar-link ${activeNav === 'audit' ? 'active' : ''}`}
+            onClick={() => setActiveNav('agent_control')}
+            className={`sidebar-link ${activeNav === 'agent_control' ? 'active' : ''}`}
           >
-            <FileText className="w-4 h-4" />
-            <span>{t.tabAudit}</span>
-          </button>
-
-          {/* 10. Proactive Background Monitor */}
-          <button
-            onClick={() => setActiveNav('monitor')}
-            className={`sidebar-link ${activeNav === 'monitor' ? 'active' : ''}`}
-          >
-            <Activity className="w-4 h-4 text-emerald-400" />
-            <span>{t.tabMonitor}</span>
+            <Cpu className="w-4 h-4 text-emerald-400" />
+            <span>{language === 'vi' ? 'Bảng Quản Trị Agent' : 'Agent Control Center'}</span>
           </button>
         </div>
       </div>
@@ -148,7 +98,7 @@ export const UserSidebar: React.FC<UserSidebarProps> = ({
           <span>{language === 'vi' ? 'Số dư khả dụng Wealify' : 'Available Balance'}</span>
           <button
             onClick={() => setIsBalanceMasked(!isBalanceMasked)}
-            className="text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+            className="text-[var(--text-muted)] hover:text-[var(--text-primary)] cursor-pointer"
           >
             {isBalanceMasked ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
           </button>

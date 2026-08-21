@@ -70,6 +70,14 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         </button>
         <button
           type="button"
+          onClick={() => onSendMessage(language === 'vi' ? 'Có tiền nào rời tài khoản ngân hàng nhưng chưa lên thẻ ảo không?' : 'Is there any money transferred from bank account not appearing on cards?')}
+          disabled={isTyping}
+          className="action-chip text-xs shrink-0 disabled:opacity-50"
+        >
+          <span>{language === 'vi' ? 'Đối soát 3 nguồn (Bank ↔ Ví ↔ Thẻ)' : '3-Way Reconciliation'}</span>
+        </button>
+        <button
+          type="button"
           onClick={() => onSendMessage(language === 'vi' ? 'Tình hình kinh doanh và lợi nhuận dòng tiền thế nào, có nên tiếp tục chạy ad không?' : 'What is my current business cash flow health, should I continue scaling ads?')}
           disabled={isTyping}
           className="action-chip text-xs shrink-0 disabled:opacity-50"

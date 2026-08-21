@@ -15,6 +15,7 @@ import { RemindersView } from '../components/views/RemindersView';
 import { ReportsView } from '../components/views/ReportsView';
 import { AuditTrailView } from '../components/views/AuditTrailView';
 import { ProactiveMonitorView } from '../components/views/ProactiveMonitorView';
+import { AgentControlView } from '../components/views/AgentControlView';
 import { EvidenceVerificationModal } from '../components/modals/EvidenceVerificationModal';
 import { EmailConfirmationModal } from '../components/modals/EmailConfirmationModal';
 import { Message, EmailModalState, Language } from '../types';
@@ -354,6 +355,10 @@ Wealify Guardian Financial Safety Team`,
         ) : userNav === 'monitor' ? (
           <main className="flex-1 flex flex-col bg-[var(--bg-primary)] overflow-y-auto">
             <ProactiveMonitorView language={language} />
+          </main>
+        ) : userNav === 'agent_control' ? (
+          <main className="flex-1 flex flex-col bg-[var(--bg-primary)] overflow-y-auto">
+            <AgentControlView language={language} />
           </main>
         ) : (
           /* Default: AI Financial Copilot Chat Thread */

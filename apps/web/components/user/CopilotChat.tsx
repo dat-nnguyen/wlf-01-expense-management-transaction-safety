@@ -104,6 +104,35 @@ export const CopilotChat: React.FC<CopilotChatProps> = ({
                     {/* Beautiful Markdown LLM Output */}
                     <MarkdownRenderer content={msg.text} />
 
+                    {/* Thought Chain & Root Cause Explanation Accordion */}
+                    <details className="group rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-subtle)] overflow-hidden transition-all">
+                      <summary className="px-3 py-2 text-[11px] font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] cursor-pointer flex items-center justify-between select-none">
+                        <span className="flex items-center gap-1.5 text-[#FC6508]">
+                          <span>🧠</span>
+                          {language === 'vi' ? 'Vết suy luận & Giải thích nguyên nhân gốc rễ (Thought Chain)' : 'AI Thought Process & Root-Cause Explanation'}
+                        </span>
+                        <span className="text-[10px] text-[var(--text-muted)] font-mono group-open:rotate-180 transition-transform">▼</span>
+                      </summary>
+                      <div className="p-3 pt-1 border-t border-[var(--border-subtle)] space-y-2 text-[11px] text-[var(--text-secondary)]">
+                        <div className="flex items-center gap-2 text-emerald-400">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                          <span><strong>Bước 1:</strong> Kiểm tra Guardrails (100% Read-Only, không thực hiện hành động chuyển tiền)</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-blue-400">
+                          <span className="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+                          <span><strong>Bước 2:</strong> Phân tích ngữ cảnh & gọi công cụ Google ADK đối soát đa nguồn</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-purple-400">
+                          <span className="w-1.5 h-1.5 rounded-full bg-purple-400"></span>
+                          <span><strong>Bước 3:</strong> Tìm nguyên nhân gốc: Đối chiếu sai lệch giữa Bank Account ↔ Thẻ ảo ↔ Email biên lai</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-amber-400">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                          <span><strong>Bước 4:</strong> Áp dụng quy định US Regulation E (thời hạn 60 ngày) và đính kèm khuyến nghị</span>
+                        </div>
+                      </div>
+                    </details>
+
                     {/* Classification Pill */}
                     {msg.classification && (
                       <div className="flex items-center gap-2 pt-1 flex-wrap">
