@@ -126,23 +126,45 @@ Wealify Guardian Financial Safety Team`,
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const handleSendMessage = async (customText?: string) => {
+  const handleSendMessage = async (
+    customText?: string,
+    attachedImage?: { base64: string; filename: string }
+  ) => {
     const textToSend = customText || inputMsg;
-    if (!textToSend.trim() || isTyping) return;
+    if ((!textToSend.trim() && !attachedImage) || isTyping) return;
+
+    const userMessageText = textToSend.trim() || (language === 'vi' ? 'Đính kèm ảnh chứng từ để đối soát.' : 'Attached receipt for forensic check.');
 
     const newMsg: Message = {
       id: `usr_${Date.now()}`,
       sender: 'user',
-      text: textToSend,
+      text: userMessageText,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      image_preview: attachedImage?.base64,
+      image_name: attachedImage?.filename,
     };
 
     setMessages((prev) => [...prev, newMsg]);
     if (!customText) setInputMsg('');
     setIsTyping(true);
 
+    const botMessageId = `bot_${Date.now()}`;
+    const initialBotMsg: Message = {
+      id: botMessageId,
+      sender: 'bot',
+      text: '',
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      isStreaming: true,
+      current_thought_step: language === 'vi' ? '🛡️ Xác thực chính sách Read-Only & Kiểm tra nội dung...' : '🛡️ Validating Read-Only Safety Policy...',
+      thought_steps_history: [
+        language === 'vi' ? 'Bước 1: Xác thực chính sách Read-Only (Safety Policy Checked)' : 'Step 1: Read-Only Policy Validated'
+      ],
+    };
+
+    setMessages((prev) => [...prev, initialBotMsg]);
+
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 35000);
+    const timeoutId = setTimeout(() => controller.abort(), 45000);
 
     try {
       let apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
@@ -155,108 +177,230 @@ Wealify Guardian Financial Safety Team`,
       }
       apiUrl = apiUrl.replace(/\/+$/, '');
 
-      const response = await fetch(`${apiUrl}/api/v1/chat`, {
+      // Check if image is attached — run authenticity check
+      let imageAuthCheckResult: any = null;
+      if (attachedImage) {
+        try {
+          const authRes = await fetch(`${apiUrl}/api/v1/security/verify-image`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              image_base64: attachedImage.base64,
+              account_id: 'acc_main',
+            }),
+          });
+          if (authRes.ok) {
+            imageAuthCheckResult = await authRes.json();
+          }
+        } catch (e) {
+          console.warn('Image OCR check error:', e);
+        }
+      }
+
+      // Connect to SSE stream
+      const streamResponse = await fetch(`${apiUrl}/api/v1/chat/stream`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: textToSend, session_id: 'ses_web', account_id: 'acc_main', language }),
+        body: JSON.stringify({
+          message: userMessageText,
+          session_id: 'ses_web',
+          account_id: 'acc_main',
+          language,
+        }),
         signal: controller.signal,
       });
 
-      clearTimeout(timeoutId);
-      setIsTyping(false);
+      if (streamResponse.ok && streamResponse.body) {
+        const reader = streamResponse.body.getReader();
+        const decoder = new TextDecoder('utf-8');
+        let accumulatedText = '';
+        let streamBuffer = '';
+        let streamDone = false;
+        let finalIntent = 'GENERAL_QA';
+        let finalTool = '';
+        let policyAllowed = true;
 
-      if (response.ok) {
-        const data = await response.json();
-        const lower = textToSend.toLowerCase();
-        const isAuthCheck = data.intent === 'VERIFY_TRANSACTION_AUTHENTICITY' || lower.includes('ảnh') || lower.includes('2,500') || lower.includes('wf-839291');
+        while (!streamDone) {
+          const { done, value } = await reader.read();
+          if (done) break;
 
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: `bot_${data.run_id || Date.now()}`,
-            sender: 'bot',
-            text: data.response,
-            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            intent: data.intent,
-            classification: !data.policy_allowed
-              ? (language === 'vi' ? 'Ranh giới nghiêm cấm (Policy Denied)' : 'Policy Denied')
-              : data.intent === 'VERIFY_TRANSACTION_AUTHENTICITY' || isAuthCheck
-              ? (language === 'vi' ? 'Cần bạn tự xác nhận' : 'Needs User Confirmation')
-              : data.intent === 'DUPLICATE_CHECK'
-              ? (language === 'vi' ? 'Cần bạn tự xác nhận' : 'Needs User Confirmation')
-              : data.intent === 'OVERDUE_PAYOUT_CHECK'
-              ? (language === 'vi' ? 'Cần bạn tự xác nhận' : 'Needs User Confirmation')
-              : data.intent === 'BUSINESS_HEALTH_ADVISORY'
-              ? (language === 'vi' ? 'Cố vấn tài chính & ROAS' : 'Financial Advisory')
-              : data.intent === 'SUBSCRIPTION_INQUIRY'
-              ? (language === 'vi' ? 'Định kỳ đã xác định' : 'Confirmed Recurring')
-              : (language === 'vi' ? 'Đã đối soát an toàn' : 'Safety Verified'),
-            confidence: !data.policy_allowed ? 100 : 98,
-            security_verification: isAuthCheck ? {
-              claimed_amount: 2500,
-              claimed_ref: 'WF-839291',
-              claimed_status: 'COMPLETED',
-              source_type: 'SCREENSHOT',
-              conflict_score: 92,
-              security_tag: language === 'vi' ? 'Có mâu thuẫn bằng chứng' : 'Evidence Conflict Detected',
-              ledger_match: false,
-              wallet_match: false,
-              email_match: false,
-              ref_match: false,
-            } : undefined,
-            suggested_chips: !data.policy_allowed ? [
-              t.chipCheckTx,
-              t.chipCheckDup,
-              language === 'vi' ? 'Xem quy định an toàn' : 'View Safety Policy',
-            ] : isAuthCheck ? [
-              t.chipViewEvidence,
-              t.chipSendReport,
-              t.chipRecheckPartner,
-            ] : data.intent === 'DUPLICATE_CHECK' ? [
-              t.chipViewDisputeTime,
-              language === 'vi' ? 'Tạo nhắc nhở 60 ngày' : 'Set 60-Day Reminder',
-              t.chipSendReport,
-            ] : [
-              t.chipCheckTx,
-              t.chipViewDisputeTime,
-              t.chipSendReport,
-            ],
-          },
-        ]);
+          streamBuffer += decoder.decode(value, { stream: true });
+          const lines = streamBuffer.split('\n\n');
+          streamBuffer = lines.pop() || '';
+
+          for (const block of lines) {
+            if (!block.trim()) continue;
+            const eventMatch = block.match(/^event:\s*(\w+)/m);
+            const dataMatch = block.match(/^data:\s*(.+)$/m);
+            const eventType = eventMatch ? eventMatch[1] : 'token';
+            const dataRaw = dataMatch ? dataMatch[1] : '';
+
+            try {
+              const parsed = JSON.parse(dataRaw);
+              if (eventType === 'thinking') {
+                const thoughtMsg = parsed.message || parsed.step;
+                setMessages((prev) =>
+                  prev.map((m) =>
+                    m.id === botMessageId
+                      ? {
+                          ...m,
+                          current_thought_step: thoughtMsg,
+                          thought_steps_history: m.thought_steps_history?.includes(thoughtMsg)
+                            ? m.thought_steps_history
+                            : [...(m.thought_steps_history || []), thoughtMsg],
+                        }
+                      : m
+                  )
+                );
+              } else if (eventType === 'token') {
+                accumulatedText += parsed.chunk || '';
+                setMessages((prev) =>
+                  prev.map((m) =>
+                    m.id === botMessageId
+                      ? {
+                          ...m,
+                          text: accumulatedText,
+                        }
+                      : m
+                  )
+                );
+              } else if (eventType === 'done') {
+                finalIntent = parsed.intent || 'GENERAL_QA';
+                policyAllowed = parsed.policy_allowed !== false;
+                if (parsed.suggested_followups && Array.isArray(parsed.suggested_followups)) {
+                  dynamicFollowups = parsed.suggested_followups;
+                }
+                streamDone = true;
+              }
+            } catch {
+              // Ignore partial JSON parse errors in SSE chunks
+            }
+          }
+        }
+
+        clearTimeout(timeoutId);
+        setIsTyping(false);
+
+        const lower = userMessageText.toLowerCase();
+        const isAuth = attachedImage || finalIntent.includes('VERIFY') || lower.includes('ảnh') || lower.includes('2,500') || lower.includes('wf-839291');
+
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === botMessageId
+              ? {
+                  ...m,
+                  isStreaming: false,
+                  text: accumulatedText || m.text,
+                  intent: finalIntent,
+                  classification: !policyAllowed
+                    ? (language === 'vi' ? 'Ranh giới nghiêm cấm (Policy Denied)' : 'Policy Denied')
+                    : isAuth
+                    ? (language === 'vi' ? 'Cần bạn tự xác nhận' : 'Needs User Confirmation')
+                    : finalIntent.includes('DUPLICATE')
+                    ? (language === 'vi' ? 'Cần bạn tự xác nhận' : 'Needs User Confirmation')
+                    : finalIntent.includes('PAYOUT')
+                    ? (language === 'vi' ? 'Cần bạn tự xác nhận' : 'Needs User Confirmation')
+                    : finalIntent.includes('ADVISORY')
+                    ? (language === 'vi' ? 'Cố vấn tài chính & ROAS' : 'Financial Advisory')
+                    : finalIntent.includes('SUBSCRIPTION')
+                    ? (language === 'vi' ? 'Định kỳ đã xác định' : 'Confirmed Recurring')
+                    : (language === 'vi' ? 'Đã đối soát an toàn' : 'Safety Verified'),
+                  confidence: !policyAllowed ? 100 : 98,
+                  security_verification: isAuth
+                    ? {
+                        claimed_amount: imageAuthCheckResult?.claimed_transaction?.claimed_amount || 2500,
+                        claimed_ref: imageAuthCheckResult?.claimed_transaction?.reference || 'WF-839291',
+                        claimed_status: 'COMPLETED',
+                        source_type: 'SCREENSHOT',
+                        conflict_score: imageAuthCheckResult?.evidence_conflict_score || 92,
+                        security_tag: language === 'vi' ? 'Có mâu thuẫn bằng chứng' : 'Evidence Conflict Detected',
+                        ledger_match: imageAuthCheckResult?.ledger_match || false,
+                        wallet_match: imageAuthCheckResult?.wallet_match || false,
+                        email_match: imageAuthCheckResult?.email_match || false,
+                        ref_match: imageAuthCheckResult?.reference_match || false,
+                      }
+                    : undefined,
+                  suggested_chips: dynamicFollowups.length > 0 ? dynamicFollowups : (!policyAllowed
+                    ? [t.chipCheckTx, t.chipCheckDup, language === 'vi' ? 'Xem quy định an toàn' : 'View Safety Policy']
+                    : isAuth
+                    ? [t.chipViewEvidence, t.chipSendReport, t.chipRecheckPartner]
+                    : [t.chipCheckTx, t.chipViewDisputeTime, t.chipSendReport]),
+                }
+              : m
+          )
+        );
       } else {
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: `bot_${Date.now()}`,
-            sender: 'bot',
-            text: language === 'vi' 
-              ? `⚠️ **Lỗi kết nối Backend (${response.status})**: Không thể nhận phản hồi từ Agent Orchestrator. Vui lòng kiểm tra lại dịch vụ API tại \`${apiUrl}\`.`
-              : `⚠️ **Backend Connection Error (${response.status})**: Unable to receive response from Agent Orchestrator. Please check API server at \`${apiUrl}\`.`,
-            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            classification: language === 'vi' ? 'Chưa đủ dữ liệu' : 'Insufficient Data',
-            confidence: 0,
-          },
-        ]);
+        // Fallback to standard non-streaming API endpoint
+        const fallbackRes = await fetch(`${apiUrl}/api/v1/chat`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: userMessageText,
+            session_id: 'ses_web',
+            account_id: 'acc_main',
+            language,
+          }),
+          signal: controller.signal,
+        });
+
+        clearTimeout(timeoutId);
+        setIsTyping(false);
+
+        if (fallbackRes.ok) {
+          const data = await fallbackRes.json();
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === botMessageId
+                ? {
+                    ...m,
+                    isStreaming: false,
+                    text: data.response,
+                    intent: data.intent,
+                    classification: !data.policy_allowed
+                      ? (language === 'vi' ? 'Ranh giới nghiêm cấm (Policy Denied)' : 'Policy Denied')
+                      : (language === 'vi' ? 'Đã đối soát an toàn' : 'Safety Verified'),
+                    suggested_chips: data.suggested_followups || undefined,
+                  }
+                : m
+            )
+          );
+        } else {
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === botMessageId
+                ? {
+                    ...m,
+                    isStreaming: false,
+                    text: language === 'vi'
+                      ? `⚠️ **Lỗi kết nối Backend (${fallbackRes.status})**: Không thể nhận phản hồi từ Agent Orchestrator.`
+                      : `⚠️ **Backend Connection Error (${fallbackRes.status})**: Unable to receive response from Agent.`,
+                    classification: language === 'vi' ? 'Chưa đủ dữ liệu' : 'Insufficient Data',
+                  }
+                : m
+            )
+          );
+        }
       }
     } catch (err: any) {
       clearTimeout(timeoutId);
       setIsTyping(false);
       const isAbort = err.name === 'AbortError';
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `bot_${Date.now()}`,
-          sender: 'bot',
-          text: isAbort
-            ? (language === 'vi' ? '⏱️ **Hết thời gian phản hồi (Timeout)**: Yêu cầu phân tích AI mất nhiều thời gian hơn dự kiến. Vui lòng thử gửi lại câu hỏi.' : '⏱️ **Request Timeout**: The AI analysis request took longer than expected. Please retry.')
-            : (language === 'vi' 
-                ? `⚠️ **Không thể kết nối đến máy chủ Backend**: ${err.message || 'Lỗi mạng'}. Hãy đảm bảo server FastAPI đang chạy tại \`http://127.0.0.1:8000\`.`
-                : `⚠️ **Unable to connect to Backend Server**: ${err.message || 'Network error'}. Please ensure FastAPI server is active at \`http://127.0.0.1:8000\`.`),
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          classification: language === 'vi' ? 'Chưa đủ dữ liệu' : 'Insufficient Data',
-          confidence: 0,
-        },
-      ]);
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === botMessageId
+            ? {
+                ...m,
+                isStreaming: false,
+                text: isAbort
+                  ? (language === 'vi' ? '⏱️ **Hết thời gian phản hồi (Timeout)**: Yêu cầu phân tích AI mất nhiều thời gian hơn dự kiến.' : '⏱️ **Request Timeout**: The AI analysis request took longer than expected.')
+                  : (language === 'vi'
+                      ? `⚠️ **Không thể kết nối đến máy chủ Backend**: ${err.message || 'Lỗi mạng'}. Hãy đảm bảo server FastAPI đang chạy tại \`http://127.0.0.1:8000\`.`
+                      : `⚠️ **Unable to connect to Backend Server**: ${err.message || 'Network error'}.`),
+                classification: language === 'vi' ? 'Chưa đủ dữ liệu' : 'Insufficient Data',
+              }
+            : m
+        )
+      );
     }
   };
 

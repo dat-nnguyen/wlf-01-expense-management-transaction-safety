@@ -16,6 +16,7 @@ def strip_accents(text: str) -> str:
 class ExecutionPlan(BaseModel):
     intent: str
     target_tool: Optional[str] = None
+    target_tools: List[str] = []  # Multi-tool execution for composite intents
     arguments: Dict[str, Any] = {}
     confidence: float = 1.0
 
@@ -116,19 +117,50 @@ class IntentPlanner:
                 arguments={},
             )
 
-        # 7. Spending Surge & Category Spike Detection
+        # 7a. Weekly / Period Financial Report (composite: multiple tools)
         if matches_any([
-            "đột biến", "dot bien", "bất thường", "bat thuong", "tiêu nhiều thế", "tieu nhieu the",
+            "báo cáo tuần", "bao cao tuan", "báo cáo tài chính tuần", "bao cao tai chinh tuan",
+            "tuần này so với tuần trước", "tuan nay so voi tuan truoc",
+            "tổng quan tuần", "tong quan tuan", "weekly report", "weekly summary",
+            "tuần này thế nào", "tuan nay the nao", "tình hình tuần", "tinh hinh tuan",
+        ]):
+            return ExecutionPlan(
+                intent="WEEKLY_FINANCIAL_REPORT",
+                target_tool=None,
+                target_tools=["generate_expense_report", "detect_spending_surges", "find_subscriptions", "find_duplicates"],
+                arguments={"window_days": 7},
+            )
+
+        # 7b. Spending Surge & Category Spike Detection (specific)
+        if matches_any([
+            "đột biến", "dot bien", "tiêu nhiều thế", "tieu nhieu the",
             "tăng vọt", "tang vot", "spending surge", "surge", "surging", "spike", "spiking", "baseline",
             "spending increase", "spending higher", "so với tuần trước", "so voi tuan truoc",
             "so với tháng trước", "so voi thang truoc", "tại sao tuần này", "tai sao tuan nay",
             "tại sao tháng này", "tai sao thang nay", "chi tiêu bất thường", "chi tieu bat thuong",
             "chi tiêu đột biến", "chi tieu dot bien", "tăng đột biến", "tang dot bien", "tăng nhiều thế",
+            "so với trước", "so voi truoc",
         ]):
             return ExecutionPlan(
                 intent="SPENDING_SURGE_INQUIRY",
                 target_tool="detect_spending_surges",
                 arguments={"window_days": 7},
+            )
+
+        # 7c. Full Anomaly Scan (composite: all anomaly radars)
+        if matches_any([
+            "bất thường", "bat thuong", "anomaly", "anomalies",
+            "có gì lạ", "co gi la", "giao dịch lạ", "giao dich la",
+            "có giao dịch nào bất thường", "co giao dich nao bat thuong",
+            "phát hiện bất thường", "phat hien bat thuong",
+            "có vấn đề gì", "co van de gi", "rà soát toàn bộ", "ra soat toan bo",
+            "quét toàn bộ", "quet toan bo", "full scan",
+        ]):
+            return ExecutionPlan(
+                intent="FULL_ANOMALY_SCAN",
+                target_tool=None,
+                target_tools=["detect_spending_surges", "find_duplicates", "detect_overdue_payouts", "reconcile_transactions"],
+                arguments={},
             )
 
         # 8. Specific Top 3 Expenses Inquiry (Priority over general advisory)

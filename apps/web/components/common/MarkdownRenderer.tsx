@@ -94,8 +94,9 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
           code: ({ node, inline, className, children, ...props }: any) => {
             const match = /language-(\w+)/.exec(className || '');
             const codeString = String(children).replace(/\n$/, '');
+            const isCodeBlock = Boolean(match || (codeString && codeString.includes('\n')) || (className && className.includes('language-')));
 
-            if (!inline) {
+            if (isCodeBlock) {
               return (
                 <div className="relative group my-2.5 rounded-xl overflow-hidden border border-[var(--border-subtle)] bg-[var(--bg-secondary)]">
                   <div className="flex items-center justify-between px-3 py-1.5 bg-[var(--bg-card)] border-b border-[var(--border-subtle)] text-[11px] font-mono text-[var(--text-muted)]">
@@ -127,7 +128,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
 
             return (
               <code
-                className="font-mono text-[11.5px] bg-[var(--bg-secondary)] border border-[var(--border-subtle)] text-[#FC6508] px-1.5 py-0.5 rounded font-semibold"
+                className="font-mono text-[11.5px] bg-[var(--bg-secondary)] border border-[var(--border-subtle)] text-[var(--text-primary)] px-1.5 py-0.5 rounded font-semibold inline-block mx-0.5 align-middle"
                 {...props}
               >
                 {children}

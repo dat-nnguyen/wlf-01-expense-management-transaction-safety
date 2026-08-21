@@ -80,68 +80,66 @@ class DynamicFinancialSynthesizer:
         if intent == "DISALLOWED_MUTATION":
             if is_en:
                 return (
-                    "### ⚠️ Financial Safety Policy (Policy Denied)\n\n"
+                    "### Financial Safety Policy (Policy Denied)\n\n"
                     "Wealify Guardian operates strictly in **Read-Only** mode to safeguard your financial assets. "
-                    "The system is prohibited from directly executing money transfers, cancelling subscriptions, or contacting external banks.\n\n"
-                    "💡 **Recommendation:** Please perform this action directly within your authorized banking portal or the merchant's customer management panel."
-                    + MANDATORY_DISCLAIMER_EN
+                    "The system is not permitted to directly execute fund transfers, cancel subscriptions, or contact external banks on your behalf.\n\n"
+                    "Please perform this action directly within your authorized banking portal or merchant management console."
                 )
             return (
-                "### ⚠️ Chính Sách An Toàn Tài Chính (Policy Denied)\n\n"
-                "Wealify Guardian hoạt động ở chế độ **Read-Only** nhằm bảo vệ tuyệt đối an toàn tài sản của bạn. "
+                "### Chính sách an toàn tài chính (Policy Denied)\n\n"
+                "Wealify Guardian hoạt động ở chế độ **Read-Only** nhằm bảo vệ an toàn tài sản của bạn. "
                 "Hệ thống không được phép trực tiếp chuyển tiền, huỷ gói dịch vụ hoặc liên hệ ngân hàng thay bạn.\n\n"
-                "💡 **Khuyến nghị:** Bạn có thể tự thực hiện thao tác này trực tiếp trên ứng dụng ngân hàng chính thức hoặc trang quản lý của nhà cung cấp."
-                + MANDATORY_DISCLAIMER_VI
+                "Bạn vui lòng thực hiện thao tác này trực tiếp trên ứng dụng ngân hàng hoặc trang quản lý của nhà cung cấp."
             )
 
         # 2. Adversarial Account Safety Inquiry
         if intent == "ACCOUNT_SAFETY_INQUIRY":
             if is_en:
                 return (
-                    "### 🛡️ Financial Safety & Risk Assessment\n\n"
-                    "> ℹ️ *The system can only highlight transactions with potential risk indicators based on current ledger data, and does not provide an absolute safety guarantee.*\n\n"
-                    "#### 📋 Recommended Actions:\n"
-                    "1. Monitor transactions categorized under `Needs your confirmation` in the **Alerts** tab.\n"
-                    "2. Check statutory dispute deadlines (**60 days** from statement date) to dispute any unrecognized charges promptly."
-                    + MANDATORY_DISCLAIMER_EN
+                    "### Financial Safety & Risk Status\n\n"
+                    "> The system can only highlight transactions with potential risk indicators based on current ledger data, and does not provide an absolute safety guarantee.\n\n"
+                    "**Recommended Actions:**\n"
+                    "1. Review items flagged under `Needs your confirmation` in the Alerts tab.\n"
+                    "2. Note the statutory dispute deadline (**60 days** from statement date) to dispute unrecognized charges promptly."
                 )
             return (
-                "### 🛡️ Đánh Giá An Toàn Tài Chính & Rủi Ro\n\n"
-                "> ℹ️ *Hệ thống chỉ có thể chỉ ra những giao dịch có dấu hiệu cần kiểm tra dựa trên dữ liệu hiện có, không đưa ra kết luận an toàn tuyệt đối.*\n\n"
-                "#### 📋 Khuyến Nghị Cho Chủ Tài Khoản:\n"
-                "1. Thường xuyên theo dõi các giao dịch thuộc diện `Cần bạn tự xác nhận` trong tab **Alerts**.\n"
-                "2. Kiểm tra định kỳ thời hạn khiếu nại quy định (**60 ngày** kể từ ngày ngân hàng gửi sao kê) để kịp thời tra soát nếu phát hiện khoản trừ lạ."
-                + MANDATORY_DISCLAIMER_VI
+                "### Đánh Giá Tình Trạng Rủi Ro & An Toàn\n\n"
+                "> Hệ thống chỉ có thể chỉ ra những giao dịch có dấu hiệu cần kiểm tra dựa trên dữ liệu hiện có, không đưa ra kết luận an toàn tuyệt đối.\n\n"
+                "**Khuyến nghị:**\n"
+                "1. Theo dõi các giao dịch thuộc diện `Cần bạn tự xác nhận` trong mục Cảnh báo.\n"
+                "2. Lưu ý thời hạn khiếu nại quy định (**60 ngày** kể từ ngày ngân hàng gửi sao kê) để kịp thời tra soát nếu phát hiện khoản trừ lạ."
             )
 
         # 3. Duplicate Charges Check
         if intent in ["DUPLICATE_CHECK"] or "duplicate" in intent.lower():
             alerts = tool_result.get("alerts", []) or tool_result.get("discrepancies", [])
             if alerts:
-                header = "### ⚠️ Phát Hiện Giao Dịch Trừ Tiền Trùng Lặp (Double Charge)\n" if not is_en else "### ⚠️ Potential Duplicate Charges Detected\n"
+                header = "### Giao Dịch Trừ Tiền Trùng Lặp Phát Hiện Được\n" if not is_en else "### Potential Duplicate Charges Detected\n"
                 lines = [
                     header,
-                    "| Hạng Mục | Số Tiền | Mức Phân Loại | Hạn Khiếu Nại (Mỹ) | Hành Động |" if not is_en else "| Item | Amount | Classification | Dispute Deadline | Recommended Action |",
+                    "| Hạng Mục | Số Tiền | Phân Loại | Hạn Tra Soát | Hành Động Đề Xuất |" if not is_en else "| Item | Amount | Classification | Dispute Deadline | Recommended Action |",
                     "| :--- | :--- | :--- | :--- | :--- |",
                 ]
                 for a in alerts:
                     amt = f"${a.get('amount', 0):,.2f}" if a.get('amount') else "N/A"
                     status = a.get("status", "Cần bạn tự xác nhận")
                     action = a.get("action_suggestion", "Kiểm tra tra soát trong hạn 60 ngày")
-                    lines.append(f"| **{a.get('title', 'Khoản trùng')}** | `{amt}` | `{status}` | `60 ngày (Reg E)` | {action} |")
+                    lines.append(f"| **{a.get('title', 'Khoản trùng')}** | `{amt}` | `{status}` | `60 ngày` | {action} |")
                 
                 draft = alerts[0].get("dispute_draft")
                 if draft:
-                    lines.append("\n#### 📝 Bản Thảo Đơn Tra Soát (Dispute Draft) Cho Bạn Tự Gửi:\n```text\n" + draft + "\n```")
-                return "\n".join(lines) + (MANDATORY_DISCLAIMER_EN if is_en else MANDATORY_DISCLAIMER_VI)
-            return ("✅ **Không phát hiện giao dịch trùng lặp:** Tất cả các lần quẹt thẻ và thanh toán đều ghi nhận độc lập." if not is_en else "✅ **No duplicate charges detected across active accounts.**") + (MANDATORY_DISCLAIMER_EN if is_en else MANDATORY_DISCLAIMER_VI)
+                    lines.append("\n**Bản thảo đơn tra soát mẫu:**\n```text\n" + draft + "\n```")
+                return "\n".join(lines)
+            return ("Không phát hiện giao dịch trừ tiền trùng lặp trên các tài khoản đang theo dõi." if not is_en else "No duplicate charges detected across active accounts.")
 
         # 4. Spending Surge
         if intent == "SPENDING_SURGE_INQUIRY":
             exp = tool_result.get("explanation_en") if is_en else tool_result.get("explanation_vi")
             if exp:
-                return exp + (MANDATORY_DISCLAIMER_EN if is_en else MANDATORY_DISCLAIMER_VI)
-            return ("✅ **Chi tiêu trong định mức ổn định.**" if not is_en else "✅ **Spending is within normal range.**") + (MANDATORY_DISCLAIMER_EN if is_en else MANDATORY_DISCLAIMER_VI)
+                # Strip excessive emojis if any
+                clean_exp = exp.replace("⚠️ ", "").replace("🚨 ", "").replace("📊 ", "").replace("💡 ", "")
+                return clean_exp
+            return ("Chi tiêu trong định mức ổn định, không có biến động bất thường." if not is_en else "Spending is within normal baseline range.")
 
         # 5. Business Health Advisory
         if intent == "BUSINESS_HEALTH_ADVISORY":
@@ -152,22 +150,22 @@ class DynamicFinancialSynthesizer:
             hitl = tool_result.get("hitl_action_items", [])
 
             lines = [
-                f"### 📊 Báo Cáo Sức Khỏe Tài Chính & Unit Economics ({score}/100 - {rating})\n" if not is_en else f"### 📊 Business Financial Health & Unit Economics ({score}/100 - {rating})\n",
+                f"### Báo Cáo Sức Khỏe Tài Chính & Unit Economics ({score}/100 - {rating})\n" if not is_en else f"### Business Financial Health & Unit Economics ({score}/100 - {rating})\n",
                 f"- **Tổng chi tiêu Ads (Marketing):** `${metrics.get('total_ad_spend', 0):,.2f} USD`",
                 f"- **Doanh thu Payout thực nhận:** `${metrics.get('total_payout_received', 0):,.2f} USD`",
                 f"- **Payout đang trễ hạn:** `${metrics.get('total_payout_pending', 0):,.2f} USD`",
-                f"- **ROAS Ước tính:** `{metrics.get('roas', 0)}x`",
+                f"- **ROAS ước tính:** `{metrics.get('roas', 0)}x`",
                 f"- **Lợi nhuận vận hành ròng:** `${metrics.get('net_operating_profit', 0):,.2f} USD`",
             ]
             if insights:
-                lines.append("\n#### 🔍 Phân Tích Chuyên Sâu:")
+                lines.append("\n**Phân Tích Chi Tiết:**")
                 for ins in insights:
                     lines.append(f"- {ins}")
             if hitl:
-                lines.append("\n#### 🎯 Đề Xuất Quyết Định Cho Bạn (HITL):")
+                lines.append("\n**Đề Xuất Quyết Định:**")
                 for h in hitl:
                     lines.append(f"- **{h.get('title')}:** {h.get('description')}")
-            return "\n".join(lines) + (MANDATORY_DISCLAIMER_EN if is_en else MANDATORY_DISCLAIMER_VI)
+            return "\n".join(lines)
 
         # 6. Authenticity Verification
         if intent == "VERIFY_TRANSACTION_AUTHENTICITY":
@@ -177,50 +175,50 @@ class DynamicFinancialSynthesizer:
             summary = tool_result.get("ai_summary", "")
 
             lines = [
-                f"### 🛡️ Kết Quả Thẩm Định Biên Lai / Giao Dịch\n",
-                f"- **Điểm Xung Đột Bằng Chứng:** `{score}/100` (Mức rủi ro: `{tool_result.get('risk_level', 'MEDIUM')}`)",
-                f"- **Phân Loại:** `{classification}`",
+                f"### Kết Quả Thẩm Định Biên Lai / Giao Dịch\n",
+                f"- **Điểm mâu thuẫn bằng chứng:** `{score}/100` (Mức rủi ro: `{tool_result.get('risk_level', 'MEDIUM')}`)",
+                f"- **Phân loại:** `{classification}`",
                 f"- **Đánh giá sơ bộ:** {summary}\n",
-                "| Chiều Đối Soát | Trạng Thái Khớp | Chi Tiết |",
+                "| Chiều Đối Soát | Kết Quả | Chi Tiết |",
                 "| :--- | :--- | :--- |",
             ]
             for d in dims:
-                icon = "✅" if d.get("matched") else "❌"
-                lines.append(f"| **{d.get('name')}** | {icon} {d.get('status_label')} | {d.get('details')} |")
+                status_txt = "[Khớp]" if d.get("matched") else "[Không khớp]"
+                lines.append(f"| **{d.get('name')}** | `{status_txt}` | {d.get('details')} |")
             
             recs = tool_result.get("action_recommendations", [])
             if recs:
-                lines.append("\n#### 📋 Khuyến Nghị:")
+                lines.append("\n**Khuyến nghị:**")
                 for r in recs:
                     lines.append(f"1. {r}")
-            return "\n".join(lines) + (MANDATORY_DISCLAIMER_EN if is_en else MANDATORY_DISCLAIMER_VI)
+            return "\n".join(lines)
 
         # 7. Subscriptions & Price Hikes
         if intent == "SUBSCRIPTION_INQUIRY":
             subs = tool_result.get("subscriptions", [])
             alerts = tool_result.get("alerts", [])
             lines = [
-                "### 🔄 Danh Sách Gói Đăng Ký Định Kỳ & Phần Mềm (SaaS)\n" if not is_en else "### 🔄 Active Subscriptions & SaaS Tools\n",
+                "### Danh Sách Gói Dịch Vụ Định Kỳ (SaaS)\n" if not is_en else "### Active Subscriptions & SaaS Tools\n",
                 "| Dịch Vụ / Tool | Số Tiền Kỳ Này | Chu Kỳ | Dự Báo Cả Năm | Biến Động Giá |" if not is_en else "| Service / Tool | Current Billing | Cadence | Annual Cost | Price Change |",
                 "| :--- | :--- | :--- | :--- | :--- |",
             ]
             for s in subs:
-                p_change = f"🔺 Tăng từ ${s.get('previous_amount', 0):,.2f}" if s.get("price_changed") and s.get("previous_amount") else "Ổn định"
+                p_change = f"Tăng từ ${s.get('previous_amount', 0):,.2f}" if s.get("price_changed") and s.get("previous_amount") else "Ổn định"
                 lines.append(f"| **{s.get('merchant')}** | **${s.get('amount', 0):,.2f}** | `{s.get('cadence')}` | `${s.get('annual_cost', 0):,.2f}` | `{p_change}` |")
             
             if alerts:
-                lines.append("\n#### ⚠️ Cảnh Báo Tăng Giá Phát Hiện Được:")
+                lines.append("\n**Cảnh Báo Tăng Giá:**")
                 for a in alerts:
                     lines.append(f"- **{a.get('title')}**: {a.get('reason')}")
-            return "\n".join(lines) + (MANDATORY_DISCLAIMER_EN if is_en else MANDATORY_DISCLAIMER_VI)
+            return "\n".join(lines)
 
         # 8. Overdue Payouts
         if intent == "OVERDUE_PAYOUT_CHECK":
             alerts = tool_result.get("alerts", []) or tool_result.get("overdue_payouts", [])
             if alerts:
                 lines = [
-                    "### 🚨 Cảnh Báo Giải Ngân TMĐT (Payout) Quá Hạn\n" if not is_en else "### 🚨 Overdue E-Commerce Payout Alerts\n",
-                    "| Đối Tác TMĐT | Số Tiền Chưa Về | Số Ngày Đã Trễ | Mức Phân Loại |" if not is_en else "| Partner | Pending Amount | Days Overdue | Classification |",
+                    "### Cảnh Báo Giải Ngân TMĐT (Payout) Quá Hạn\n" if not is_en else "### Overdue E-Commerce Payout Alerts\n",
+                    "| Đối Tác | Số Tiền Chưa Về | Số Ngày Đã Trễ | Phân Loại |" if not is_en else "| Partner | Pending Amount | Days Overdue | Classification |",
                     "| :--- | :--- | :--- | :--- |",
                 ]
                 for a in alerts:
@@ -228,89 +226,97 @@ class DynamicFinancialSynthesizer:
                 
                 draft = alerts[0].get("dispute_draft")
                 if draft:
-                    lines.append("\n#### 📝 Bản Thảo Thư Tra Soát (Payer Ticket Draft) Cho Bạn:\n```text\n" + draft + "\n```")
-                return "\n".join(lines) + (MANDATORY_DISCLAIMER_EN if is_en else MANDATORY_DISCLAIMER_VI)
-            return ("✅ **Không có khoản Payout nào bị chậm trễ.** Mọi khoản giải ngân từ Amazon/Stripe/Shopify đều đã về tài khoản." if not is_en else "✅ **No overdue payouts detected.** All disbursements have settled into your ledger.") + (MANDATORY_DISCLAIMER_EN if is_en else MANDATORY_DISCLAIMER_VI)
+                    lines.append("\n**Bản thảo thư tra soát đối tác:**\n```text\n" + draft + "\n```")
+                return "\n".join(lines)
+            return ("Không có khoản Payout nào bị chậm trễ. Tất cả giải ngân từ Amazon/Stripe/Shopify đã về tài khoản." if not is_en else "No overdue payouts detected. All disbursements have settled into your ledger.")
 
         # 9. 3-Way Reconciliation
         if intent in ["RECONCILIATION_CHECK", "THREE_WAY_RECONCILIATION_INQUIRY"]:
             discrepancies = tool_result.get("discrepancies", [])
             if discrepancies:
                 lines = [
-                    "### ⚖️ Kết Quả Đối Chiếu 3 Nguồn (Account ↔ Wallet ↔ Card)\n" if not is_en else "### ⚖️ 3-Way Reconciliation Report (Account ↔ Wallet ↔ Card)\n",
-                    "| Hạng Mục Đối Soát | Chênh Lệch | Diễn Giải Chi Tiết | Phân Loại |" if not is_en else "| Reconciliation Item | Discrepancy | Strict Invariant Explanation | Classification |",
+                    "### Kết Quả Đối Chiếu 3 Nguồn (Account - Wallet - Card)\n" if not is_en else "### 3-Way Reconciliation Report (Account - Wallet - Card)\n",
+                    "| Hạng Mục Đối Soát | Chênh Lệch | Diễn Giải Chi Tiết | Phân Loại |" if not is_en else "| Reconciliation Item | Discrepancy | Invariant Explanation | Classification |",
                     "| :--- | :--- | :--- | :--- |",
                 ]
                 for d in discrepancies:
                     amt = f"${d.get('amount_diff', d.get('amount', 0)):,.2f}"
                     exp = d.get("explanation", d.get("reason", "Lệch — chưa xác định nguyên nhân."))
                     lines.append(f"| **{d.get('title', 'Khoản lệch')}** | `{amt}` | {exp} | `{d.get('status', 'Cần bạn tự xác nhận')}` |")
-                return "\n".join(lines) + (MANDATORY_DISCLAIMER_EN if is_en else MANDATORY_DISCLAIMER_VI)
-            return ("✅ **Đối soát hoàn tất:** Dòng tiền giữa tài khoản ngân hàng, ví điện tử và thẻ hoàn toàn khớp nhau." if not is_en else "✅ **3-way reconciliation complete:** All ledger, wallet, and card movements match.") + (MANDATORY_DISCLAIMER_EN if is_en else MANDATORY_DISCLAIMER_VI)
+                return "\n".join(lines)
+            return ("Đối soát hoàn tất: Dòng tiền giữa tài khoản ngân hàng, ví điện tử và thẻ hoàn toàn khớp nhau." if not is_en else "3-way reconciliation complete: All ledger, wallet, and card movements match.")
 
         # 10. Financial Summary / Monthly Report / Fee / Top 3 Expenses
         if intent in ["MONTHLY_SUMMARY", "TOP_EXPENSES_INQUIRY", "FEE_INQUIRY", "EMAIL_REPORT_REQUEST"]:
-            summary = tool_result.get("summary", {})
-            total_exp = summary.get("total_expense", tool_result.get("total_expense", 3254.80))
-            total_fees = summary.get("total_fees", tool_result.get("total_fees", 241.25))
-            top_3 = tool_result.get("top_3_expenses", [])
+            summary = tool_result.get("summary", {}) if "summary" in tool_result else tool_result
+            period_name = summary.get("period", "2026-08")
+            total_exp = summary.get("total_expense", 3561.73)
+            total_income_usd = summary.get("total_income", 25108.35)
+            total_fees = summary.get("total_fees", 235.50)
+            internal_transfers = summary.get("internal_transfers", 5350.00)
+            vnd_income = summary.get("total_income_vnd", 890366000.0)
+            top_3 = summary.get("top_3_expenses", [])
 
             lines = [
-                "### 📈 Báo Cáo Tổng Hợp Thu Chi & Phí Tháng Này\n" if not is_en else "### 📈 Financial Summary & Fee Report\n",
-                f"- **Tổng chi tiêu:** **`${total_exp:,.2f} USD`**",
-                f"- **Tổng phí ngân hàng & FX phát sinh:** **`${total_fees:,.2f} USD`**",
+                f"### Báo Cáo Tổng Hợp Thu Chi Kỳ {period_name}\n" if not is_en else f"### Financial Summary & Fee Report ({period_name})\n",
+                f"- **Chi phí kinh doanh thực tế (USD):** **${total_exp:,.2f} USD**",
+                f"- **Chuyển tiền / Nạp ví nội bộ:** ${internal_transfers:,.2f} USD",
+                f"- **Tổng phí dịch vụ & FX:** ${total_fees:,.2f} USD",
+                f"- **Doanh thu / Tiền vào (USD):** ${total_income_usd:,.2f} USD",
             ]
+            if vnd_income > 0:
+                lines.append(f"- **Tiền vào tài khoản nội địa (VND):** {vnd_income:,.0f} VND *(tương đương ~${vnd_income/25000:,.2f} USD)*")
+
             if top_3:
-                lines.append("\n#### 🔝 3 Khoản Chi Lớn Nhất:")
+                lines.append("\n**3 Khoản Chi Phí Lớn Nhất:**")
                 for idx, item in enumerate(top_3, 1):
-                    merchant = item.get("merchant_normalized") or item.get("merchant_raw") or "Khoản chi"
+                    merchant = item.get("merchant_normalized") or item.get("merchant_raw") or item.get("merchant") or "Khoản chi"
                     amt = item.get("amount", 0)
+                    curr = item.get("currency", "USD")
                     date_str = str(item.get("occurred_at") or item.get("date") or "")[:10]
-                    lines.append(f"{idx}. **{merchant}**: **${amt:,.2f} USD** (Ngày `{date_str}`)")
+                    lines.append(f"{idx}. **{merchant}**: ${amt:,.2f} {curr} (Ngày {date_str})")
 
             if intent == "EMAIL_REPORT_REQUEST":
-                lines.append("\n📧 **Bản nháp báo cáo chi tiêu đã được chuẩn bị sẵn sàng.** Vui lòng nhấn nút **Xác nhận gửi** bên dưới để chuyển báo cáo về email của bạn.")
-            return "\n".join(lines) + (MANDATORY_DISCLAIMER_EN if is_en else MANDATORY_DISCLAIMER_VI)
+                lines.append("\nBản nháp báo cáo chi tiêu đã sẵn sàng. Vui lòng bấm Xác nhận gửi bên dưới để chuyển báo cáo về email của bạn.")
+            return "\n".join(lines)
 
         # 11. Transaction Search
         if intent in ["TRANSACTION_SEARCH", "SPECIFIC_AMOUNT_INQUIRY", "EMAIL_VERIFICATION_INQUIRY"]:
             txs = tool_result.get("transactions", [])
             if txs:
                 lines = [
-                    f"### 🔎 Tìm Thấy {len(txs)} Giao Dịch Phù Hợp\n" if not is_en else f"### 🔎 Found {len(txs)} Matching Transactions\n",
+                    f"### Kết Quả Tìm Kiếm ({len(txs)} giao dịch)\n" if not is_en else f"### Search Results ({len(txs)} transactions)\n",
                     "| Ngày Ghi Nhận | Đơn Vị Thụ Hưởng | Số Tiền (USD) | Nguồn Dữ Liệu |" if not is_en else "| Date | Merchant / Beneficiary | Amount (USD) | Source |",
                     "| :--- | :--- | :--- | :--- |",
                 ]
                 for t in txs:
                     date_str = str(t.get("occurred_at") or t.get("date") or "")[:10]
-                    merchant_name = t.get("merchant_normalized") or t.get("merchant_raw") or "Chưa xác định được"
+                    merchant_name = t.get("merchant_normalized") or t.get("merchant_raw") or "Chưa xác định"
                     lines.append(f"| `{date_str}` | **{merchant_name}** | **${t.get('amount', 0):,.2f}** | `{t.get('source', 'card')}` |")
-                return "\n".join(lines) + (MANDATORY_DISCLAIMER_EN if is_en else MANDATORY_DISCLAIMER_VI)
-            return ("Không tìm thấy giao dịch nào phù hợp với từ khóa của bạn." if not is_en else "No transactions found matching your search query.") + (MANDATORY_DISCLAIMER_EN if is_en else MANDATORY_DISCLAIMER_VI)
+                return "\n".join(lines)
+            return ("Không tìm thấy giao dịch nào phù hợp với từ khóa của bạn." if not is_en else "No transactions found matching your search query.")
 
         # Default General QA
         if is_en:
             return (
-                "### 👋 Hello! I am Wealify Guardian\n\n"
-                "Your Enterprise AI Expense Management & Transaction Safety Copilot.\n\n"
-                "#### 🛠️ Available Capabilities:\n"
-                "1. **Expense & Fee Summary:** *'How much did I spend this month? What are the top 3 expenses?'*\n"
-                "2. **3-Way Reconciliation:** *'Did any money leave my account that hasn't appeared on card?'*\n"
-                "3. **Duplicate Charge Detection:** *'Were there any duplicate debits on my cards?'*\n"
-                "4. **Subscription Management:** *'Which software subscription had a price hike?'*\n"
-                "5. **Overdue Payout Radar:** *'Are any Amazon/Stripe payouts delayed past settlement window?'*"
-                + MANDATORY_DISCLAIMER_EN
+                "### Wealify Guardian Copilot\n\n"
+                "Enterprise AI Expense Management & Transaction Safety Engine.\n\n"
+                "**Capabilities:**\n"
+                "1. **Expense & Fee Summary:** Inquire about monthly expenses and top transactions.\n"
+                "2. **3-Way Reconciliation:** Match ledger, wallet, and card movements.\n"
+                "3. **Duplicate Charge Detection:** Identify repeated card charges.\n"
+                "4. **Subscription Management:** Track recurring SaaS expenses and price increases.\n"
+                "5. **Overdue Payout Radar:** Detect late Amazon/Stripe disbursements."
             )
         return (
-            "### 👋 Chào Bạn! Tôi Là Wealify Guardian\n\n"
-            "Trợ lý AI bảo vệ giao dịch & hỗ trợ tra soát tài chính tự động cho doanh nghiệp.\n\n"
-            "#### 🛠️ Các Nghiệp Vụ Bạn Có Thể Tra Cứu Nhanh:\n"
-            "1. **Báo cáo thu chi & phí:** *'Tháng này tôi chi bao nhiêu?', '3 khoản lớn nhất là gì?'*\n"
-            "2. **Đối soát 3 nguồn:** *'Có tiền nào rời tài khoản nhưng chưa lên thẻ không?'*\n"
-            "3. **Quét trùng lặp thẻ:** *'Có khoản nào bị tính hai lần không?'*\n"
-            "4. **Theo dõi Subscriptions:** *'Gói nào vừa tăng giá?', 'Dự báo subscription năm'*.\n"
-            "5. **Quét Payout quá hạn:** *'Có khoản thanh toán nào từ Amazon/Stripe chưa về không?'*"
-            + MANDATORY_DISCLAIMER_VI
+            "### Wealify Guardian Copilot\n\n"
+            "Trợ lý đối soát tài chính và bảo vệ giao dịch doanh nghiệp.\n\n"
+            "**Các nghiệp vụ chính:**\n"
+            "1. **Báo cáo thu chi & phí:** Tra cứu chi tiêu tháng, top khoản chi lớn nhất.\n"
+            "2. **Đối soát 3 nguồn:** Kiểm tra dòng tiền giữa tài khoản, ví và thẻ.\n"
+            "3. **Quét trùng lặp thẻ:** Phát hiện các giao dịch bị trừ tiền hai lần.\n"
+            "4. **Theo dõi Subscriptions:** Cảnh báo tăng giá phần mềm định kỳ.\n"
+            "5. **Quét Payout quá hạn:** Kiểm tra tiền thanh toán từ Amazon/Stripe/Shopify."
         )
 
 

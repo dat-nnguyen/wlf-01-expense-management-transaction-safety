@@ -43,6 +43,11 @@ export interface Message {
   timeline_steps?: TimelineStep[];
   suggested_chips?: string[];
   security_verification?: SecurityVerificationInfo;
+  image_preview?: string;
+  image_name?: string;
+  isStreaming?: boolean;
+  current_thought_step?: string;
+  thought_steps_history?: string[];
 }
 
 export interface SecurityCaseItem {

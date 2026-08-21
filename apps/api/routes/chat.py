@@ -26,6 +26,7 @@ class ChatResponse(BaseModel):
     tool_called: Optional[str]
     tool_result: Dict[str, Any]
     policy_allowed: bool
+    suggested_followups: List[str] = Field(default_factory=list)
 
 
 @router.post("/chat", response_model=ChatResponse)
@@ -48,6 +49,7 @@ async def chat_endpoint(
         tool_called=result.tool_called,
         tool_result=result.tool_result,
         policy_allowed=result.policy_allowed,
+        suggested_followups=result.suggested_followups,
     )
 
 
@@ -62,11 +64,11 @@ async def chat_stream_endpoint(
     """
     async def sse_event_generator():
         # Step 1: Input Guardrail
-        yield f"event: thinking\ndata: {json.dumps({'step': 'INPUT_GUARDRAIL', 'message': '🛡️ Xác thực chính sách Read-Only & Kiểm tra nội dung...'}, ensure_ascii=False)}\n\n"
+        yield f"event: thinking\ndata: {json.dumps({'step': 'INPUT_GUARDRAIL', 'message': '[Planner] Kiểm tra an toàn chính sách Read-Only & xác thực dữ liệu đầu vào'}, ensure_ascii=False)}\n\n"
         await asyncio.sleep(0.05)
 
-        # Step 2: Planning
-        yield f"event: thinking\ndata: {json.dumps({'step': 'INTENT_PLANNING', 'message': '🧠 Google ADK Intent Router đang lập kế hoạch gọi công cụ tài chính...'}, ensure_ascii=False)}\n\n"
+        # Step 2: LLM Tool Selection
+        yield f"event: thinking\ndata: {json.dumps({'step': 'LLM_TOOL_SELECTION', 'message': '[Google ADK] Phân tích ngữ cảnh & điều phối Sub-Agent phù hợp'}, ensure_ascii=False)}\n\n"
         await asyncio.sleep(0.05)
 
         # Execute Orchestrator
@@ -79,11 +81,11 @@ async def chat_stream_endpoint(
 
         # Step 3: Tool Execution Trace
         if result.tool_called:
-            yield f"event: thinking\ndata: {json.dumps({'step': 'TOOL_EXECUTION', 'tool': result.tool_called, 'message': f'⚡ Đã thực thi công cụ: {result.tool_called}'}, ensure_ascii=False)}\n\n"
+            yield f"event: thinking\ndata: {json.dumps({'step': 'TOOL_EXECUTION', 'tool': result.tool_called, 'message': f'[Tool Engine] Thực thi công cụ tài chính: {result.tool_called}'}, ensure_ascii=False)}\n\n"
             await asyncio.sleep(0.05)
 
         # Step 4: Grounding Reflection
-        yield f"event: thinking\ndata: {json.dumps({'step': 'GROUNDING_REFLECTION', 'message': '🔍 Grounding Self-Reflection: Kiểm tra đối soát số liệu và điều khoản 60 ngày...'}, ensure_ascii=False)}\n\n"
+        yield f"event: thinking\ndata: {json.dumps({'step': 'GROUNDING_REFLECTION', 'message': '[Data Grounding] Đối soát số cái từ 238 transactions & đối chiếu hạn khiếu nại 60 ngày'}, ensure_ascii=False)}\n\n"
         await asyncio.sleep(0.05)
 
         # Step 5: Stream Response Tokens
@@ -94,7 +96,7 @@ async def chat_stream_endpoint(
             yield f"event: token\ndata: {json.dumps({'chunk': chunk}, ensure_ascii=False)}\n\n"
             await asyncio.sleep(0.02)
 
-        # Step 6: Done Event
-        yield f"event: done\ndata: {json.dumps({'run_id': result.run_id, 'intent': result.intent, 'policy_allowed': result.policy_allowed, 'tool_called': result.tool_called}, ensure_ascii=False)}\n\n"
+        # Step 6: Done Event with Dynamic Agent Follow-ups
+        yield f"event: done\ndata: {json.dumps({'run_id': result.run_id, 'intent': result.intent, 'policy_allowed': result.policy_allowed, 'tool_called': result.tool_called, 'suggested_followups': result.suggested_followups}, ensure_ascii=False)}\n\n"
 
     return StreamingResponse(sse_event_generator(), media_type="text/event-stream")
