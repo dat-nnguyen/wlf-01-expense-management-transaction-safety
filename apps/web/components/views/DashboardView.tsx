@@ -191,9 +191,24 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
           <div className="space-y-2.5">
             {[
-              { merchant: 'Facebook Ads (Meta)', amount: 150.0, date: '19/08/2026', cat: 'Quảng cáo & Tiếp thị' },
-              { merchant: 'Adobe Creative Cloud', amount: 54.99, date: '18/08/2026', cat: 'Thuê bao phần mềm (SaaS)' },
-              { merchant: 'Amazon Web Services (AWS)', amount: 45.0, date: '15/08/2026', cat: 'Máy chủ & Đám mây' },
+              {
+                merchant: 'Facebook Ads (Meta)',
+                amount: 150.0,
+                date: '19/08/2026',
+                cat: language === 'vi' ? 'Quảng cáo & Tiếp thị' : 'Advertising & Marketing',
+              },
+              {
+                merchant: 'Adobe Creative Cloud',
+                amount: 54.99,
+                date: '18/08/2026',
+                cat: language === 'vi' ? 'Thuê bao phần mềm (SaaS)' : 'Software Subscriptions (SaaS)',
+              },
+              {
+                merchant: 'Amazon Web Services (AWS)',
+                amount: 45.0,
+                date: '15/08/2026',
+                cat: language === 'vi' ? 'Máy chủ & Đám mây' : 'Cloud Infrastructure',
+              },
             ].map((item, idx) => (
               <div
                 key={idx}
@@ -238,33 +253,39 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 space-y-1.5">
               <div className="flex items-center justify-between">
                 <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30">
-                  Cần bạn tự xác nhận
+                  {language === 'vi' ? 'Cần bạn tự xác nhận' : 'Needs confirmation'}
                 </span>
                 <div className="flex items-center gap-1 text-[11px] font-mono text-[#FC6508]">
                   <Clock className="w-3 h-3" />
-                  <span>Hạn còn 12 ngày (25/09/2026)</span>
+                  <span>{language === 'vi' ? 'Hạn còn 12 ngày (25/09/2026)' : 'Dispute: 12 days left (09/25/2026)'}</span>
                 </div>
               </div>
               <div className="font-semibold text-xs text-[var(--text-primary)]">
-                Cà thẻ 2 lần: Facebook Ads ($150.00 USD)
+                {language === 'vi' ? 'Cà thẻ 2 lần: Facebook Ads ($150.00 USD)' : 'Double-Charge: Facebook Ads ($150.00 USD)'}
               </div>
               <div className="text-[11px] text-[var(--text-secondary)]">
-                Phát hiện 2 giao dịch cùng số tiền $150.00 cách nhau 105 giây trên thẻ ảo Volcano Ads •••• 4812.
+                {language === 'vi'
+                  ? 'Phát hiện 2 giao dịch cùng số tiền $150.00 cách nhau 105 giây trên thẻ ảo Volcano Ads •••• 4812.'
+                  : 'Detected 2 identical $150.00 charges 105 seconds apart on virtual card Volcano Ads •••• 4812.'}
               </div>
             </div>
 
             <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 space-y-1.5">
               <div className="flex items-center justify-between">
                 <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">
-                  Cần bạn tự xác nhận
+                  {language === 'vi' ? 'Cần bạn tự xác nhận' : 'Needs confirmation'}
                 </span>
-                <span className="text-[11px] text-[var(--text-muted)] font-mono">16 ngày trễ</span>
+                <span className="text-[11px] text-[var(--text-muted)] font-mono">
+                  {language === 'vi' ? '16 ngày trễ' : '16 days overdue'}
+                </span>
               </div>
               <div className="font-semibold text-xs text-[var(--text-primary)]">
-                Payout sàn Amazon chậm trễ ($4,250.00 USD)
+                {language === 'vi' ? 'Payout sàn Amazon chậm trễ ($4,250.00 USD)' : 'Overdue Amazon Seller Payout ($4,250.00 USD)'}
               </div>
               <div className="text-[11px] text-[var(--text-secondary)]">
-                Email giải ngân ngày 05/08/2026 nhưng tài khoản chưa ghi nhận số dư.
+                {language === 'vi'
+                  ? 'Email giải ngân ngày 05/08/2026 nhưng tài khoản chưa ghi nhận số dư.'
+                  : 'Disbursement email dated 08/05/2026 but funds not yet credited to account.'}
               </div>
             </div>
           </div>

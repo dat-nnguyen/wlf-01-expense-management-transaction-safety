@@ -79,14 +79,14 @@ export const AuditTrailView: React.FC<AuditTrailViewProps> = ({ language }) => {
             className="px-3.5 py-2 rounded-xl bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] border border-[var(--border-subtle)] text-xs font-semibold text-[var(--text-primary)] transition-all flex items-center gap-1.5 shadow-sm"
           >
             <Download className="w-3.5 h-3.5 text-[#FC6508]" />
-            <span>Xuất CSV (Export CSV)</span>
+            <span>{language === 'vi' ? 'Xuất CSV' : 'Export CSV'}</span>
           </button>
           <button
             onClick={() => handleExport('json')}
             className="px-3.5 py-2 rounded-xl bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] border border-[var(--border-subtle)] text-xs font-semibold text-[var(--text-primary)] transition-all flex items-center gap-1.5 shadow-sm"
           >
             <Download className="w-3.5 h-3.5 text-indigo-400" />
-            <span>Xuất JSON (Export JSON)</span>
+            <span>{language === 'vi' ? 'Xuất JSON' : 'Export JSON'}</span>
           </button>
         </div>
       </div>
@@ -99,12 +99,12 @@ export const AuditTrailView: React.FC<AuditTrailViewProps> = ({ language }) => {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Tìm theo mã log, loại sự kiện, mã tham chiếu..."
+            placeholder={language === 'vi' ? 'Tìm theo mã log, loại sự kiện, mã tham chiếu...' : 'Search log ID, event type, reference...'}
             className="w-full pl-9 pr-3 py-1.5 rounded-lg bg-[var(--bg-input)] border border-[var(--border-subtle)] text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[#FC6508]"
           />
         </div>
         <span className="text-xs text-[var(--text-muted)] font-mono">
-          Tổng cộng: {filtered.length} bản ghi
+          {language === 'vi' ? `Tổng cộng: ${filtered.length} bản ghi` : `Total: ${filtered.length} records`}
         </span>
       </div>
 
@@ -114,13 +114,13 @@ export const AuditTrailView: React.FC<AuditTrailViewProps> = ({ language }) => {
           <table className="w-full text-left text-xs">
             <thead className="bg-[var(--bg-secondary)] text-[var(--text-muted)] uppercase tracking-wider font-semibold border-b border-[var(--border-subtle)]">
               <tr>
-                <th className="py-3 px-4">Mã Log & Thời Gian</th>
-                <th className="py-3 px-4">Loại Sự Kiện (Event Type)</th>
-                <th className="py-3 px-4">Mã Đối Soát (Reference)</th>
-                <th className="py-3 px-4">Số Tiền</th>
-                <th className="py-3 px-4">Lý Do / Bằng Chứng Gắn Cờ</th>
-                <th className="py-3 px-4">Phân Loại 3 Mức</th>
-                <th className="py-3 px-4">Mức Tin Cậy</th>
+                <th className="py-3 px-4">{language === 'vi' ? 'Mã Log & Thời Gian' : 'Log ID & Time'}</th>
+                <th className="py-3 px-4">{language === 'vi' ? 'Loại Sự Kiện (Event Type)' : 'Event Type'}</th>
+                <th className="py-3 px-4">{language === 'vi' ? 'Mã Đối Soát (Reference)' : 'Reference'}</th>
+                <th className="py-3 px-4">{language === 'vi' ? 'Số Tiền' : 'Amount'}</th>
+                <th className="py-3 px-4">{language === 'vi' ? 'Lý Do / Bằng Chứng Gắn Cờ' : 'Reason / Flagged Evidence'}</th>
+                <th className="py-3 px-4">{language === 'vi' ? 'Phân Loại 3 Mức' : 'Tri-State Alert'}</th>
+                <th className="py-3 px-4">{language === 'vi' ? 'Mức Tin Cậy' : 'Confidence'}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border-subtle)]">

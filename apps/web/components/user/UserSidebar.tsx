@@ -158,7 +158,7 @@ export const UserSidebar: React.FC<UserSidebarProps> = ({
         </div>
         <div className="flex items-center gap-1.5 text-[10px] text-emerald-400 font-medium pt-1 border-t border-[var(--border-subtle)]">
           <ShieldCheck className="w-3 h-3" />
-          <span>Bảo vệ số dư 24/7</span>
+          <span>{language === 'vi' ? 'Bảo vệ số dư 24/7' : '24/7 Balance Protection'}</span>
         </div>
       </div>
     </aside>

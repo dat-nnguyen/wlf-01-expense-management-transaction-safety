@@ -73,7 +73,15 @@ export const TransactionDetailPanel: React.FC<TransactionDetailPanelProps> = ({
               <div className="flex items-center justify-between text-[10px]">
                 <span className="text-[var(--text-muted)] font-mono">{tx.time}</span>
                 <span className="px-1.5 py-0.2 rounded text-[9px] font-medium bg-[var(--bg-card)] text-[var(--text-secondary)] border border-[var(--border-subtle)]">
-                  {tx.badge}
+                  {language === 'vi'
+                    ? tx.badge
+                    : tx.badge === 'Nghi trùng lặp'
+                    ? 'Suspicious Duplicate'
+                    : tx.badge === 'Đã hoàn tất'
+                    ? 'Settled'
+                    : tx.badge === 'Chậm trễ 16 ngày'
+                    ? '16 Days Overdue'
+                    : tx.badge}
                 </span>
               </div>
             </div>

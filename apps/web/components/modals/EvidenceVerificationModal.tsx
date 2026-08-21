@@ -90,7 +90,9 @@ export const EvidenceVerificationModal: React.FC<EvidenceVerificationModalProps>
 
         {/* AI Forensic Summary */}
         <div className="space-y-1 text-xs leading-relaxed">
-          <div className="font-bold text-[var(--text-primary)]">Tóm tắt kết luận giám định Wealify:</div>
+          <div className="font-bold text-[var(--text-primary)]">
+            {language === 'vi' ? 'Tóm tắt kết luận giám định Wealify:' : 'Wealify Forensic Investigation Summary:'}
+          </div>
           <p className="text-[var(--text-secondary)] bg-[var(--bg-secondary)] p-3 rounded-lg border border-[var(--border-subtle)]">
             {t.authenticitySummary}
           </p>

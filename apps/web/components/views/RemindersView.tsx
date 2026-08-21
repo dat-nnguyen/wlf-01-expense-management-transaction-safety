@@ -155,7 +155,7 @@ export const RemindersView: React.FC<RemindersViewProps> = ({ language }) => {
                 {/* Top Badge: Days Remaining Countdown */}
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-mono text-[var(--text-muted)]">
-                    Mã: {rem.transaction_id}
+                    {language === 'vi' ? 'Mã:' : 'ID:'} {rem.transaction_id}
                   </span>
                   <span
                     className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold flex items-center gap-1.5 ${
@@ -167,7 +167,11 @@ export const RemindersView: React.FC<RemindersViewProps> = ({ language }) => {
                     }`}
                   >
                     <Clock className="w-3.5 h-3.5" />
-                    <span>{isResolved ? 'Đã giải quyết' : `Còn ${rem.days_remaining} ngày`}</span>
+                    <span>
+                      {isResolved
+                        ? (language === 'vi' ? 'Đã giải quyết' : 'Resolved')
+                        : (language === 'vi' ? `Còn ${rem.days_remaining} ngày` : `${rem.days_remaining} days left`)}
+                    </span>
                   </span>
                 </div>
 
@@ -182,11 +186,11 @@ export const RemindersView: React.FC<RemindersViewProps> = ({ language }) => {
                 {/* Dates breakdown */}
                 <div className="p-2.5 rounded-xl bg-[var(--bg-input)] border border-[var(--border-subtle)] space-y-1 text-xs">
                   <div className="flex justify-between text-[var(--text-muted)]">
-                    <span>Ngày gửi sao kê:</span>
+                    <span>{language === 'vi' ? 'Ngày gửi sao kê:' : 'Statement Date:'}</span>
                     <span className="font-mono text-[var(--text-primary)]">{rem.statement_date}</span>
                   </div>
                   <div className="flex justify-between font-semibold">
-                    <span className="text-[#FC6508]">Hạn khiếu nại (60 ngày):</span>
+                    <span className="text-[#FC6508]">{language === 'vi' ? 'Hạn khiếu nại (60 ngày):' : 'Dispute Deadline (60d):'}</span>
                     <span className="font-mono text-[#FC6508]">{rem.deadline_date}</span>
                   </div>
                 </div>
@@ -203,10 +207,10 @@ export const RemindersView: React.FC<RemindersViewProps> = ({ language }) => {
                     className="px-3 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-xs font-semibold transition-colors flex items-center gap-1"
                   >
                     <CheckCircle2 className="w-3.5 h-3.5" />
-                    <span>Đánh dấu xong</span>
+                    <span>{language === 'vi' ? 'Đánh dấu xong' : 'Mark Resolved'}</span>
                   </button>
                 ) : (
-                  <span className="text-xs text-emerald-400 font-medium">Hoàn tất</span>
+                  <span className="text-xs text-emerald-400 font-medium">{language === 'vi' ? 'Hoàn tất' : 'Resolved'}</span>
                 )}
                 <button
                   onClick={() => handleDelete(rem.id)}
@@ -238,11 +242,13 @@ export const RemindersView: React.FC<RemindersViewProps> = ({ language }) => {
 
             <form onSubmit={handleCreate} className="space-y-3.5 text-xs">
               <div>
-                <label className="block text-[var(--text-secondary)] font-medium mb-1">Mã Giao Dịch (ID)</label>
+                <label className="block text-[var(--text-secondary)] font-medium mb-1">
+                  {language === 'vi' ? 'Mã Giao Dịch (ID)' : 'Transaction ID'}
+                </label>
                 <input
                   type="text"
                   required
-                  placeholder="Ví dụ: card_0001"
+                  placeholder={language === 'vi' ? 'Ví dụ: card_0001' : 'e.g. card_0001'}
                   value={formData.transaction_id}
                   onChange={(e) => setFormData({ ...formData, transaction_id: e.target.value })}
                   className="w-full px-3 py-2 rounded-lg bg-[var(--bg-input)] border border-[var(--border-subtle)] text-[var(--text-primary)] focus:outline-none focus:border-[#FC6508]"
@@ -250,11 +256,13 @@ export const RemindersView: React.FC<RemindersViewProps> = ({ language }) => {
               </div>
 
               <div>
-                <label className="block text-[var(--text-secondary)] font-medium mb-1">Đơn Vị Thụ Hưởng (Merchant)</label>
+                <label className="block text-[var(--text-secondary)] font-medium mb-1">
+                  {language === 'vi' ? 'Đơn Vị Thụ Hưởng (Merchant)' : 'Merchant Name'}
+                </label>
                 <input
                   type="text"
                   required
-                  placeholder="Ví dụ: Facebook Ads (Meta)"
+                  placeholder={language === 'vi' ? 'Ví dụ: Facebook Ads (Meta)' : 'e.g. Facebook Ads (Meta)'}
                   value={formData.merchant}
                   onChange={(e) => setFormData({ ...formData, merchant: e.target.value })}
                   className="w-full px-3 py-2 rounded-lg bg-[var(--bg-input)] border border-[var(--border-subtle)] text-[var(--text-primary)] focus:outline-none focus:border-[#FC6508]"
@@ -262,7 +270,9 @@ export const RemindersView: React.FC<RemindersViewProps> = ({ language }) => {
               </div>
 
               <div>
-                <label className="block text-[var(--text-secondary)] font-medium mb-1">Số Tiền ($ USD)</label>
+                <label className="block text-[var(--text-secondary)] font-medium mb-1">
+                  {language === 'vi' ? 'Số Tiền ($ USD)' : 'Amount ($ USD)'}
+                </label>
                 <input
                   type="number"
                   step="0.01"
@@ -275,7 +285,9 @@ export const RemindersView: React.FC<RemindersViewProps> = ({ language }) => {
               </div>
 
               <div>
-                <label className="block text-[var(--text-secondary)] font-medium mb-1">Ngày Ngân Hàng Gửi Sao Kê (Statement Date)</label>
+                <label className="block text-[var(--text-secondary)] font-medium mb-1">
+                  {language === 'vi' ? 'Ngày Ngân Hàng Gửi Sao Kê (Statement Date)' : 'Bank Statement Date'}
+                </label>
                 <input
                   type="date"
                   value={formData.statement_date}
@@ -285,10 +297,12 @@ export const RemindersView: React.FC<RemindersViewProps> = ({ language }) => {
               </div>
 
               <div>
-                <label className="block text-[var(--text-secondary)] font-medium mb-1">Ghi Chú Tra Soát</label>
+                <label className="block text-[var(--text-secondary)] font-medium mb-1">
+                  {language === 'vi' ? 'Ghi Chú Tra Soát' : 'Dispute Notes'}
+                </label>
                 <textarea
                   rows={2}
-                  placeholder="Ghi chú lý do tra soát (cà thẻ đúp, chưa nhận tiền...)"
+                  placeholder={language === 'vi' ? 'Ghi chú lý do tra soát (cà thẻ đúp, chưa nhận tiền...)' : 'Notes on discrepancy (double charge, delayed payout...)'}
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                   className="w-full px-3 py-2 rounded-lg bg-[var(--bg-input)] border border-[var(--border-subtle)] text-[var(--text-primary)] focus:outline-none focus:border-[#FC6508]"
@@ -301,13 +315,13 @@ export const RemindersView: React.FC<RemindersViewProps> = ({ language }) => {
                   onClick={() => setIsCreateOpen(false)}
                   className="px-3 py-1.5 rounded-lg border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                 >
-                  Hủy
+                  {language === 'vi' ? 'Hủy' : 'Cancel'}
                 </button>
                 <button
                   type="submit"
                   className="px-4 py-1.5 rounded-lg bg-[#FC6508] hover:bg-[#e05603] text-white font-semibold shadow-sm"
                 >
-                  Tạo Nhắc Nhở
+                  {language === 'vi' ? 'Tạo Nhắc Nhở' : 'Create Reminder'}
                 </button>
               </div>
             </form>

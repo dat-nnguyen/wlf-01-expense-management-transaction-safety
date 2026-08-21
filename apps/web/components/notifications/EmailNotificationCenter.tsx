@@ -148,7 +148,9 @@ export const EmailNotificationCenter: React.FC<EmailNotificationCenterProps> = (
             <span className="font-medium">{language === 'vi' ? 'Quẹt Thẻ Đúp' : 'Double-Swipe Alerts'}</span>
             <CreditCard className="w-3.5 h-3.5 text-rose-400" />
           </div>
-          <div className="text-xl font-bold text-rose-400 font-mono">1 Sự Cố</div>
+          <div className="text-xl font-bold text-rose-400 font-mono">
+            {language === 'vi' ? '1 Sự Cố' : '1 Issue'}
+          </div>
           <div className="text-[10px] text-[var(--text-muted)]">Facebook Ads ($150.00 x 2)</div>
         </div>
 
@@ -167,7 +169,9 @@ export const EmailNotificationCenter: React.FC<EmailNotificationCenterProps> = (
             <AlertTriangle className="w-3.5 h-3.5 text-[#FC6508]" />
           </div>
           <div className="text-xl font-bold text-[#FC6508] font-mono">$4,250.00</div>
-          <div className="text-[10px] text-[var(--text-muted)]">Amazon Seller (Trễ 16 ngày)</div>
+          <div className="text-[10px] text-[var(--text-muted)]">
+            {language === 'vi' ? 'Amazon Seller (Trễ 16 ngày)' : 'Amazon Seller (16 days overdue)'}
+          </div>
         </div>
 
         <div className="p-3.5 rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] space-y-1">
@@ -223,7 +227,9 @@ export const EmailNotificationCenter: React.FC<EmailNotificationCenterProps> = (
           <h2 className="text-xs font-bold text-[var(--text-primary)] uppercase tracking-wider">
             {language === 'vi' ? 'Nhật Ký Email Cảnh Báo Đã Gửi' : 'Dispatched Email Alerts Feed'}
           </h2>
-          <span className="text-xs font-mono text-[var(--text-muted)]">{filteredLogs.length} thông báo</span>
+          <span className="text-xs font-mono text-[var(--text-muted)]">
+            {language === 'vi' ? `${filteredLogs.length} thông báo` : `${filteredLogs.length} notices`}
+          </span>
         </div>
 
         <div className="space-y-2.5">
@@ -245,13 +251,13 @@ export const EmailNotificationCenter: React.FC<EmailNotificationCenterProps> = (
                     }`}
                   >
                     {log.alert_type === 'duplicate'
-                      ? 'QUẸT THẺ ĐÚP'
+                      ? (language === 'vi' ? 'QUẸT THẺ ĐÚP' : 'DOUBLE CHARGE')
                       : log.alert_type === 'price_hike'
-                      ? 'TĂNG GIÁ'
-                      : 'PAYOUT TRỄ'}
+                      ? (language === 'vi' ? 'TĂNG GIÁ' : 'PRICE HIKE')
+                      : (language === 'vi' ? 'PAYOUT TRỄ' : 'OVERDUE PAYOUT')}
                   </span>
                   <span className="text-[10px] text-emerald-400 font-medium">
-                    ✓ Gửi tới {log.recipient_email}
+                    ✓ {language === 'vi' ? 'Gửi tới' : 'Sent to'} {log.recipient_email}
                   </span>
                 </div>
 

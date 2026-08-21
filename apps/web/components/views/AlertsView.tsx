@@ -56,21 +56,21 @@ export const AlertsView: React.FC<AlertsViewProps> = ({
         return (
           <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5 w-max">
             <CheckCircle2 className="w-3.5 h-3.5" />
-            <span>① Định kỳ đã xác định</span>
+            <span>{language === 'vi' ? '① Định kỳ đã xác định' : '① Confirmed Recurring'}</span>
           </span>
         );
       case 'Cần bạn tự xác nhận':
         return (
           <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-500/15 text-rose-400 border border-rose-500/30 flex items-center gap-1.5 w-max">
             <AlertTriangle className="w-3.5 h-3.5" />
-            <span>② Cần bạn tự xác nhận</span>
+            <span>{language === 'vi' ? '② Cần bạn tự xác nhận' : '② Needs Confirmation'}</span>
           </span>
         );
       default:
         return (
           <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30 flex items-center gap-1.5 w-max">
             <HelpCircle className="w-3.5 h-3.5" />
-            <span>③ Chưa đủ dữ liệu</span>
+            <span>{language === 'vi' ? '③ Chưa đủ dữ liệu' : '③ Insufficient Data'}</span>
           </span>
         );
     }
@@ -132,7 +132,9 @@ export const AlertsView: React.FC<AlertsViewProps> = ({
                 {getStatusBadge(a.status)}
                 <div className="flex items-center gap-1 font-mono text-[11px] text-[#FC6508] bg-[#FC6508]/10 px-2 py-0.5 rounded-md border border-[#FC6508]/20">
                   <Clock className="w-3 h-3" />
-                  <span>Hạn tra soát: {a.deadline_days || 60} ngày</span>
+                  <span>
+                    {language === 'vi' ? 'Hạn tra soát:' : 'Dispute window:'} {a.deadline_days || 60} {language === 'vi' ? 'ngày' : 'days'}
+                  </span>
                 </div>
               </div>
 
@@ -152,11 +154,11 @@ export const AlertsView: React.FC<AlertsViewProps> = ({
               {/* Confidence & Source */}
               <div className="flex items-center gap-3 text-[11px] pt-1">
                 <span className="text-emerald-400 font-medium">
-                  Độ tin cậy: {a.confidence_label} ({Math.round(a.confidence * 100)}%)
+                  {language === 'vi' ? 'Độ tin cậy:' : 'Confidence:'} {a.confidence_label} ({Math.round(a.confidence * 100)}%)
                 </span>
                 <span className="text-[var(--text-muted)]">•</span>
                 <span className="text-[var(--text-muted)] font-mono">
-                  Mã TX: {a.transaction_ids?.[0] || 'TX-9182'}
+                  {language === 'vi' ? 'Mã TX:' : 'TX ID:'} {a.transaction_ids?.[0] || 'TX-9182'}
                 </span>
               </div>
             </div>
@@ -164,14 +166,14 @@ export const AlertsView: React.FC<AlertsViewProps> = ({
             {/* Bottom Actions */}
             <div className="pt-3 border-t border-[var(--border-subtle)] flex items-center justify-between gap-2">
               <div className="text-[11px] text-[var(--text-muted)] italic truncate max-w-[240px]">
-                {a.action_suggestion || 'Kiểm tra lại sao kê ngân hàng.'}
+                {a.action_suggestion || (language === 'vi' ? 'Kiểm tra lại sao kê ngân hàng.' : 'Review bank statement records.')}
               </div>
               {a.dispute_draft && (
                 <button
                   onClick={() => setSelectedAlert(a)}
                   className="px-3 py-1.5 rounded-lg bg-[var(--bg-input)] hover:bg-[var(--bg-card-hover)] border border-[var(--border-subtle)] text-[11px] font-semibold text-[#FC6508] transition-colors shrink-0"
                 >
-                  Mẫu đơn tra soát
+                  {language === 'vi' ? 'Mẫu đơn tra soát' : 'Dispute Letter Draft'}
                 </button>
               )}
             </div>
@@ -185,7 +187,7 @@ export const AlertsView: React.FC<AlertsViewProps> = ({
           <div className="bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-2xl max-w-lg w-full p-5 space-y-4 shadow-2xl animate-fadeIn">
             <div className="flex items-center justify-between">
               <h3 className="font-bold text-sm text-[var(--text-primary)]">
-                Bản Thảo Thư Khiếu Nại Ngân Hàng (Dispute Draft)
+                {language === 'vi' ? 'Bản Thảo Thư Khiếu Nại Ngân Hàng (Dispute Draft)' : 'Bank Dispute Letter Draft'}
               </h3>
               <button
                 onClick={() => setSelectedAlert(null)}
@@ -203,7 +205,11 @@ export const AlertsView: React.FC<AlertsViewProps> = ({
                 className="px-4 py-2 rounded-xl bg-[#FC6508] hover:bg-[#e05603] text-white text-xs font-semibold transition-all flex items-center gap-1.5"
               >
                 <Copy className="w-3.5 h-3.5" />
-                <span>{copiedDraft ? 'Đã sao chép!' : 'Sao chép thư khiếu nại'}</span>
+                <span>
+                  {copiedDraft
+                    ? (language === 'vi' ? 'Đã sao chép!' : 'Copied!')
+                    : (language === 'vi' ? 'Sao chép thư khiếu nại' : 'Copy Dispute Draft')}
+                </span>
               </button>
             </div>
           </div>

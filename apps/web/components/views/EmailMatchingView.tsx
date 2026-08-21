@@ -60,21 +60,21 @@ export const EmailMatchingView: React.FC<EmailMatchingViewProps> = ({ language }
         return (
           <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5 w-max">
             <CheckCircle2 className="w-3.5 h-3.5" />
-            <span>Có email khớp</span>
+            <span>{language === 'vi' ? 'Có email khớp' : 'Matched Email'}</span>
           </span>
         );
       case 'Email nghi giả':
         return (
           <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-500/15 text-rose-400 border border-rose-500/30 flex items-center gap-1.5 w-max">
             <ShieldAlert className="w-3.5 h-3.5" />
-            <span>Email nghi giả</span>
+            <span>{language === 'vi' ? 'Email nghi giả' : 'Suspicious Fake'}</span>
           </span>
         );
       default:
         return (
           <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30 flex items-center gap-1.5 w-max">
             <HelpCircle className="w-3.5 h-3.5" />
-            <span>Không tìm thấy</span>
+            <span>{language === 'vi' ? 'Không tìm thấy' : 'Not Found'}</span>
           </span>
         );
     }
@@ -146,11 +146,11 @@ export const EmailMatchingView: React.FC<EmailMatchingViewProps> = ({ language }
           <table className="w-full text-left text-xs">
             <thead className="bg-[var(--bg-secondary)] text-[var(--text-muted)] uppercase tracking-wider font-semibold border-b border-[var(--border-subtle)]">
               <tr>
-                <th className="py-3 px-4">Giao Dịch (Transaction)</th>
-                <th className="py-3 px-4">Email Đối Chiếu (Mailbox Evidence)</th>
-                <th className="py-3 px-4">Kết Quả (Result)</th>
-                <th className="py-3 px-4">Độ Tin Cậy (Confidence)</th>
-                <th className="py-3 px-4">Lý Do Match & Nguồn Sử Dụng</th>
+                <th className="py-3 px-4">{language === 'vi' ? 'Giao Dịch (Transaction)' : 'Transaction'}</th>
+                <th className="py-3 px-4">{language === 'vi' ? 'Email Đối Chiếu (Mailbox Evidence)' : 'Mailbox Evidence'}</th>
+                <th className="py-3 px-4">{language === 'vi' ? 'Kết Quả (Result)' : 'Result'}</th>
+                <th className="py-3 px-4">{language === 'vi' ? 'Độ Tin Cậy (Confidence)' : 'Confidence'}</th>
+                <th className="py-3 px-4">{language === 'vi' ? 'Lý Do Match & Nguồn Sử Dụng' : 'Match Reason & Source'}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border-subtle)]">
@@ -177,14 +177,14 @@ export const EmailMatchingView: React.FC<EmailMatchingViewProps> = ({ language }
                           {item.email_subject}
                         </div>
                         <div className="text-[11px] text-[var(--text-muted)] font-mono truncate">
-                          Từ: {item.email_sender}
+                          {language === 'vi' ? 'Từ:' : 'From:'} {item.email_sender}
                         </div>
                         <div className="text-[10px] text-[var(--text-muted)] font-mono">
-                          Ngày: {item.email_date}
+                          {language === 'vi' ? 'Ngày:' : 'Date:'} {item.email_date}
                         </div>
                       </div>
                     ) : (
-                      <span className="text-[var(--text-muted)] font-mono">— (Không có)</span>
+                      <span className="text-[var(--text-muted)] font-mono">{language === 'vi' ? '— (Không có)' : '— (None)'}</span>
                     )}
                   </td>
 
@@ -209,7 +209,7 @@ export const EmailMatchingView: React.FC<EmailMatchingViewProps> = ({ language }
                       {item.match_reason}
                     </div>
                     <div className="text-[10px] text-[var(--text-muted)] font-mono mt-1">
-                      Nguồn: {item.source_used}
+                      {language === 'vi' ? 'Nguồn:' : 'Source:'} {item.source_used}
                     </div>
                   </td>
                 </tr>

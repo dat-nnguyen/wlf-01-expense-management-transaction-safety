@@ -80,15 +80,15 @@ export const ThreeWayReconciliationView: React.FC<ThreeWayReconciliationViewProp
           </div>
           <div className="space-y-1 text-xs">
             <div className="flex justify-between text-[var(--text-muted)]">
-              <span>Tổng tiền vào:</span>
+              <span>{language === 'vi' ? 'Tổng tiền vào:' : 'Total Credits:'}</span>
               <span className="font-mono text-emerald-400 font-bold">+${report?.account_summary?.total_credit?.toFixed(2) || '15,450.00'}</span>
             </div>
             <div className="flex justify-between text-[var(--text-muted)]">
-              <span>Tổng tiền ra:</span>
+              <span>{language === 'vi' ? 'Tổng tiền ra:' : 'Total Debits:'}</span>
               <span className="font-mono text-[var(--text-primary)] font-bold">-${report?.account_summary?.total_debit?.toFixed(2) || '2,995.00'}</span>
             </div>
             <div className="flex justify-between pt-1 border-t border-[var(--border-subtle)] font-bold">
-              <span>Dòng tiền ròng:</span>
+              <span>{language === 'vi' ? 'Dòng tiền ròng:' : 'Net Flow:'}</span>
               <span className="font-mono text-emerald-400">+${report?.account_summary?.net_flow?.toFixed(2) || '12,455.00'}</span>
             </div>
           </div>
@@ -105,15 +105,15 @@ export const ThreeWayReconciliationView: React.FC<ThreeWayReconciliationViewProp
           </div>
           <div className="space-y-1 text-xs">
             <div className="flex justify-between text-[var(--text-muted)]">
-              <span>Nạp vào (Topup):</span>
+              <span>{language === 'vi' ? 'Nạp vào (Topup):' : 'Topup Inflow:'}</span>
               <span className="font-mono text-emerald-400 font-bold">+${report?.wallet_summary?.total_credit?.toFixed(2) || '5,500.00'}</span>
             </div>
             <div className="flex justify-between text-[var(--text-muted)]">
-              <span>Rút / Chi:</span>
+              <span>{language === 'vi' ? 'Rút / Chi:' : 'Withdraw / Debit:'}</span>
               <span className="font-mono text-[var(--text-primary)] font-bold">-${report?.wallet_summary?.total_debit?.toFixed(2) || '1,000.00'}</span>
             </div>
             <div className="flex justify-between pt-1 border-t border-[var(--border-subtle)] font-bold">
-              <span>Dòng tiền ròng:</span>
+              <span>{language === 'vi' ? 'Dòng tiền ròng:' : 'Net Flow:'}</span>
               <span className="font-mono text-emerald-400">+${report?.wallet_summary?.net_flow?.toFixed(2) || '4,500.00'}</span>
             </div>
           </div>
@@ -126,19 +126,19 @@ export const ThreeWayReconciliationView: React.FC<ThreeWayReconciliationViewProp
               <CreditCard className="w-4 h-4 text-purple-400" />
               <span className="font-bold text-xs text-[var(--text-primary)]">3. Card Statement</span>
             </div>
-            <span className="text-[10px] font-mono text-[var(--text-muted)]">Thẻ ảo VPBank</span>
+            <span className="text-[10px] font-mono text-[var(--text-muted)]">{language === 'vi' ? 'Thẻ ảo VPBank' : 'VPBank Virtual Card'}</span>
           </div>
           <div className="space-y-1 text-xs">
             <div className="flex justify-between text-[var(--text-muted)]">
-              <span>Hoàn tiền / Nạp:</span>
+              <span>{language === 'vi' ? 'Hoàn tiền / Nạp:' : 'Refunds / Topup:'}</span>
               <span className="font-mono text-emerald-400 font-bold">+$0.00</span>
             </div>
             <div className="flex justify-between text-[var(--text-muted)]">
-              <span>Chi tiêu quẹt thẻ:</span>
+              <span>{language === 'vi' ? 'Chi tiêu quẹt thẻ:' : 'Card Spend:'}</span>
               <span className="font-mono text-[var(--text-primary)] font-bold">-${report?.card_summary?.total_debit?.toFixed(2) || '1,240.48'}</span>
             </div>
             <div className="flex justify-between pt-1 border-t border-[var(--border-subtle)] font-bold">
-              <span>Tổng chi thẻ:</span>
+              <span>{language === 'vi' ? 'Tổng chi thẻ:' : 'Total Card Out:'}</span>
               <span className="font-mono text-rose-400">-${report?.card_summary?.total_debit?.toFixed(2) || '1,240.48'}</span>
             </div>
           </div>
@@ -149,7 +149,7 @@ export const ThreeWayReconciliationView: React.FC<ThreeWayReconciliationViewProp
       <div className="rounded-2xl bg-[var(--bg-card)] border border-[var(--border-subtle)] overflow-hidden shadow-sm space-y-3 p-5">
         <div className="flex items-center justify-between">
           <h3 className="font-bold text-xs uppercase tracking-wider text-[var(--text-muted)]">
-            {language === 'vi' ? 'Danh Sách Lệch Nguồn & Kiểm Toán Dòng Tiền (7 Kịch Bản Bắt Buộc)' : 'Multi-Source Discrepancies & Integrity Checks'}
+            {language === 'vi' ? 'Danh Sách Lệch Nguồn & Kiểm Toán Dòng Tiền' : 'Multi-Source Discrepancies & Integrity Checks'}
           </h3>
           <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/25">
             {report?.discrepancies?.length || 2} {language === 'vi' ? 'mục lệch phát hiện' : 'discrepancies detected'}
@@ -160,42 +160,42 @@ export const ThreeWayReconciliationView: React.FC<ThreeWayReconciliationViewProp
           <table className="w-full text-left text-xs">
             <thead className="bg-[var(--bg-secondary)] text-[var(--text-muted)] uppercase tracking-wider font-semibold border-b border-[var(--border-subtle)]">
               <tr>
-                <th className="py-3 px-4">Hiện Tượng Đối Soát</th>
-                <th className="py-3 px-4">Nguồn A ↔ Nguồn B</th>
-                <th className="py-3 px-4">Số Tiền Lệch</th>
-                <th className="py-3 px-4">Giải Thích (Quy Tắc Không Suy Đoán)</th>
-                <th className="py-3 px-4">Phân Loại 3 Mức</th>
-                <th className="py-3 px-4">Độ Tin Cậy</th>
+                <th className="py-3 px-4">{language === 'vi' ? 'Hiện Tượng Đối Soát' : 'Reconciliation Finding'}</th>
+                <th className="py-3 px-4">{language === 'vi' ? 'Nguồn A ↔ Nguồn B' : 'Source A ↔ Source B'}</th>
+                <th className="py-3 px-4">{language === 'vi' ? 'Số Tiền Lệch' : 'Amount Diff'}</th>
+                <th className="py-3 px-4">{language === 'vi' ? 'Giải Thích (Không Suy Đoán)' : 'Explanation (Strict Zero-Hallucination)'}</th>
+                <th className="py-3 px-4">{language === 'vi' ? 'Phân Loại 3 Mức' : 'Tri-State Alert'}</th>
+                <th className="py-3 px-4">{language === 'vi' ? 'Độ Tin Cậy' : 'Confidence'}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border-subtle)]">
               {(report?.discrepancies || [
                 {
-                  title: 'Tiền rời Account nhưng chưa lên Card',
+                  title: language === 'vi' ? 'Tiền rời Account nhưng chưa lên Card' : 'Money left Account but not credited to Card',
                   source_a: 'Account Statement',
                   source_b: 'Card Statement',
                   amount_diff: 50.0,
-                  explanation: 'Lệch $50.00 giữa Account và Card Statement — chưa xác định nguyên nhân.',
-                  status: 'Cần bạn tự xác nhận',
-                  confidence_label: 'Mức độ tin cậy cao',
+                  explanation: language === 'vi' ? 'Lệch $50.00 giữa Account và Card Statement — chưa xác định nguyên nhân.' : 'Diff of $50.00 between Account and Card Statement — root cause undetermined.',
+                  status: language === 'vi' ? 'Cần bạn tự xác nhận' : 'Needs confirmation',
+                  confidence_label: language === 'vi' ? 'Mức độ tin cậy cao' : 'High Confidence',
                 },
                 {
-                  title: 'Tiền nạp vào Wallet bị trùng',
+                  title: language === 'vi' ? 'Tiền nạp vào Wallet bị trùng' : 'Duplicate Wallet Topup detected',
                   source_a: 'Wallet Topup 1',
                   source_b: 'Wallet Topup 2',
                   amount_diff: 500.0,
-                  explanation: 'Lệch nạp trùng $500.00 trong Wallet — chưa xác định nguyên nhân.',
-                  status: 'Cần bạn tự xác nhận',
-                  confidence_label: 'Mức độ tin cậy cao',
+                  explanation: language === 'vi' ? 'Lệch nạp trùng $500.00 trong Wallet — chưa xác định nguyên nhân.' : 'Duplicate $500.00 topup recorded in Wallet — root cause undetermined.',
+                  status: language === 'vi' ? 'Cần bạn tự xác nhận' : 'Needs confirmation',
+                  confidence_label: language === 'vi' ? 'Mức độ tin cậy cao' : 'High Confidence',
                 },
                 {
-                  title: 'Phí bị tính 2 lần giữa các nguồn',
+                  title: language === 'vi' ? 'Phí bị tính 2 lần giữa các nguồn' : 'Fee charged twice across sources',
                   source_a: 'Account Fee',
                   source_b: 'Card Fee',
                   amount_diff: 2.50,
-                  explanation: 'Lệch phí $2.50 xuất hiện đồng thời trên Account và Card — chưa xác định nguyên nhân.',
-                  status: 'Cần bạn tự xác nhận',
-                  confidence_label: 'Mức độ tin cậy cao',
+                  explanation: language === 'vi' ? 'Lệch phí $2.50 xuất hiện đồng thời trên Account và Card — chưa xác định nguyên nhân.' : 'Fee of $2.50 appeared concurrently on Account and Card — root cause undetermined.',
+                  status: language === 'vi' ? 'Cần bạn tự xác nhận' : 'Needs confirmation',
+                  confidence_label: language === 'vi' ? 'Mức độ tin cậy cao' : 'High Confidence',
                 },
               ]).map((d: any, idx: number) => (
                 <tr key={idx} className="hover:bg-[var(--bg-secondary)]/50 transition-colors">
@@ -216,7 +216,11 @@ export const ThreeWayReconciliationView: React.FC<ThreeWayReconciliationViewProp
                   <td className="py-3 px-4">
                     <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/15 text-rose-400 border border-rose-500/30 flex items-center gap-1 w-max">
                       <AlertTriangle className="w-3 h-3" />
-                      <span>{d.status?.value || d.status}</span>
+                      <span>
+                        {d.status === 'Cần bạn tự xác nhận'
+                          ? (language === 'vi' ? 'Cần bạn tự xác nhận' : 'Needs confirmation')
+                          : (d.status?.value || d.status)}
+                      </span>
                     </span>
                   </td>
                   <td className="py-3 px-4 text-[11px] text-emerald-400 font-medium">

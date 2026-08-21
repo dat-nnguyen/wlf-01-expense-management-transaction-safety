@@ -205,7 +205,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ language }) => {
                   </div>
                   <div>
                     <div className="font-semibold text-xs text-[var(--text-primary)]">{item.merchant}</div>
-                    <div className="text-[11px] text-[var(--text-muted)]">{item.category} • Ngày: {item.date}</div>
+                    <div className="text-[11px] text-[var(--text-muted)]">{item.category} • {language === 'vi' ? 'Ngày:' : 'Date:'} {item.date}</div>
                   </div>
                 </div>
                 <div className="font-mono font-bold text-sm text-[var(--text-primary)]">
@@ -225,19 +225,19 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ language }) => {
 
           <div className="p-4 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-subtle)] space-y-2 text-xs">
             <div className="flex justify-between text-[var(--text-muted)]">
-              <span>Subscription kỳ này:</span>
+              <span>{language === 'vi' ? 'Subscription kỳ này:' : 'Current Period Subs:'}</span>
               <span className="font-mono text-[var(--text-primary)] font-bold">
                 ${report?.subscription_spending?.toFixed(2) || '87.47'} USD
               </span>
             </div>
             <div className="flex justify-between text-[var(--text-muted)]">
-              <span>Dự kiến chi phí kỳ tới:</span>
+              <span>{language === 'vi' ? 'Dự kiến chi phí kỳ tới:' : 'Next Period Forecast:'}</span>
               <span className="font-mono text-[var(--text-primary)] font-bold">
                 ${report?.subscription_forecast_next_period?.toFixed(2) || '87.47'} USD
               </span>
             </div>
             <div className="flex justify-between pt-2 border-t border-[var(--border-subtle)] font-bold">
-              <span className="text-[#FC6508]">Dự kiến tổng subscription/năm:</span>
+              <span className="text-[#FC6508]">{language === 'vi' ? 'Dự kiến tổng subscription/năm:' : 'Projected Annual Subs:'}</span>
               <span className="font-mono text-[#FC6508]">
                 ${report?.subscription_forecast_annual?.toFixed(2) || '1,049.64'} USD
               </span>
@@ -248,10 +248,12 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ language }) => {
           <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300 space-y-1">
             <div className="font-bold flex items-center gap-1.5 text-amber-400">
               <AlertCircle className="w-3.5 h-3.5" />
-              <span>Phát hiện tăng giá: Adobe Creative Cloud</span>
+              <span>{language === 'vi' ? 'Phát hiện tăng giá: Adobe Creative Cloud' : 'Stealth Price Hike: Adobe Creative Cloud'}</span>
             </div>
             <div className="text-[11px] text-[var(--text-secondary)]">
-              Tăng từ $49.99 lên $54.99/tháng (+10.0% / Tăng +$60.00/năm).
+              {language === 'vi'
+                ? 'Tăng từ $49.99 lên $54.99/tháng (+10.0% / Tăng +$60.00/năm).'
+                : 'Increased from $49.99 to $54.99/month (+10.0% / +$60.00/yr impact).'}
             </div>
           </div>
         </div>

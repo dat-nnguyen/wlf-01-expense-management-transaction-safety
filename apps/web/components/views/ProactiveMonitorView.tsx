@@ -98,10 +98,12 @@ export const ProactiveMonitorView: React.FC<ProactiveMonitorViewProps> = ({ lang
             <span className="w-3 h-3 rounded-full bg-emerald-400 animate-pulse"></span>
             <div>
               <div className="font-bold text-sm text-[var(--text-primary)]">
-                Trình Quét Nền Đang Hoạt Động (Scheduler Active)
+                {language === 'vi' ? 'Trình Quét Nền Đang Hoạt Động (Scheduler Active)' : 'Autonomous Background Scheduler Active'}
               </div>
               <div className="text-[11px] text-[var(--text-muted)]">
-                Chu kỳ quét: Mỗi 15 phút (Interval: 15 mins) • Chế độ chống báo trùng: BẬT
+                {language === 'vi'
+                  ? 'Chu kỳ quét: Mỗi 15 phút • Chế độ chống báo trùng: BẬT'
+                  : 'Scan interval: Every 15 minutes • Deduplication: ACTIVE'}
               </div>
             </div>
           </div>
@@ -113,28 +115,36 @@ export const ProactiveMonitorView: React.FC<ProactiveMonitorViewProps> = ({ lang
         {/* 4 Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
           <div className="p-3 rounded-xl bg-[var(--bg-input)] border border-[var(--border-subtle)] space-y-1">
-            <div className="text-[11px] text-[var(--text-muted)]">Số lần quét đã chạy</div>
+            <div className="text-[11px] text-[var(--text-muted)]">
+              {language === 'vi' ? 'Số lần quét đã chạy' : 'Total Scans Run'}
+            </div>
             <div className="text-lg font-bold font-mono text-[var(--text-primary)]">
               {monitorStatus?.total_scans_run || 1}
             </div>
           </div>
 
           <div className="p-3 rounded-xl bg-[var(--bg-input)] border border-[var(--border-subtle)] space-y-1">
-            <div className="text-[11px] text-[var(--text-muted)]">Giao dịch đã ghi nhớ</div>
+            <div className="text-[11px] text-[var(--text-muted)]">
+              {language === 'vi' ? 'Giao dịch đã ghi nhớ' : 'Known Transactions'}
+            </div>
             <div className="text-lg font-bold font-mono text-indigo-400">
               {monitorStatus?.known_transactions_count || 18}
             </div>
           </div>
 
           <div className="p-3 rounded-xl bg-[var(--bg-input)] border border-[var(--border-subtle)] space-y-1">
-            <div className="text-[11px] text-[var(--text-muted)]">Cảnh báo đã phát</div>
+            <div className="text-[11px] text-[var(--text-muted)]">
+              {language === 'vi' ? 'Cảnh báo đã phát' : 'Active Alerts'}
+            </div>
             <div className="text-lg font-bold font-mono text-rose-400">
               {monitorStatus?.active_alerts_count || 3}
             </div>
           </div>
 
           <div className="p-3 rounded-xl bg-[var(--bg-input)] border border-[var(--border-subtle)] space-y-1">
-            <div className="text-[11px] text-[var(--text-muted)]">Báo trùng triệt tiêu</div>
+            <div className="text-[11px] text-[var(--text-muted)]">
+              {language === 'vi' ? 'Báo trùng triệt tiêu' : 'Suppressed Duplicates'}
+            </div>
             <div className="text-lg font-bold font-mono text-emerald-400">
               {monitorStatus?.suppressed_duplicates_count || 5}
             </div>
@@ -147,7 +157,11 @@ export const ProactiveMonitorView: React.FC<ProactiveMonitorViewProps> = ({ lang
         <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-300 space-y-1 animate-fadeIn">
           <div className="font-bold flex items-center gap-1.5 text-emerald-400">
             <CheckCircle2 className="w-4 h-4" />
-            <span>Kết quả quét định kỳ hoàn tất lúc {scanResult.timestamp?.slice(11, 19)}</span>
+            <span>
+              {language === 'vi'
+                ? `Kết quả quét định kỳ hoàn tất lúc ${scanResult.timestamp?.slice(11, 19)}`
+                : `Periodic scan completed at ${scanResult.timestamp?.slice(11, 19)} UTC`}
+            </span>
           </div>
           <div>{scanResult.summary}</div>
         </div>
@@ -163,12 +177,12 @@ export const ProactiveMonitorView: React.FC<ProactiveMonitorViewProps> = ({ lang
           <table className="w-full text-left text-xs">
             <thead className="bg-[var(--bg-secondary)] text-[var(--text-muted)] uppercase tracking-wider font-semibold border-b border-[var(--border-subtle)]">
               <tr>
-                <th className="py-3 px-4">Mã Phiên Quét</th>
-                <th className="py-3 px-4">Thời Gian (UTC)</th>
-                <th className="py-3 px-4">Giao Dịch Mới</th>
-                <th className="py-3 px-4">Cảnh Báo Mới</th>
-                <th className="py-3 px-4">Báo Trùng Đã Triệt Tiêu</th>
-                <th className="py-3 px-4">Tóm Tắt</th>
+                <th className="py-3 px-4">{language === 'vi' ? 'Mã Phiên Quét' : 'Scan ID'}</th>
+                <th className="py-3 px-4">{language === 'vi' ? 'Thời Gian (UTC)' : 'Timestamp (UTC)'}</th>
+                <th className="py-3 px-4">{language === 'vi' ? 'Giao Dịch Mới' : 'New Transactions'}</th>
+                <th className="py-3 px-4">{language === 'vi' ? 'Cảnh Báo Mới' : 'New Alerts'}</th>
+                <th className="py-3 px-4">{language === 'vi' ? 'Báo Trùng Đã Triệt Tiêu' : 'Suppressed Duplicates'}</th>
+                <th className="py-3 px-4">{language === 'vi' ? 'Tóm Tắt' : 'Summary'}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border-subtle)]">
@@ -181,7 +195,9 @@ export const ProactiveMonitorView: React.FC<ProactiveMonitorViewProps> = ({ lang
                       new_transactions_count: 18,
                       new_alerts_count: 3,
                       suppressed_duplicates_count: 0,
-                      summary: 'Quét lần đầu: Nhận diện 18 giao dịch, gắn cờ 3 bất thường.',
+                      summary: language === 'vi'
+                        ? 'Quét lần đầu: Nhận diện 18 giao dịch, gắn cờ 3 bất thường.'
+                        : 'Initial scan: Discovered 18 transactions, flagged 3 anomalies.',
                     },
                   ]
               ).map((h, idx) => (

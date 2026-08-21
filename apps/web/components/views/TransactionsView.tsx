@@ -73,19 +73,47 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({ language }) 
   const getBadgeForType = (type: string) => {
     switch (type) {
       case 'payin':
-        return <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/25">Tiền vào (Pay-in)</span>;
+        return (
+          <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/25">
+            {language === 'vi' ? 'Tiền vào (Pay-in)' : 'Pay-in'}
+          </span>
+        );
       case 'payout':
-        return <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-500/15 text-blue-400 border border-blue-500/25">Tiền ra (Payout)</span>;
+        return (
+          <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-500/15 text-blue-400 border border-blue-500/25">
+            {language === 'vi' ? 'Tiền ra (Payout)' : 'Payout'}
+          </span>
+        );
       case 'transfer_to_card':
-        return <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-indigo-500/15 text-indigo-400 border border-indigo-500/25">Chuyển sang thẻ</span>;
+        return (
+          <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-indigo-500/15 text-indigo-400 border border-indigo-500/25">
+            {language === 'vi' ? 'Chuyển sang thẻ' : 'Transfer to Card'}
+          </span>
+        );
       case 'fee':
-        return <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-500/15 text-amber-400 border border-amber-500/25">Phí (Fee)</span>;
+        return (
+          <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-500/15 text-amber-400 border border-amber-500/25">
+            {language === 'vi' ? 'Phí (Fee)' : 'Fee'}
+          </span>
+        );
       case 'subscription':
-        return <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-[#FC6508]/15 text-[#FC6508] border-[#FC6508]/25">Subscription</span>;
+        return (
+          <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-[#FC6508]/15 text-[#FC6508] border-[#FC6508]/25">
+            Subscription
+          </span>
+        );
       case 'ad_spend':
-        return <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-purple-500/15 text-purple-400 border border-purple-500/25">Quảng cáo (Ads)</span>;
+        return (
+          <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-purple-500/15 text-purple-400 border border-purple-500/25">
+            {language === 'vi' ? 'Quảng cáo (Ads)' : 'Ad Spend'}
+          </span>
+        );
       default:
-        return <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-[var(--bg-input)] text-[var(--text-secondary)] border border-[var(--border-subtle)]">Chi tiêu</span>;
+        return (
+          <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-[var(--bg-input)] text-[var(--text-secondary)] border border-[var(--border-subtle)]">
+            {language === 'vi' ? 'Chi tiêu' : 'Expense'}
+          </span>
+        );
     }
   };
 
@@ -95,7 +123,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({ language }) 
       return (
         <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1 w-max">
           <CheckCircle2 className="w-3 h-3" />
-          <span>Định kỳ đã xác định</span>
+          <span>{language === 'vi' ? 'Định kỳ đã xác định' : 'Confirmed Recurring'}</span>
         </span>
       );
     }
@@ -103,7 +131,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({ language }) 
       return (
         <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/15 text-rose-400 border border-rose-500/30 flex items-center gap-1 w-max">
           <AlertTriangle className="w-3 h-3" />
-          <span>Cần bạn tự xác nhận</span>
+          <span>{language === 'vi' ? 'Cần bạn tự xác nhận' : 'Needs Confirmation'}</span>
         </span>
       );
     }
@@ -111,13 +139,13 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({ language }) 
       return (
         <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30 flex items-center gap-1 w-max">
           <HelpCircle className="w-3 h-3" />
-          <span>Chưa đủ dữ liệu</span>
+          <span>{language === 'vi' ? 'Chưa đủ dữ liệu' : 'Insufficient Data'}</span>
         </span>
       );
     }
     return (
       <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-[var(--bg-secondary)] text-[var(--text-muted)] border border-[var(--border-subtle)]">
-        Hợp lệ
+        {language === 'vi' ? 'Hợp lệ' : 'Normal'}
       </span>
     );
   };
@@ -204,13 +232,13 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({ language }) 
           <table className="w-full text-left text-xs">
             <thead className="bg-[var(--bg-secondary)] text-[var(--text-muted)] uppercase tracking-wider font-semibold border-b border-[var(--border-subtle)]">
               <tr>
-                <th className="py-3 px-4">Mã TX & Ngày</th>
-                <th className="py-3 px-4">Đơn Vị Thụ Hưởng (Merchant)</th>
-                <th className="py-3 px-4">Diễn Giải Viết Tắt</th>
-                <th className="py-3 px-4">Số Tiền</th>
-                <th className="py-3 px-4">Phân Loại</th>
-                <th className="py-3 px-4">Nguồn Dữ Liệu</th>
-                <th className="py-3 px-4">Nhãn Cảnh Báo (3 Mức)</th>
+                <th className="py-3 px-4">{language === 'vi' ? 'Mã TX & Ngày' : 'TX ID & Date'}</th>
+                <th className="py-3 px-4">{language === 'vi' ? 'Đơn Vị Thụ Hưởng (Merchant)' : 'Merchant'}</th>
+                <th className="py-3 px-4">{language === 'vi' ? 'Diễn Giải Viết Tắt' : 'Normalized Meaning'}</th>
+                <th className="py-3 px-4">{language === 'vi' ? 'Số Tiền' : 'Amount'}</th>
+                <th className="py-3 px-4">{language === 'vi' ? 'Phân Loại' : 'Type'}</th>
+                <th className="py-3 px-4">{language === 'vi' ? 'Nguồn Dữ Liệu' : 'Source'}</th>
+                <th className="py-3 px-4">{language === 'vi' ? 'Nhãn Cảnh Báo (3 Mức)' : 'Tri-State Alert'}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border-subtle)]">
@@ -228,7 +256,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({ language }) 
                       <div className="text-[10px] text-[var(--text-muted)] font-mono truncate max-w-[160px]">{tx.merchant_raw}</div>
                     </td>
                     <td className="py-3 px-4 text-[11px] text-[var(--text-secondary)] max-w-xs">
-                      {tx.merchant_explanation || 'Giao dịch thương mại trực tuyến.'}
+                      {tx.merchant_explanation || (language === 'vi' ? 'Giao dịch thương mại trực tuyến.' : 'Online commercial transaction.')}
                     </td>
                     <td className="py-3 px-4">
                       <div className={`font-mono font-bold ${isCredit ? 'text-emerald-400' : 'text-[var(--text-primary)]'}`}>
