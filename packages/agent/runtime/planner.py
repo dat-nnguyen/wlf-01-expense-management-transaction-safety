@@ -102,13 +102,16 @@ class IntentPlanner:
             )
 
         # 10. Specific Transaction Search
-        if any(k in msg for k in ["tìm", "khoản", "search", "giao dịch", "grab", "apple", "facebook"]):
-            query_match = re.search(r"(?:tìm|khoản|search)\s+([a-zA-Z0-9\$\.\s]+)", msg)
-            query = query_match.group(1).strip() if query_match else ""
+        if any(k in msg for k in ["tìm", "khoản", "search", "giao dịch", "grab", "apple", "facebook", "netflix", "adobe", "stripe"]):
+            found_merchant = ""
+            for m in ["grab", "netflix", "adobe", "facebook", "stripe", "amazon", "apple", "tiktok", "shopee", "topup"]:
+                if m in msg:
+                    found_merchant = m
+                    break
             return ExecutionPlan(
                 intent="TRANSACTION_SEARCH",
                 target_tool="search_transactions",
-                arguments={"query": query},
+                arguments={"query": found_merchant},
             )
 
         # Default General QA

@@ -15,12 +15,18 @@ class SearchTransactionsTool(BaseTool):
 
     async def execute(self, context: ToolContext, arguments: Dict[str, Any]) -> ToolResult:
         start = time.perf_counter()
-        query = arguments.get("query", "").lower()
+        query = arguments.get("query", "").lower().strip()
         limit = arguments.get("limit", 50)
 
-        txs = await self.source.get_transactions(account_id=context.account_id, limit=limit)
+        acc_id = context.account_id or "acc_main"
+        txs = await self.source.get_transactions(account_id=acc_id, limit=limit)
         if query:
-            txs = [t for t in txs if query in t.merchant_normalized.lower() or query in t.merchant_raw.lower()]
+            clean_q = query.lower()
+            for stop in ["kiểm tra", "các khoản", "giao dịch", "gần đây", "của tôi", "tìm", "khoản", "recent", "transactions", "cho tôi", "xem", "quét", "lịch sử", "history", "all"]:
+                clean_q = clean_q.replace(stop, "")
+            clean_q = clean_q.strip()
+            if clean_q:
+                txs = [t for t in txs if clean_q in t.merchant_normalized.lower() or clean_q in t.merchant_raw.lower()]
 
         duration = (time.perf_counter() - start) * 1000
         return ToolResult(
