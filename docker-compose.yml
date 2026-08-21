@@ -10,7 +10,7 @@ services:
       POSTGRES_PASSWORD: postgrespassword
       POSTGRES_DB: wealify_guardian
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -34,7 +34,7 @@ services:
       LLM_PROVIDER: mock
       APP_PORT: 8000
     ports:
-      - "8000:8000"
+      - "8001:8000"
 
   web:
     build:
@@ -45,10 +45,11 @@ services:
     depends_on:
       - api
     environment:
-      NEXT_PUBLIC_API_URL: http://localhost:8000
+      NEXT_PUBLIC_API_URL: http://localhost:8001
       PORT: 3000
     ports:
-      - "3000:3000"
+      - "3001:3000"
 
 volumes:
   postgres_data:
+
