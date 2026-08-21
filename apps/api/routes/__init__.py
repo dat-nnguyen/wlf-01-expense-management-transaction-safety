@@ -8,6 +8,7 @@ from apps.api.routes.advisory import router as advisory_router
 from apps.api.routes.hitl import router as hitl_router
 from apps.api.routes.notifications import router as notifications_router
 from apps.api.routes.security import router as security_router
+from apps.api.routes.audit import router as audit_router
 
 __all__ = [
     "health_router",
@@ -20,5 +21,6 @@ __all__ = [
     "hitl_router",
     "notifications_router",
     "security_router",
+    "audit_router",
 ]
 

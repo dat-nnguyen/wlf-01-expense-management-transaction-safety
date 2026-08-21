@@ -10,6 +10,8 @@ from packages.agent.providers import BaseLLMProvider, get_llm_provider
 from packages.agent.runtime.executor import SafeToolExecutor
 from packages.agent.runtime.planner import ExecutionPlan, IntentPlanner
 from packages.agent.tools import ToolContext, ToolRegistry, create_default_tool_registry
+from packages.agent.memory import session_memory
+from packages.agent.rag import financial_rag
 from packages.observability.logging import logger
 from packages.observability.metrics import metrics_tracker
 
@@ -123,16 +125,25 @@ class AgentOrchestrator:
                 tool_data = {"error": tool_res.error}
                 steps.append(ExecutionStep(step_name="TOOL_EXECUTION", status="FAILED", details={"tool": tool_name, "error": tool_res.error}))
 
-        # 5. State: EVIDENCE_CHECK
-        steps.append(ExecutionStep(step_name="EVIDENCE_CHECK", status="SUCCESS", details={"evidence_count": len(tool_data)}))
+        # 5. State: EVIDENCE_CHECK & RAG RETRIEVAL
+        rag_context = financial_rag.get_grounding_context(user_message)
+        conv_context = session_memory.get_formatted_context(session_id)
+        steps.append(ExecutionStep(step_name="EVIDENCE_CHECK", status="SUCCESS", details={"evidence_count": len(tool_data), "rag_active": bool(rag_context)}))
 
-        # 6. State: RESPONSE_GENERATION
+        # 6. State: RESPONSE_GENERATION (with Memory Context & RAG Grounding)
+        enriched_prompt = user_message
+        if conv_context:
+            enriched_prompt = f"{conv_context}\n\n{enriched_prompt}"
+        if rag_context:
+            enriched_prompt = f"{enriched_prompt}\n\n{rag_context}"
+
         llm_response = await self.llm.generate(
-            prompt=user_message,
+            prompt=enriched_prompt,
             context={
                 "intent": plan.intent,
                 "tool_name": tool_name,
                 "tool_result": tool_data,
+                "rag_context": rag_context,
             },
         )
         metrics_tracker.record_tokens(llm_response.prompt_tokens, llm_response.completion_tokens)
@@ -145,6 +156,10 @@ class AgentOrchestrator:
         # 8. State: SAFETY_CHECK (Output Guardrail)
         _, sanitized_text = OutputGuardrail.sanitize_output(llm_response.content)
         steps.append(ExecutionStep(step_name="SAFETY_CHECK", status="SUCCESS", details={"sanitized": True}))
+
+        # Record turns to Session Memory
+        session_memory.add_message(session_id=session_id, role="user", content=user_message, intent=plan.intent)
+        session_memory.add_message(session_id=session_id, role="assistant", content=sanitized_text, intent=plan.intent, tool_called=tool_name)
 
         # 9. State: COMPLETED
         steps.append(ExecutionStep(step_name="COMPLETED", status="SUCCESS"))
