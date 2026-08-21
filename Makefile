@@ -15,8 +15,16 @@ dev:
 	@echo "Khởi chạy song song Backend API (8000) và Web Dashboard (3000)..."
 	python -m uvicorn apps.api.main:app --reload --host 0.0.0.0 --port 8000
 
-test:
-	pytest tests/ -v
+test-backend:
+	@if [ -f .venv/bin/pytest ]; then .venv/bin/pytest tests/ -v; else pytest tests/ -v; fi
+
+test-frontend:
+	cd apps/web && npx tsc --noEmit
+
+test: test-backend test-frontend
+
+ci: test-backend test-frontend
+	@echo "✅ All backend and frontend regression checks PASSED!"
 
 seed:
 	python scripts/seed.py

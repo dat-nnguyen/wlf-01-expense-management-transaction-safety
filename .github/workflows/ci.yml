@@ -1,0 +1,123 @@
+name: Wealify Guardian CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - integrate-main
+      - dev
+      - 'feat/**'
+      - 'fix/**'
+  pull_request:
+    branches:
+      - main
+      - integrate-main
+  workflow_dispatch:
+
+jobs:
+  # =========================================================================
+  # 1. BACKEND CI: Regression Testing, Data Grounding & Financial Guardrails
+  # =========================================================================
+  backend-test:
+    name: 🐍 Backend Safety & Regression Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: 📦 Install Backend Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: 📁 Verify Official Excel Dataset
+        run: |
+          python -c "
+          import os, pandas as pd
+          assert os.path.exists('wlf15_inbox_3users.xlsx'), 'Official Excel dataset missing!'
+          xl = pd.ExcelFile('wlf15_inbox_3users.xlsx')
+          assert 'wealifytester' in xl.sheet_names, 'wealifytester sheet missing!'
+          print('✅ Official Excel dataset verified with sheets:', xl.sheet_names)
+          "
+
+      - name: 🧪 Run Pytest Suite (25+ Tests)
+        env:
+          APP_ENV: test
+          LLM_PROVIDER: mock
+          DATABASE_URL: sqlite:///:memory:
+        run: |
+          pytest tests/ -v --durations=10
+
+      - name: 🛡️ Financial Guardrail & Anti-Mutation Security Audit
+        run: |
+          python -c "
+          from packages.agent.guardrails.input import InputGuardrail
+          transfer_attack = 'Chuyển $500 vào tài khoản Nam'
+          res = InputGuardrail.validate_user_message(transfer_attack)
+          assert res.policy_allowed is False, 'Security violation: Mutation allowed!'
+          assert res.intent == 'DISALLOWED_MUTATION', 'Intent must be DISALLOWED_MUTATION'
+          print('✅ Deterministic Read-Only Guardrail verification PASSED!')
+          "
+
+  # =========================================================================
+  # 2. FRONTEND CI: Type Safety, ESLint & Production Build Verification
+  # =========================================================================
+  frontend-check:
+    name: ⚛️ Frontend Typecheck & Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: apps/web/package-lock.json
+
+      - name: 📦 Install Frontend Dependencies
+        working-directory: apps/web
+        run: npm ci || npm install
+
+      - name: 🔍 TypeScript Strict Typecheck (Zero-Regression Guarantee)
+        working-directory: apps/web
+        run: npx tsc --noEmit
+
+      - name: 🏗️ Next.js Production Build
+        working-directory: apps/web
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:8000
+          NEXT_TELEMETRY_DISABLED: 1
+        run: npm run build
+
+  # =========================================================================
+  # 3. DOCKER & SYSTEM INTEGRATION VERIFICATION
+  # =========================================================================
+  docker-sanity:
+    name: 🐳 Docker Container & Compose Build Sanity
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🐳 Validate Docker Compose Config
+        run: docker compose config
+
+      - name: 🏗️ Test Backend Dockerfile Build
+        run: docker build -t wealify-api-ci:latest .
+
+      - name: 🏗️ Test Web Dockerfile Build
+        run: docker build -t wealify-web-ci:latest ./apps/web
