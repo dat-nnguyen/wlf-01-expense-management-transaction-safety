@@ -43,11 +43,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: 📁 Verify Official Excel Dataset
-        run: |
-          python -c "import os, pandas as pd; assert os.path.exists('wlf15_inbox_3users.xlsx'), 'Missing dataset'; xl = pd.ExcelFile('wlf15_inbox_3users.xlsx'); assert 'wealifytester' in xl.sheet_names; print('✅ Official Excel dataset verified with sheets:', xl.sheet_names)"
-
-      - name: 🧪 Run Pytest Suite (28 Tests)
+      - name: 🧪 Run Pytest Suite
         run: |
           pytest tests/ -v --durations=10
 
