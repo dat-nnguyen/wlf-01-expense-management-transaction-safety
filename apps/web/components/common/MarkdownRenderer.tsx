@@ -20,62 +20,72 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
     setTimeout(() => setCopiedIndex(null), 2000);
   };
 
+  // Pre-process content so bullet points and headings render with optimal Markdown spacing
+  const formattedContent = (content || '')
+    .replace(/\n•\s*/g, '\n\n- ')
+    .replace(/^•\s*/gm, '- ');
+
   return (
-    <div className={`prose-custom text-sm leading-relaxed text-[#f1f5f9] space-y-2.5 ${className}`}>
+    <div className={`prose-custom text-xs md:text-sm leading-relaxed text-[var(--text-primary)] space-y-3 ${className}`}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
           // Paragraphs
           p: ({ children }) => (
-            <p className="mb-2 leading-relaxed text-[#e2e8f0] last:mb-0">
+            <p className="mb-2 leading-relaxed text-[var(--text-secondary)] last:mb-0">
               {children}
             </p>
           ),
 
           // Headers
           h1: ({ children }) => (
-            <h1 className="text-base font-bold text-white mt-3 mb-1.5 flex items-center gap-2 border-b border-white/10 pb-1">
+            <h1 className="text-base font-bold text-[var(--text-primary)] mt-3 mb-2 flex items-center gap-2 border-b border-[var(--border-subtle)] pb-1.5 tracking-tight">
               {children}
             </h1>
           ),
           h2: ({ children }) => (
-            <h2 className="text-sm font-bold text-indigo-200 mt-2.5 mb-1 flex items-center gap-1.5">
+            <h2 className="text-sm font-bold text-[var(--text-primary)] mt-3 mb-1.5 flex items-center gap-1.5 tracking-tight">
               {children}
             </h2>
           ),
           h3: ({ children }) => (
-            <h3 className="text-xs font-bold text-purple-300 mt-2 mb-1">
+            <h3 className="text-xs md:text-sm font-bold text-[#FC6508] mt-2.5 mb-1.5 flex items-center gap-1.5 tracking-tight">
               {children}
             </h3>
+          ),
+          h4: ({ children }) => (
+            <h4 className="text-xs font-bold text-[var(--text-primary)] mt-2 mb-1">
+              {children}
+            </h4>
           ),
 
           // Bold text highlights
           strong: ({ children }) => (
-            <strong className="font-semibold text-white bg-white/5 px-1 py-0.5 rounded border border-white/10">
+            <strong className="font-semibold text-[var(--text-primary)]">
               {children}
             </strong>
           ),
 
           // Lists
           ul: ({ children }) => (
-            <ul className="list-disc list-inside space-y-1 my-1.5 text-[#cbd5e1] pl-1">
+            <ul className="list-disc list-inside space-y-1.5 my-2 text-[var(--text-secondary)] pl-1">
               {children}
             </ul>
           ),
           ol: ({ children }) => (
-            <ol className="list-decimal list-inside space-y-1 my-1.5 text-[#cbd5e1] pl-1 font-medium">
+            <ol className="list-decimal list-inside space-y-1.5 my-2 text-[var(--text-secondary)] pl-1 font-medium">
               {children}
             </ol>
           ),
           li: ({ children }) => (
-            <li className="text-xs leading-relaxed text-[#cbd5e1]">
-              <span className="text-slate-200">{children}</span>
+            <li className="text-xs leading-relaxed text-[var(--text-secondary)]">
+              <span className="text-[var(--text-primary)]">{children}</span>
             </li>
           ),
 
           // Blockquotes
           blockquote: ({ children }) => (
-            <blockquote className="border-l-2 border-indigo-400 bg-indigo-950/30 px-3 py-2 rounded-r-lg my-2 text-xs text-indigo-200 italic">
+            <blockquote className="border-l-2 border-[#FC6508] bg-[#FC6508]/10 px-3.5 py-2.5 rounded-r-xl my-2.5 text-xs text-[var(--text-primary)] font-medium leading-relaxed">
               {children}
             </blockquote>
           ),
@@ -87,13 +97,13 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
 
             if (!inline) {
               return (
-                <div className="relative group my-2.5 rounded-xl overflow-hidden border border-[rgba(255,255,255,0.12)] bg-[#05070e]">
-                  <div className="flex items-center justify-between px-3 py-1.5 bg-white/5 border-b border-white/10 text-[11px] font-mono text-[#94a3b8]">
+                <div className="relative group my-2.5 rounded-xl overflow-hidden border border-[var(--border-subtle)] bg-[var(--bg-secondary)]">
+                  <div className="flex items-center justify-between px-3 py-1.5 bg-[var(--bg-card)] border-b border-[var(--border-subtle)] text-[11px] font-mono text-[var(--text-muted)]">
                     <span>{match ? match[1] : 'code'}</span>
                     <button
                       type="button"
                       onClick={() => handleCopyCode(codeString, Math.random())}
-                      className="flex items-center gap-1 hover:text-white transition-colors"
+                      className="flex items-center gap-1 hover:text-[var(--text-primary)] transition-colors"
                     >
                       {copiedIndex !== null ? (
                         <>
@@ -108,7 +118,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
                       )}
                     </button>
                   </div>
-                  <pre className="p-3 text-xs font-mono text-[#38bdf8] overflow-x-auto">
+                  <pre className="p-3 text-xs font-mono text-[var(--text-primary)] overflow-x-auto">
                     <code>{codeString}</code>
                   </pre>
                 </div>
@@ -117,7 +127,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
 
             return (
               <code
-                className="font-mono text-[12px] bg-purple-950/60 border border-purple-500/30 text-purple-200 px-1.5 py-0.5 rounded"
+                className="font-mono text-[11.5px] bg-[var(--bg-secondary)] border border-[var(--border-subtle)] text-[#FC6508] px-1.5 py-0.5 rounded font-semibold"
                 {...props}
               >
                 {children}
@@ -125,36 +135,36 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
             );
           },
 
-          // Tables
+          // Tables (Scientific, clear and modern financial table)
           table: ({ children }) => (
-            <div className="overflow-x-auto my-3 rounded-xl border border-[rgba(255,255,255,0.12)] bg-[#080d1a]">
+            <div className="overflow-x-auto my-3 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-secondary)] shadow-sm">
               <table className="w-full text-xs text-left border-collapse">
                 {children}
               </table>
             </div>
           ),
           thead: ({ children }) => (
-            <thead className="bg-white/5 border-b border-white/10 text-[#94a3b8] uppercase font-semibold text-[10.5px] tracking-wider">
+            <thead className="bg-[var(--bg-card)] border-b border-[var(--border-subtle)] text-[var(--text-muted)] uppercase font-bold text-[10px] tracking-wider">
               {children}
             </thead>
           ),
           tbody: ({ children }) => (
-            <tbody className="divide-y divide-white/5 text-[#cbd5e1]">
+            <tbody className="divide-y divide-[var(--border-subtle)] text-[var(--text-secondary)]">
               {children}
             </tbody>
           ),
           tr: ({ children }) => (
-            <tr className="hover:bg-white/[0.03] transition-colors">
+            <tr className="hover:bg-white/[0.02] transition-colors">
               {children}
             </tr>
           ),
           th: ({ children }) => (
-            <th className="px-3.5 py-2 font-semibold text-slate-200">
+            <th className="px-3.5 py-2.5 font-bold text-[var(--text-primary)]">
               {children}
             </th>
           ),
           td: ({ children }) => (
-            <td className="px-3.5 py-2">
+            <td className="px-3.5 py-2.5 font-medium">
               {children}
             </td>
           ),
@@ -165,7 +175,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
               href={href}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-cyan-400 hover:text-cyan-300 underline underline-offset-2 transition-colors font-medium"
+              className="text-[#FC6508] hover:underline underline-offset-2 transition-colors font-semibold"
             >
               {children}
             </a>
@@ -173,11 +183,11 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
 
           // Horizontal rule
           hr: () => (
-            <hr className="border-t border-white/10 my-3" />
+            <hr className="border-t border-[var(--border-subtle)] my-3" />
           ),
         }}
       >
-        {content}
+        {formattedContent}
       </ReactMarkdown>
     </div>
   );

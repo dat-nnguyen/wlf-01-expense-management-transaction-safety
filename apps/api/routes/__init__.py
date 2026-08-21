@@ -4,6 +4,9 @@ from apps.api.routes.transactions import router as transactions_router
 from apps.api.routes.reconciliation import router as reconciliation_router
 from apps.api.routes.alerts import router as alerts_router
 from apps.api.routes.reports import router as reports_router
+from apps.api.routes.reminders import router as reminders_router
+from apps.api.routes.monitor import router as monitor_router
+from apps.api.routes.admin import router as admin_router
 from apps.api.routes.advisory import router as advisory_router
 from apps.api.routes.hitl import router as hitl_router
 from apps.api.routes.notifications import router as notifications_router
@@ -17,10 +20,12 @@ __all__ = [
     "reconciliation_router",
     "alerts_router",
     "reports_router",
+    "reminders_router",
+    "monitor_router",
+    "admin_router",
     "advisory_router",
     "hitl_router",
     "notifications_router",
     "security_router",
     "audit_router",
 ]
-

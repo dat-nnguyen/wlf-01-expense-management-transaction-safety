@@ -73,11 +73,30 @@ class AgentOrchestrator:
         self.executor = SafeToolExecutor(self.registry)
         self.llm = llm_provider or get_llm_provider()
 
+    @classmethod
+    async def process(
+        cls,
+        user_message: str,
+        session_id: str = "ses_default",
+        account_id: str = "acc_main",
+        user_email: str = "founder@wealify.io",
+        language: str = "vi",
+    ) -> AgentRunResult:
+        instance = cls()
+        return await instance.run(
+            user_message=user_message,
+            session_id=session_id,
+            account_id=account_id,
+            user_email=user_email,
+            language=language,
+        )
+
     async def run(
         self,
         user_message: str,
         session_id: str = "ses_default",
         account_id: str = "acc_main",
+
         user_email: str = "founder@wealify.io",
         language: str = "vi",
     ) -> AgentRunResult:
@@ -139,69 +158,13 @@ class AgentOrchestrator:
                 tool_data = tool_res.data
                 steps.append(ExecutionStep(step_name="TOOL_EXECUTION", status="SUCCESS", details={"tool": tool_name, "execution_time_ms": tool_res.execution_time_ms}))
 
-                # 4b. Auto-Dispatch Email Alert for Detected High-Severity Financial Anomalies
-                try:
-                    if plan.intent == "DUPLICATE_CHECK" and tool_data.get("duplicate_count", 0) > 0:
-                        dup_alert = Alert(
-                            id=f"alt_dup_{uuid.uuid4().hex[:6]}",
-                            alert_type=AlertType.DUPLICATE,
-                            title=f"⚠️ Cảnh báo cà thẻ ảo 2 lần: {tool_data.get('duplicates', [{}])[0].get('merchant', 'Ads')} ($150.00 USD)",
-                            status=AlertStatus.NEEDS_USER_CONFIRMATION,
-                            reason="Phát hiện 2 giao dịch -$150.00 USD cách nhau 105 giây cho cùng sản phẩm trên thẻ ảo Volcano Ads •••• 4812.",
-                            confidence=0.98,
-                            confidence_label="Mức độ tin cậy cao",
-                            amount=150.0,
-                            deadline_days=59,
-                            action_suggestion="Yêu cầu ngân hàng VPBank tra soát hoàn tiền trừ đúp.",
-                        )
-                        log = EmailAlertDispatcher.dispatch_alert(dup_alert, user_email)
-                        email_dispatched = True
-                        dispatched_email_id = log.id
-                        steps.append(ExecutionStep(step_name="EMAIL_DISPATCH", status="SENT", details={"recipient": user_email, "alert_id": dup_alert.id}))
-
-                    elif plan.intent == "OVERDUE_PAYOUT_CHECK" and tool_data.get("total_overdue_count", 0) > 0:
-                        payout_alert = Alert(
-                            id=f"alt_payout_{uuid.uuid4().hex[:6]}",
-                            alert_type=AlertType.OVERDUE_PAYOUT,
-                            title=f"🚨 Payout sàn Amazon chậm trễ 16 ngày ($4,250.00 USD)",
-                            status=AlertStatus.NEEDS_USER_CONFIRMATION,
-                            reason="Email giải ngân $4,250.00 USD từ Amazon ngày 05/08/2026 nhưng sau 16 ngày chưa thấy tiền về tài khoản Wealify.",
-                            confidence=0.96,
-                            confidence_label="Mức độ tin cậy cao",
-                            amount=4250.0,
-                            deadline_days=60,
-                            days_overdue=16,
-                            action_suggestion="Gửi ticket tra soát tới Amazon Seller Central.",
-                        )
-                        log = EmailAlertDispatcher.dispatch_alert(payout_alert, user_email)
-                        email_dispatched = True
-                        dispatched_email_id = log.id
-                        steps.append(ExecutionStep(step_name="EMAIL_DISPATCH", status="SENT", details={"recipient": user_email, "alert_id": payout_alert.id}))
-
-                    elif plan.intent == "SUBSCRIPTION_INQUIRY":
-                        sub_alert = Alert(
-                            id=f"alt_sub_{uuid.uuid4().hex[:6]}",
-                            alert_type=AlertType.PRICE_HIKE,
-                            title="📈 Thuê bao tăng giá: Adobe Creative Cloud tăng +10.0%",
-                            status=AlertStatus.RECURRING_CONFIRMED,
-                            reason="Chi phí định kỳ của Adobe Creative Cloud tăng từ $49.99 lên $54.99/tháng (+10.0%).",
-                            confidence=0.95,
-                            confidence_label="Mức độ tin cậy cao",
-                            amount=54.99,
-                            deadline_days=60,
-                            action_suggestion="Xem xét đàm phán lại license không sử dụng.",
-                        )
-                        log = EmailAlertDispatcher.dispatch_alert(sub_alert, user_email)
-                        email_dispatched = True
-                        dispatched_email_id = log.id
-                        steps.append(ExecutionStep(step_name="EMAIL_DISPATCH", status="SENT", details={"recipient": user_email, "alert_id": sub_alert.id}))
-                except Exception as ex:
-                    logger.error(f"Failed to auto-dispatch email alert: {ex}")
-
+                # Prepare draft email data for User Preview & Confirmation (HITL safety)
+                steps.append(ExecutionStep(step_name="DRAFT_PREPARATION", status="SUCCESS", details={"preview_ready": True}))
             else:
                 logger.warning(f"[{run_id}] Tool {tool_name} returned error: {tool_res.error}")
                 tool_data = {"error": tool_res.error}
                 steps.append(ExecutionStep(step_name="TOOL_EXECUTION", status="FAILED", details={"tool": tool_name, "error": tool_res.error}))
+
 
         # 5. State: EVIDENCE_CHECK & RAG RETRIEVAL
         rag_context = financial_rag.get_grounding_context(user_message)

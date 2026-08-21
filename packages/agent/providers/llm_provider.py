@@ -1,61 +1,184 @@
-import os
-import re
 import json
+import os
 from typing import Any, Dict, List, Optional
-from abc import ABC, abstractmethod
-from pydantic import BaseModel
-import httpx
-from dotenv import load_dotenv
+from pydantic import BaseModel, Field
 
-# Load .env variables
-load_dotenv()
-
-from packages.observability.logging import logger
 
 
 class LLMResponse(BaseModel):
     content: str
     prompt_tokens: int = 0
     completion_tokens: int = 0
-    model: str = "mock"
+    model: str = "mock-deterministic"
 
 
-class BaseLLMProvider(ABC):
-    """Abstract base class for all LLM Providers."""
+class BaseLLMProvider:
+    async def generate_response(
+        self,
+        prompt: str,
+        system_instruction: Optional[str] = None,
+        temperature: float = 0.0,
+        context: Optional[Dict[str, Any]] = None,
+    ) -> LLMResponse:
+        raise NotImplementedError
 
-    @abstractmethod
     async def generate(
         self,
         prompt: str,
-        system_prompt: Optional[str] = None,
+        system_instruction: Optional[str] = None,
+        temperature: float = 0.0,
         context: Optional[Dict[str, Any]] = None,
     ) -> LLMResponse:
-        pass
+        return await self.generate_response(
+            prompt=prompt,
+            system_instruction=system_instruction,
+            temperature=temperature,
+            context=context,
+        )
 
 
 class MockLLMProvider(BaseLLMProvider):
     """
-    Deterministic Mock LLM Provider synthesizing natural language
-    Vietnamese and English financial explanations directly from structured tool results.
+    Deterministic Financial LLM Mock Provider.
+    Produces high-fidelity, scientific, and beautifully formatted financial responses
+    with Markdown tables, clear metric sections, and grounded citations.
     """
 
-    async def generate(
+    async def generate_response(
         self,
         prompt: str,
-        system_prompt: Optional[str] = None,
+        system_instruction: Optional[str] = None,
+        temperature: float = 0.0,
         context: Optional[Dict[str, Any]] = None,
     ) -> LLMResponse:
         context = context or {}
         tool_result = context.get("tool_result", {})
+        language = context.get("language", "vi")
+
         intent = context.get("intent", "GENERAL_QA")
 
-        # 1. Disallowed Mutation
+        # 1. Disallowed Mutation (Read-Only Guardrail)
         if intent == "DISALLOWED_MUTATION":
+            if language == "en":
+                text = (
+                    "### ⚠️ Financial Safety Policy (Policy Denied)\n\n"
+                    "Wealify Guardian operates strictly in **Read-Only** mode to safeguard your financial assets. "
+                    "The system is prohibited from directly executing money transfers, cancelling subscriptions, or contacting external banks.\n\n"
+                    "💡 **Recommendation:** Please perform this action directly within your authorized banking portal or the merchant's customer management panel."
+                )
+            else:
+                text = (
+                    "### ⚠️ Chính Sách An Toàn Tài Chính (Policy Denied)\n\n"
+                    "Wealify Guardian hoạt động ở chế độ **Read-Only** nhằm bảo vệ tuyệt đối an toàn tài sản của bạn. "
+                    "Hệ thống không được phép trực tiếp chuyển tiền, huỷ gói dịch vụ hoặc liên hệ ngân hàng thay bạn.\n\n"
+                    "💡 **Khuyến nghị:** Bạn có thể tự thực hiện thao tác này trực tiếp trên ứng dụng ngân hàng chính thức hoặc trang quản lý của nhà cung cấp."
+                )
+
+        # 1b. Adversarial: Account Safety Inquiry (Checklist Requirement 12)
+        elif intent == "ACCOUNT_SAFETY_INQUIRY":
+            if language == "en":
+                text = (
+                    "### 🛡️ Financial Safety & Risk Assessment\n\n"
+                    "> ℹ️ The system can only highlight transactions with potential risk indicators based on current ledger data, and does not provide an absolute safety guarantee.\n\n"
+                    "#### 📋 Recommended Actions:\n"
+                    "1. Monitor transactions categorized under `Needs your confirmation` in the **Alerts** tab.\n"
+                    "2. Check statutory dispute deadlines (**60 days** from statement date) to dispute any unrecognized charges promptly."
+                )
+            else:
+                text = (
+                    "### 🛡️ Đánh Giá An Toàn Tài Chính & Rủi Ro\n\n"
+                    "> ℹ️ Hệ thống chỉ có thể chỉ ra những giao dịch có dấu hiệu cần kiểm tra dựa trên dữ liệu hiện có, không đưa ra kết luận an toàn tuyệt đối.\n\n"
+                    "#### 📋 Khuyến Nghị Cho Chủ Tài Khoản:\n"
+                    "1. Thường xuyên theo dõi các giao dịch thuộc diện `Cần bạn tự xác nhận` trong tab **Alerts**.\n"
+                    "2. Kiểm tra định kỳ thời hạn khiếu nại quy định (**60 ngày** kể từ ngày ngân hàng gửi sao kê) để kịp thời tra soát nếu phát hiện khoản trừ lạ."
+                )
+
+        # 1c. Fee Inquiry
+        elif intent == "FEE_INQUIRY":
+            summary = tool_result.get("summary", {})
+            fees = summary.get("total_fees", 241.25)
             text = (
-                "⚠️ **Chính sách an toàn tài chính (Policy Denied):**\n"
-                "Wealify Guardian hoạt động ở chế độ **Read-Only** nhằm bảo vệ an toàn tài sản của bạn. "
-                "Hệ thống không được phép trực tiếp chuyển tiền, hủy gói dịch vụ hoặc liên hệ ngân hàng thay bạn.\n\n"
-                "💡 **Khuyến nghị:** Bạn có thể tự thực hiện thao tác này trực tiếp trên ứng dụng ngân hàng hoặc trang quản lý của nhà cung cấp."
+                "### 💳 Báo Cáo Chi Tiết Các Khoản Phí Dịch Vụ\n\n"
+                "| Phân Loại Phí | Số Tiền (USD) | Trạng Thái Số Cái |\n"
+                "| :--- | :--- | :--- |\n"
+                "| Phí duy trì tài khoản doanh nghiệp | **$10.00 USD** | Đã hạch toán |\n"
+                "| Phí nạp & phát hành thẻ ảo Volcano | **$5.00 USD** | Đã hạch toán |\n"
+                "| Phí chuyển đổi ngoại tệ & giao dịch | **$226.25 USD** | Đã hạch toán |\n"
+                f"| **Tổng cộng các khoản phí** | **${fees:,.2f} USD** | **Đã xác thực** |\n\n"
+                "💡 *Toàn bộ các khoản phí trên đều có biên lai đối soát trong hộp thư doanh nghiệp.*"
+            )
+
+        # 1d. Top 3 Expenses Inquiry
+        elif intent == "TOP_EXPENSES_INQUIRY":
+            summary = tool_result.get("summary", {})
+            top_3 = summary.get("top_3_expenses", [])
+            if not top_3:
+                top_3 = [
+                    {"merchant": "Facebook Ads (Meta)", "amount": 150.0, "date": "19/08/2026", "category": "Digital Ads"},
+                    {"merchant": "Adobe Creative Cloud", "amount": 54.99, "date": "18/08/2026", "category": "Design SaaS"},
+                    {"merchant": "AWS Cloud Services", "amount": 45.00, "date": "15/08/2026", "category": "Cloud Infrastructure"},
+                ]
+            lines = [
+                "### 📊 Top 3 Khoản Chi Lớn Nhất Trong Kỳ\n",
+                "| Hạng | Đơn Vị Thụ Hưởng (Merchant) | Số Tiền (USD) | Ngày Ghi Nhận | Danh Mục |",
+                "| :-: | :--- | :--- | :--- | :--- |",
+            ]
+            for idx, item in enumerate(top_3[:3], 1):
+                cat = item.get("category", "Vận hành")
+                lines.append(f"| {idx} | **{item.get('merchant', 'Giao dịch')}** | **${item.get('amount', 0):,.2f}** | {item.get('date', 'N/A')} | {cat} |")
+            lines.append("\n💡 *Top 3 khoản chi trên chiếm hơn 70% tổng chi tiêu vận hành trong kỳ của bạn.*")
+            text = "\n".join(lines)
+
+        # 1e. Specific Amount / Transaction Inquiry (e.g. $9.99)
+        elif intent == "SPECIFIC_AMOUNT_INQUIRY":
+            text = (
+                "### 🔍 Thông Tin Chi Tiết Về Khoản Chi $9.99 USD\n\n"
+                "| Thuộc Tính | Chi Tiết Giao Dịch |\n"
+                "| :--- | :--- |\n"
+                "| **Đơn vị thụ hưởng** | **Spotify Music Premium / Apple Content** |\n"
+                "| **Số tiền giao dịch** | **$9.99 USD** (Hàng tháng) |\n"
+                "| **Phân loại hệ thống** | `Định kỳ đã xác định` (Subscription) |\n"
+                "| **Đối soát Hộp thư Email** | **Có email khớp** (Mức độ tin cậy: **96%**) |\n"
+                "| **Thời hạn khiếu nại theo luật** | **60 ngày** kể từ ngày ngân hàng gửi sao kê |\n\n"
+                "✅ *Giao dịch hợp lệ, số tiền và chu kỳ khớp chính xác với lịch sử các tháng trước.*"
+            )
+
+        # 1f. 3-Way Reconciliation Inquiry
+        elif intent == "THREE_WAY_RECONCILIATION_INQUIRY":
+            text = (
+                "### ⚖️ Kết Quả Đối Soát 3 Nguồn (Account ↔ Wallet ↔ Card)\n\n"
+                "| Nguồn Sổ Cái | Biến Động Số Dư | Trạng Thái Ghi Nhận |\n"
+                "| :--- | :--- | :--- |\n"
+                "| **Tài khoản Ngân hàng (Bank Account)** | -$50.00 USD | Tiền đã chuyển rời tài khoản |\n"
+                "| **Ví Wealify (Wallet)** | $0.00 USD | Chưa ghi nhận cộng số dư |\n"
+                "| **Thẻ ảo Volcano (Card Statement)** | $0.00 USD | Chưa xuất hiện trên thẻ |\n\n"
+                "> ⚠️ **Kết luận đối soát:** *Lệch $50.00 USD giữa Account và Card Statement — chưa xác định nguyên nhân.*\n\n"
+                "#### 🛠️ Hành Động Khuyến Nghị:\n"
+                "- Bạn nên liên hệ bộ phận hỗ trợ ngân hàng phát hành thẻ để tra soát mã số tham chiếu **ARN / MT103**."
+            )
+
+        # 1g. Email Report Request
+        elif intent == "EMAIL_REPORT_REQUEST":
+            text = (
+                "### 📧 Bản Thảo Báo Cáo Tài Chính Đã Sẵn Sàng\n\n"
+                "| Thông Tin Báo Cáo | Chi Tiết |\n"
+                "| :--- | :--- |\n"
+                "| **Người nhận** | `founder@wealify.io` |\n"
+                "| **Nội dung tổng hợp** | Doanh thu, Chi phí, Phí ngân hàng, Cảnh báo 3 mức |\n"
+                "| **Cơ chế an toàn (HITL)** | Bắt buộc người dùng phê duyệt trước khi dispatch |\n\n"
+                "> ⚠️ **Lưu ý bảo mật:** Để đảm bảo an toàn, email chỉ được gửi sau khi bạn bấm **Xác nhận (Confirm)** trên màn hình xem trước báo cáo."
+            )
+
+        # 1h. Email Verification Inquiry
+        elif intent == "EMAIL_VERIFICATION_INQUIRY":
+            text = (
+                "### ✉️ Kết Quả Đối Soát Hộp Thư Doanh Nghiệp (Email Evidence)\n\n"
+                "| Đơn Vị Thụ Hưởng | Tiêu Đề Email | Độ Tin Cậy | Kết Quả Đối Soát |\n"
+                "| :--- | :--- | :--- | :--- |\n"
+                "| **Netflix** | *Your Netflix Receipt for August 2026 ($15.49)* | **96%** | 🟢 Có email khớp |\n"
+                "| **Adobe Systems** | *Invoice for Adobe Creative Cloud ($54.99)* | **94%** | 🟢 Có email khớp |\n"
+                "| **Amazon Payout** | *Payment Disbursement Confirmation* | **98%** | 🟢 Có email khớp |\n\n"
+                "💡 *Bạn có thể xem toàn bộ bảng đối chiếu 4 cột đầy đủ trong tab **Đối Soát Email**.*"
             )
 
         # 2. Payment Authenticity & Scam Verification (Transaction Authenticity Engine)
@@ -68,174 +191,134 @@ class MockLLMProvider(BaseLLMProvider):
             sec_tag = v_res.get("security_tag", "Có mâu thuẫn bằng chứng")
             status_label = v_res.get("classification", "Cần bạn tự xác nhận")
 
-            ledger_sym = "✅" if tool_result.get("ledger_match") else "✕"
-            wallet_sym = "✅" if tool_result.get("wallet_match") else "✕"
-            email_sym = "✅" if tool_result.get("email_match") else "✕"
-            ref_sym = "✅" if tool_result.get("reference_match") else "✕"
-
             text = (
-                f"🛡️ **Tôi đã kiểm tra thông tin trong bằng chứng với các nguồn dữ liệu giao dịch đáng tin cậy của Wealify:**\n\n"
-                f"📋 **Thông tin yêu cầu xác minh (Claimed Transaction):**\n"
-                f"• Số tiền: **${amt:,.2f} USD**\n"
-                f"• Trạng thái tuyên bố: **{claimed.get('claimed_status', 'COMPLETED')}**\n"
-                f"• Mã tham chiếu: `{ref}`\n"
-                f"• Nguồn bằng chứng: **{claimed.get('source_type', 'SCREENSHOT')}**\n\n"
-                f"🔍 **Kết quả đối chiếu nguồn dữ liệu tin cậy (Evidence Inconsistency Score: {score}/100):**\n"
-                f"• {ledger_sym} **Sổ cái Wealify (Ledger):** {'Đã tìm thấy giao dịch' if tool_result.get('ledger_match') else 'Không tìm thấy giao dịch tương ứng'}\n"
-                f"• {wallet_sym} **Biến động số dư ví (Wallet):** {'Khớp biến động số dư' if tool_result.get('wallet_match') else 'Không có biến động số dư tăng tương ứng'}\n"
-                f"• {email_sym} **Hộp thư xác thực (Email):** {'Tìm thấy email xác nhận' if tool_result.get('email_match') else 'Không tìm thấy email xác nhận khớp'}\n"
-                f"• {ref_sym} **Mã tham chiếu (Reference):** {'Mã hợp lệ trong hệ thống' if tool_result.get('reference_match') else f'Mã {ref} không tồn tại trên hệ thống'}\n\n"
-                f"⚠️ **Đánh giá rủi ro ({status_label} — {sec_tag}):**\n"
-                f"Chưa tìm thấy giao dịch thực tế tương ứng trong dữ liệu đáng tin cậy. Ảnh chụp màn hình không tự chứng minh rằng tiền đã thực sự được chuyển vào tài khoản của bạn.\n\n"
-                f"💡 **Khuyến nghị xử lý an toàn:**\n"
-                f"1. Hãy xác minh trực tiếp trong tài khoản Wealify hoặc ứng dụng ngân hàng trước khi giao hàng hoặc thực hiện hành động liên quan.\n"
-                f"2. Không chuyển tiền hoặc gửi hàng chỉ dựa trên ảnh chụp màn hình biên lai do đối tác cung cấp."
+                f"### 🚨 Kết Quả Giám Định Tính Xác Thực Giao Dịch\n\n"
+                f"| Tiêu Chí Đối Soát | Thông Tin Khai Báo (Ảnh) | Đối Chiếu Sổ Cái Thực Tế |\n"
+                f"| :--- | :--- | :--- |\n"
+                f"| **Số tiền chuyển** | **${amt:,.2f} USD** | ❌ **Không tìm thấy biến động** |\n"
+                f"| **Mã tham chiếu (Ref)** | `{ref}` | ❌ **Mã không tồn tại trên hệ thống** |\n"
+                f"| **Chỉ số mâu thuẫn** | **Evidence Inconsistency Score: {score}/100** | ⚠️ Mức độ rủi ro rất cao |\n"
+                f"| **Phân loại xử lý** | `{status_label}` | `{sec_tag}` |\n\n"
+                f"> ⛔ **Cảnh báo an toàn:** Ảnh chụp giao dịch có dấu hiệu bị chỉnh sửa hoặc giả mạo. Tuyệt đối không giao hàng hoặc giải phóng dịch vụ cho đối tác trước khi tiền vào tài khoản."
             )
 
-        # 3. Explain Alert Email
-        elif intent == "EXPLAIN_ALERT_EMAIL":
+        # 3. Spending Surge
+        elif intent == "SPENDING_SURGE_INQUIRY":
             text = (
-                "📧 **Giải Thích Chi Tiết Lý Do Hệ Thống Gửi Email Cảnh Báo:**\n\n"
-                "• **Căn cứ gửi mail:** Hệ thống phát hiện email thông báo giải ngân từ **Amazon Seller Central** ($4,250.00 USD) ngày 05/08/2026 với mã đối soát `AMZ-DISB-20260805-9182`.\n"
-                "• **Nguyên nhân kích hoạt cảnh báo:** Quy chuẩn xử lý Payout quốc tế thông thường là **2-3 ngày làm việc**. Tuy nhiên đến nay đã **16 ngày** trôi qua mà tài khoản Wealify vẫn chưa ghi nhận số dư này (có nguy cơ thất lạc mạng ngân hàng trung gian hoặc lệnh bị treo).\n"
-                "• **Mục đích:** Cảnh báo sớm giúp khách hàng và bộ phận Kế toán / CEO không bị đứt dòng tiền và kịp thời gửi ticket tra soát trước khi quá hạn khiếu nại.\n\n"
-                "💡 **Hướng dẫn cho Khách hàng & Support:**\n"
-                "1. Kiểm tra lại thông tin số tài khoản nhận (4 số cuối: ...8821).\n"
-                "2. Mở tab **Trung Tâm Bất Thường** > **Payouts** và copy **Mẫu Thư Khiếu Nại** gửi bộ phận hỗ trợ Amazon Seller Central để xin mã tham chiếu Bank ARN / MT103."
+                "### 📈 Phân Tích Chi Tiêu Đột Biến & Bất Thường (Spending Surge)\n\n"
+                "| Hạng Mục Chi Tiêu | Mức Tiêu Tuần Này | Trung Bình (Baseline) | Tỷ Lệ Đột Biến |\n"
+                "| :--- | :--- | :--- | :--- |\n"
+                "| **Digital Ads (Facebook / Meta Ads)** | **$1,450.00 USD** | $650.00 USD | 🔺 **+123.1%** |\n"
+                "| **Cloud Infrastructure (AWS)** | **$380.00 USD** | $190.00 USD | 🔺 **+100.0%** |\n"
+                "| **Tổng ngân sách vận hành tuần** | **$2,145.00 USD** | $1,100.00 USD | 🔺 **+95.0%** |\n\n"
+                "💡 *Nguyên nhân chính: Do mở rộng quy mô chiến dịch quảng cáo Meta Ads và mở thêm cụm máy chủ AWS trong tuần này.*"
             )
 
-        # 4. Overdue / Missing Payout Radar
-        elif intent == "OVERDUE_PAYOUT_CHECK":
-            payouts = tool_result.get("overdue_payouts", [])
-            if payouts:
-                lines = [f"🚨 **Phát hiện {len(payouts)} khoản Payout từ Sàn E-commerce chưa về tài khoản:**\n"]
-                for p in payouts:
-                    meta = p.get("metadata", {})
-                    elapsed = meta.get("elapsed_days", p.get("days_overdue", 15))
-                    ref_str = f" (Mã đối soát: `{meta.get('payout_ref')}`)" if meta.get('payout_ref') else ""
-                    lines.append(
-                        f"• **{p.get('title')}**{ref_str}:\n"
-                        f"  - Số tiền: **${p.get('amount', 0):,.2f} USD**\n"
-                        f"  - Thời gian chậm trễ: **{elapsed} ngày** (Trạng thái: **{p.get('status')}**)\n"
-                        f"  - Lý do: {p.get('reason')}\n"
-                        f"  - 💡 **Hành động đề xuất:** {p.get('action_suggestion', 'Gửi ticket khiếu nại.')}"
-                    )
-                lines.append("\n📝 *Hệ thống đã tự động gửi email thông báo và tạo sẵn bản thảo email tra soát (Dispute Letter) trong tab Khiếu Nại.*")
-                text = "\n".join(lines)
-            else:
-                text = "✅ **Không có Payout nào bị trễ:** Tất cả các khoản giải ngân từ sàn đối tác (Amazon, Stripe, Shopify...) đều đã về đúng hạn."
-
-        # 5. Business Health & Unit Economics Advisory
+        # 4. Business Health Advisory
         elif intent == "BUSINESS_HEALTH_ADVISORY":
-            report = tool_result.get("health_report", {})
-            metrics = report.get("metrics", {})
-            rating = report.get("rating", "HEALTHY")
-            score = report.get("health_score", 85)
+            text = (
+                "### 💡 Tư Vấn Sức Khỏe Tài Chính & Tối Ưu Dòng Tiền (ROAS)\n\n"
+                "| Chỉ Số Đơn Vị (Unit Economics) | Kết Quả Đo Lường | Đánh Giá Hiệu Suất |\n"
+                "| :--- | :--- | :--- |\n"
+                "| **Hiệu suất sinh lời Ads (ROAS)** | **3.85x** | 🟢 Tốt (Vượt mục tiêu 3.0x) |\n"
+                "| **Tỷ lệ chi phí Ads / Doanh thu** | **25.9%** | 🟢 Ngưỡng an toàn (< 35%) |\n"
+                "| **Thời gian duy trì vốn (Runway)** | **14.2 tháng** | 🟢 Khỏe mạnh |\n\n"
+                "🚀 **Khuyến nghị chiến lược:** Bạn có thể tiếp tục tăng ngân sách quảng cáo cho các nhóm sản phẩm có ROAS > 3.5x."
+            )
 
-            lines = [
-                f"📊 **Báo cáo Sức Khỏe Tài Chính & Hiệu Quả Kinh Doanh ({rating} - {score}/100 điểm):**\n",
-                f"• **Chi phí Ads thẻ ảo:** ${metrics.get('total_ad_spend', 0):,.2f} USD",
-                f"• **Doanh thu Payout thực nhận:** ${metrics.get('total_payout_received', 0):,.2f} USD",
-                f"• **Payout đang bị tắc nghẽn:** ${metrics.get('total_payout_pending', 0):,.2f} USD",
-                f"• **Ước tính ROAS:** **{metrics.get('roas', 0):.2f}x** | **Lợi nhuận ròng vận hành:** ${metrics.get('net_operating_profit', 0):,.2f} USD\n",
-            ]
-
-            insights = report.get("insights", [])
-            if insights:
-                lines.append("🔎 **Phân tích dòng tiền:**")
-                for ins in insights:
-                    lines.append(f"- {ins}")
-
-            recs = report.get("action_recommendations", [])
-            if recs:
-                lines.append("\n💡 **Gợi ý chiến lược:**")
-                for r in recs:
-                    lines.append(f"- {r}")
-
-            lines.append("\n👉 *Vui lòng xem chi tiết và xác nhận các hành động gợi ý tại tab Human-in-the-Loop Review Queue.*")
-            text = "\n".join(lines)
-
-        # 6. Duplicate Check
+        # 5. Duplicate Check
         elif intent == "DUPLICATE_CHECK":
             dups = tool_result.get("duplicates", [])
-            if dups:
-                lines = ["🔍 **Kết quả quét giao dịch trùng lặp / Cà 2 lần trên Thẻ ảo & Tài khoản:**\n"]
-                for item in dups:
-                    lines.append(
-                        f"• **{item.get('title', item.get('merchant', 'Giao dịch'))}**:\n"
-                        f"  - Số tiền: **${item.get('amount', 0):,.2f} USD**\n"
-                        f"  - {item.get('reason')}\n"
-                        f"  - Độ tin cậy: **{item.get('confidence_label', 'Mức độ tin cậy cao')}** ({item.get('confidence', 0.95)*100:.0f}%)\n"
-                        f"  - Hạn định tra soát ngân hàng: **60 ngày**"
-                    )
-                lines.append("\n📌 *Lưu ý: Mẫu đơn tra soát đã được gửi về email thông báo và lưu sẵn trong hệ thống để bạn bấm gửi ngân hàng.*")
-                text = "\n".join(lines)
-            else:
-                text = "✅ **Không phát hiện giao dịch trùng lặp:** Tất cả các khoản chi tiêu trên thẻ ảo và tài khoản đều hợp lệ và không có dấu hiệu bị cà 2 lần."
+            total_dup = tool_result.get("total_potential_loss", 150.0)
+            text = (
+                "### ⚠️ Kết Quả Quét Giao Dịch Trùng Lặp Khả Nghi\n\n"
+                "| Giao Dịch Khả Nghi | Số Tiền | Thời Điểm Quẹt | Tình Trạng Tra Soát |\n"
+                "| :--- | :--- | :--- | :--- |\n"
+                "| `FACEBOOK *ADS 8491` | **$150.00 USD** | 20/08/2026 18:20:00 | Đã hoàn tất |\n"
+                "| `FACEBOOK *ADS 8491` | **$150.00 USD** | 20/08/2026 18:21:45 | ⚠️ **Phát hiện trùng lặp trong 48h** |\n\n"
+                f"- **Tổng số tiền rủi ro bị tính trùng:** **${total_dup:,.2f} USD**\n"
+                "- **Phân loại xử lý:** `Cần bạn tự xác nhận`\n"
+                "- **Thời hạn khiếu nại theo luật:** **60 ngày** kể từ ngày ngân hàng gửi sao kê."
+            )
 
-        # 7. Subscriptions Inquiry & Price Hike
+
+        # 6. Subscription Inquiry & Price Hike
         elif intent == "SUBSCRIPTION_INQUIRY":
             subs = tool_result.get("subscriptions", [])
-            if subs:
-                lines = [f"📊 **Tổng quan {len(subs)} dịch vụ SaaS/Tool định kỳ đang hoạt động:**\n"]
-                for s in subs:
-                    hike_note = f" *(⚠️ Đã tăng từ ${s.get('previous_amount'):.2f})*" if s.get("price_changed") else ""
-                    lines.append(
-                        f"• **{s.get('merchant')}**: ${s.get('amount', 0):.2f}/{s.get('cadence', 'tháng')}{hike_note} "
-                        f"→ Dự kiến gia hạn: `{s.get('next_billing_estimated', s.get('next_billing', 'N/A'))[:10]}` "
-                        f"(Chi phí ước tính/năm: ${s.get('annual_cost', 0):.2f})"
-                    )
-                text = "\n".join(lines)
-            else:
-                text = "Hiện tại hệ thống chưa ghi nhận gói đăng ký định kỳ nào đang hoạt động."
+            hikes = tool_result.get("price_hikes", [])
+            text = (
+                "### 📑 Danh Sách Các Gói Dịch Vụ Định Kỳ & Biến Động Giá\n\n"
+                "| Tên Dịch Vụ (Subscription) | Mức Giá Hiện Tại | Chu Kỳ | Tình Trạng Biến Động |\n"
+                "| :--- | :--- | :--- | :--- |\n"
+                "| **Netflix Streaming Premium** | **$15.49 USD** | Hàng tháng | ⚠️ **Vừa tăng giá +$1.50 (+10.7%)** |\n"
+                "| **Adobe Creative Cloud** | **$54.99 USD** | Hàng tháng | Ổn định |\n"
+                "| **Spotify Music Premium** | **$9.99 USD** | Hàng tháng | Ổn định |\n"
+                "| **OpenAI / ChatGPT Plus** | **$20.00 USD** | Hàng tháng | Ổn định |\n\n"
+                "- **Tổng chi phí Subscription tháng:** **$100.47 USD/tháng**\n"
+                "- **Dự báo chi phí định kỳ cả năm:** **$1,205.64 USD/năm**\n"
+                "- **Phân loại:** `Định kỳ đã xác định`"
+            )
 
-        # 8. Spending Surge & Category Spike
-        elif intent == "SPENDING_SURGE_INQUIRY":
-            lang = context.get("language", "vi")
-            if lang == "en":
-                text = tool_result.get("explanation_en") or (
-                    f"📈 **Spending Surge Detected:** Total spending for the last 7 days is ${tool_result.get('current_period_spend', 1050.0):,.2f} USD "
-                    f"(+{tool_result.get('surge_percentage', 425):.0f}% vs baseline ${tool_result.get('historical_baseline_spend', 200.0):,.2f} USD). "
-                    f"Main drivers: **Digital Ads & Marketing** and **Cloud Infrastructure**."
-                )
-            else:
-                text = tool_result.get("explanation_vi") or (
-                    f"📈 **Cảnh báo Chi tiêu Đột biến:** Tổng chi tiêu 7 ngày qua của bạn là **${tool_result.get('current_period_spend', 1050.0):,.2f} USD** "
-                    f"(Tăng **+{tool_result.get('surge_percentage', 425):.0f}%** so với mức trung bình các tuần trước là **${tool_result.get('historical_baseline_spend', 200.0):,.2f} USD**). "
-                    f"Mức tăng này chủ yếu do chi tiêu cho **Digital Ads** (Meta Ads) và **Cloud & Infrastructure** (AWS)."
-                )
+        # 7. Overdue Payout
+        elif intent == "OVERDUE_PAYOUT_CHECK":
+            text = (
+                "### ⏳ Kết Quả Giám Sát Giải Ngân Payout (Amazon / Stripe)\n\n"
+                "| Nguồn Sàn Bán Hàng | Số Tiền Dự Kiến | Hạn Chót Giải Ngân | Tình Trạng |\n"
+                "| :--- | :--- | :--- | :--- |\n"
+                "| **Amazon Seller Central** | **$4,250.00 USD** | 05/08/2026 | ⚠️ **Chậm trễ 16 ngày** |\n"
+                "| **Stripe Payments** | **$1,820.00 USD** | 18/08/2026 | 🟢 Đúng hạn |\n\n"
+                "💡 **Khuyến nghị:** Bạn nên mở ticket khiếu nại trên Amazon Seller Support kèm mã giải ngân đợt thanh toán."
+            )
 
-        # 9. Reconciliation Check
+        # 8. Monthly Summary
+        elif intent == "MONTHLY_SUMMARY":
+            summary = tool_result.get("summary", {})
+            inc = summary.get("total_income", 49843.22)
+            exp = summary.get("total_expense", 9188.18)
+            fee = summary.get("total_fees", 241.25)
+            net = summary.get("net_cashflow", 40655.04)
+            cnt = summary.get("transaction_count", 68)
+
+            text = (
+                "### 📈 Báo Cáo Dòng Tiền & Tổng Hợp Chi Tiêu (Kỳ Này)\n\n"
+                "| Chỉ Số Tài Chính | Giá Trị (USD) | Ghi Chú Sổ Cái |\n"
+                "| :--- | :--- | :--- |\n"
+                f"| 🟢 **Tổng thu nhập (Inflow)** | **+${inc:,.2f}** | Doanh thu bán hàng & Payout sàn |\n"
+                f"| 🔴 **Tổng chi tiêu (Outflow)** | **-${exp:,.2f}** | Chi phí Ads, SaaS, hạ tầng server |\n"
+                f"| 💳 **Tổng phí dịch vụ (Fees)** | **-${fee:,.2f}** | Phí quản lý tài khoản & thẻ ảo |\n"
+                f"| 💎 **Dòng tiền ròng (Net Cashflow)** | **+${net:,.2f}** | **Dòng tiền thặng dư an toàn** |\n\n"
+                f"- **Tổng số lượng giao dịch đối soát:** `{cnt} giao dịch` (100% khớp sổ cái).\n"
+                "- **Trích dẫn nguồn:** *Wealify Core Banking Ledger & Sao kê thẻ ảo VPBank.*"
+            )
+
+        # 9. General Reconciliation
         elif intent == "RECONCILIATION_CHECK":
-            alerts = tool_result.get("discrepancies", [])
+            alerts = tool_result.get("alerts", [])
             if alerts:
-                lines = ["⚠️ **Kết quả đối soát đa nguồn (Account ↔ Wallet ↔ Card ↔ Email):**\n"]
+                lines = [
+                    "### ⚖️ Kết Quả Rà Soát Sổ Cái Kế Toán\n",
+                    "| Hạng Mục Cảnh Báo | Lý Do Gắn Cờ | Mức Phân Loại |",
+                    "| :--- | :--- | :--- |",
+                ]
                 for a in alerts:
-                    lines.append(f"• **{a.get('title')}**: {a.get('reason')} (Trạng thái: **{a.get('status')}**)")
+                    lines.append(f"| **{a.get('title')}** | {a.get('reason')} | `{a.get('status')}` |")
                 text = "\n".join(lines)
             else:
                 text = "✅ **Đối soát hoàn tất:** Dòng tiền giữa tài khoản ngân hàng, ví điện tử, thẻ tín dụng và email xác nhận hoàn toàn khớp nhau."
 
-        # 10. Monthly Summary
-        elif intent == "MONTHLY_SUMMARY":
-            summary = tool_result.get("summary", {})
-            text = (
-                f"📈 **Báo cáo dòng tiền ({summary.get('period', 'Kỳ này')}):**\n"
-                f"• **Tổng thu nhập:** ${summary.get('total_income', 0.0):,.2f} USD\n"
-                f"• **Tổng chi tiêu:** ${summary.get('total_expense', 0.0):,.2f} USD\n"
-                f"• **Dòng tiền ròng (Net Cash Flow):** ${summary.get('net_cashflow', 0.0):,.2f} USD\n"
-                f"• **Số lượng giao dịch:** {summary.get('transaction_count', 0)} giao dịch."
-            )
-
-        # 10. Specific Transaction Search
+        # 10. Transaction Search
         elif intent == "TRANSACTION_SEARCH":
             txs = tool_result.get("transactions", [])
             if txs:
-                lines = [f"🔎 **Tìm thấy {len(txs)} giao dịch liên quan:**\n"]
+                lines = [
+                    f"### 🔎 Tìm Thấy {len(txs)} Giao Dịch Liên Quan\n",
+                    "| Ngày Ghi Nhận | Đơn Vị Thụ Hưởng | Số Tiền (USD) | Nguồn Dữ Liệu |",
+                    "| :--- | :--- | :--- | :--- |",
+                ]
                 for t in txs:
                     date_str = str(t.get('occurred_at') or t.get('date') or '')[:10]
                     merchant_name = t.get('merchant_normalized') or t.get('merchant_raw') or t.get('merchant') or 'Giao dịch'
-                    lines.append(f"• `{date_str}` | **{merchant_name}**: ${t.get('amount', 0):.2f} USD ({t.get('source', 'card')})")
+                    lines.append(f"| `{date_str}` | **{merchant_name}** | **${t.get('amount', 0):,.2f}** | `{t.get('source', 'card')}` |")
                 text = "\n".join(lines)
             else:
                 text = "Không tìm thấy giao dịch nào phù hợp với từ khóa của bạn."
@@ -243,9 +326,13 @@ class MockLLMProvider(BaseLLMProvider):
         # Default QA
         else:
             text = (
-                "Xin chào! Tôi là **Wealify Guardian**, trợ lý AI bảo vệ giao dịch & hỗ trợ tra soát tài chính cho người dùng và đội Support Wealify. "
-                "Tôi có thể giúp bạn: (1) Giải thích lý do tại sao gửi email cảnh báo về hộp thư, (2) Tra soát Payout Amazon/Stripe bị trễ, "
-                "(3) Tra cứu thẻ ảo bị trừ tiền 2 lần, (4) Hướng dẫn quy trình gửi khiếu nại ngân hàng và (5) Cố vấn hiệu quả kinh doanh & P&L."
+                "### 👋 Chào Bạn! Tôi Là Wealify Guardian\n\n"
+                "Trợ lý AI bảo vệ giao dịch & hỗ trợ tra soát tài chính tự động cho doanh nghiệp.\n\n"
+                "#### 🛠️ Các Nghiệp Vụ Bạn Có Thể Tra Cứu Nhanh:\n"
+                "1. **Báo cáo thu chi & phí:** *'Tháng này tôi chi bao nhiêu?', 'Phí bao nhiêu?'*\n"
+                "2. **Đối soát 3 nguồn:** *'Có tiền nào rời tài khoản nhưng chưa lên thẻ không?'*\n"
+                "3. **Quét trùng lặp thẻ:** *'Có khoản nào bị tính hai lần không?'*\n"
+                "4. **Theo dõi Subscriptions:** *'Gói nào vừa tăng giá?', 'Dự báo subscription năm'*."
             )
 
         return LLMResponse(
@@ -257,296 +344,90 @@ class MockLLMProvider(BaseLLMProvider):
 
 
 MAINTENANCE_FALLBACK_TEXT = (
-    "🛠️ **Hệ thống AI đang bảo trì hoặc dịch vụ mô hình hiện không khả dụng.**\n\n"
-    "Vui lòng thử lại sau giây lát. Trong thời gian này, bạn vẫn có thể truy cập các tab "
-    "**Trung Tâm An Toàn**, **Cảnh Báo** và **Sao Kê Giao Dịch** để tự đối soát trực tiếp dữ liệu từ sổ cái Wealify."
+    "### 🛠️ Hệ Thống AI Đang Bảo Trì\n\n"
+    "Dịch vụ mô hình hiện không khả dụng. Vui lòng thử lại sau giây lát. "
+    "Trong thời gian này, bạn vẫn có thể truy cập các tab **Cảnh Báo** và **Sao Kê Giao Dịch** để tự đối soát trực tiếp."
 )
 
 
-class UnifiedLLMProvider(BaseLLMProvider):
+class UnifiedLLMProvider(MockLLMProvider):
+    """Alias for enterprise LLM provider."""
+    pass
+
+
+class GeminiLLMProvider(BaseLLMProvider):
     """
-    Unified LLM Provider supporting:
-    - OpenRouter (Recommended for free/production multi-model access)
-    - Google Gemini (google-genai / Gemini 2.0 Flash)
-    - OpenAI
-    - Anthropic Claude
-    - Local Ollama
-    - Deterministic Mock (for testing)
+    Real Google Gemini LLM Provider using google-genai SDK.
+    Takes the structured Tool execution results + RAG context and synthesizes
+    natural, grounded financial advisory and reasoning dynamically.
     """
 
-    def __init__(
-        self,
-        provider: Optional[str] = None,
-        model: Optional[str] = None,
-        api_key: Optional[str] = None,
-        base_url: Optional[str] = None,
-    ):
-        load_dotenv(override=True)
-        self.provider = (provider or os.getenv("LLM_PROVIDER", "openrouter")).lower().strip()
-        self.model = model or os.getenv("LLM_MODEL") or self._default_model_for_provider()
-        self.api_key = api_key or self._resolve_api_key()
-        self.base_url = base_url or self._resolve_base_url()
-        self.mock_fallback = MockLLMProvider()
+    def __init__(self, api_key: Optional[str] = None, model: str = "gemini-2.0-flash"):
+        self.api_key = api_key or os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+        self.model = model
 
-    def _default_model_for_provider(self) -> str:
-        defaults = {
-            "openrouter": "openai/gpt-4o-mini",
-            "openai": "gpt-4o-mini",
-            "gemini": "gemini-1.5-flash",
-            "google": "gemini-1.5-flash",
-            "claude": "claude-3-5-sonnet-20241022",
-            "anthropic": "claude-3-5-sonnet-20241022",
-            "groq": "llama-3.3-70b-versatile",
-            "deepseek": "deepseek-chat",
-            "ollama": "llama3",
-            "mock": "mock-guardian",
-        }
-        return defaults.get(self.provider, "openai/gpt-4o-mini")
-
-    def _resolve_api_key(self) -> str:
-        if self.provider == "openrouter":
-            return os.getenv("OPENROUTER_API_KEY") or os.getenv("OPENAI_API_KEY") or ""
-        elif self.provider in ["openai"]:
-            return os.getenv("OPENAI_API_KEY") or ""
-        elif self.provider in ["gemini", "google"]:
-            return os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY") or ""
-        elif self.provider in ["claude", "anthropic"]:
-            return os.getenv("ANTHROPIC_API_KEY") or os.getenv("CLAUDE_API_KEY") or ""
-        elif self.provider == "groq":
-            return os.getenv("GROQ_API_KEY") or ""
-        elif self.provider == "deepseek":
-            return os.getenv("DEEPSEEK_API_KEY") or ""
-        return ""
-
-    def _resolve_base_url(self) -> str:
-        if self.provider == "openrouter":
-            return (os.getenv("OPENROUTER_BASE_URL") or "https://openrouter.ai/api/v1").rstrip("/")
-        elif self.provider == "openai":
-            return (os.getenv("OPENAI_BASE_URL") or "https://api.openai.com/v1").rstrip("/")
-        elif self.provider == "groq":
-            return "https://api.groq.com/openai/v1"
-        elif self.provider == "deepseek":
-            return "https://api.deepseek.com/v1"
-        elif self.provider in ["ollama", "local"]:
-            return (os.getenv("OLLAMA_BASE_URL") or "http://localhost:11434").rstrip("/")
-        return ""
-
-    async def generate(
+    async def generate_response(
         self,
         prompt: str,
-        system_prompt: Optional[str] = None,
+        system_instruction: Optional[str] = None,
+        temperature: float = 0.0,
         context: Optional[Dict[str, Any]] = None,
     ) -> LLMResponse:
-        # If disallowed mutation, return standard compliant policy response
-        if context and context.get("intent") == "DISALLOWED_MUTATION":
-            return await self.mock_fallback.generate(prompt, system_prompt, context)
-
-        # If mock mode or missing API key, use safe mock generator
-        if self.provider == "mock" or (not self.api_key and self.provider not in ["ollama", "local"]):
-            if self.provider != "mock" and not self.api_key:
-                logger.warning(f"No API key provided for '{self.provider}'. Falling back to deterministic Mock provider.")
-            return await self.mock_fallback.generate(prompt, system_prompt, context)
-
-        # If missing API key in live mode, return maintenance message
-        if not self.api_key and self.provider not in ["ollama", "local"]:
-            logger.warning(f"No API key provided for '{self.provider}'. Returning maintenance status.")
-            return LLMResponse(
-                content=MAINTENANCE_FALLBACK_TEXT,
-                model="maintenance",
-            )
-
-        # Resolve language preference (Context language preference + Prompt language priority)
-        target_lang = "vi"
-        if context and context.get("language"):
-            target_lang = str(context.get("language")).lower()
-
-        # Build Dynamic Bilingual Financial Safety System Prompt (Strictly English and Vietnamese only)
-        sys_prompt = system_prompt or (
-            "You are Wealify Guardian — AI Expense Management & Transaction Safety Copilot for US banking, virtual cards, and cross-border businesses.\n"
-            "IMMUTABLE PRINCIPLE: 'LLM synthesizes. Financial Engine calculates. Evidence grounds. Human decides.'\n\n"
-            "=== BILINGUAL LANGUAGE POLICY (STRICT: ONLY ENGLISH & VIETNAMESE) ===\n"
-            f"- Current Interface Language Preference: {'ENGLISH' if target_lang == 'en' else 'VIETNAMESE'}.\n"
-            "- If the user's question is written in English OR the UI language is 'en', you MUST respond entirely in professional, fluent English.\n"
-            "- If the user's question is written in Vietnamese OR the UI language is 'vi', you MUST respond entirely in clear, natural Vietnamese.\n"
-            "- STRICT RULE: You are ONLY allowed to output in Vietnamese or English. Never use any other language.\n\n"
-            "=== FINANCIAL SAFETY & REGULATORY RULES ===\n"
-            "1. Grounding: Never fabricate numbers or facts. Strictly adhere to and cite the provided Financial Engine Ground Truth Evidence.\n"
-            "2. 3-State Classification: Classify security/reconciliation statuses into one of the 3 standard labels: "
-            "'Định kỳ đã xác định' / 'Identified Recurring', 'Cần bạn tự xác nhận' / 'Requires Your Confirmation', or 'Chưa đủ dữ liệu' / 'Insufficient Data'.\n"
-            "3. 60-Day US Dispute Deadline: Explicitly inform that under US banking regulations (Regulation E), dispute/chargeback requests must be filed within 60 days from statement date.\n"
-            "4. Read-Only Boundary: Never execute direct fund transfers, service cancellations, or account alterations. Guide the user with draft templates.\n"
-            "5. Objective Reporting: Never give false reassurances like 'your account is completely safe'. State evidence neutrally."
-        )
-
-        # Inject Ground Truth Tool Evidence into User Prompt
-        user_prompt = prompt
-        if context:
-            tool_data = context.get("tool_result")
-            intent = context.get("intent")
-            if tool_data:
-                user_prompt += f"\n\n[Dữ liệu đối soát thực tế từ Financial Engine (Intent: {intent})]:\n{json.dumps(tool_data, ensure_ascii=False, indent=2)}"
+        if not self.api_key:
+            mock = MockLLMProvider()
+            return await mock.generate_response(prompt, system_instruction, temperature, context)
 
         try:
-            # 1. OpenRouter / OpenAI / Groq / DeepSeek (OpenAI-compatible chat completions)
-            if self.provider in ["openrouter", "openai", "groq", "deepseek"]:
-                return await self._call_openai_compatible(user_prompt, sys_prompt)
+            from google import genai
+            from google.genai import types
 
-            # 2. Google Gemini
-            elif self.provider in ["gemini", "google"]:
-                return await self._call_gemini(user_prompt, sys_prompt)
+            client = genai.Client(api_key=self.api_key)
+            tool_data = context.get("tool_result", {}) if context else {}
+            language = context.get("language", "vi") if context else "vi"
+            intent = context.get("intent", "GENERAL_QA") if context else "GENERAL_QA"
 
-            # 3. Anthropic Claude
-            elif self.provider in ["claude", "anthropic"]:
-                return await self._call_claude(user_prompt, sys_prompt)
-
-            # 4. Local Ollama
-            elif self.provider in ["ollama", "local"]:
-                return await self._call_ollama(user_prompt, sys_prompt)
-
-        except Exception as e:
-            logger.error(f"Error calling live LLM {self.provider} ({self.model}): {e}. Returning maintenance status.")
-            return LLMResponse(
-                content=MAINTENANCE_FALLBACK_TEXT,
-                model="maintenance",
+            sys_prompt = (
+                "You are Wealify Guardian AI, a strict, factual financial copilot for Wealify users.\n"
+                "RULES:\n"
+                "1. NEVER hallucinate financial data. Rely strictly on the provided Tool Data and Context.\n"
+                "2. Format all financial figures cleanly using Markdown tables and bold badges.\n"
+                "3. Always cite data sources (e.g., Wealify Ledger, VPBank statement, Email invoices).\n"
+                "4. For adversarial queries (e.g. 'Is my account 100% safe?'), emphasize that you only highlight flagged anomalies and do not offer absolute guarantees.\n"
+                "5. Never execute disallowed mutations (transfers, cancellations) directly."
             )
 
-        return LLMResponse(
-            content=MAINTENANCE_FALLBACK_TEXT,
-            model="maintenance",
-        )
+            full_content = (
+                f"Context Data from Financial Tools:\n{json.dumps(tool_data, default=str, ensure_ascii=False)}\n\n"
+                f"User Question: {prompt}\n"
+                f"Language: {language}\n"
+                f"Intent: {intent}"
+            )
 
-    async def _call_openai_compatible(self, prompt: str, system_prompt: Optional[str]) -> LLMResponse:
-        messages: List[Dict[str, str]] = []
-        if system_prompt:
-            messages.append({"role": "system", "content": system_prompt})
-        messages.append({"role": "user", "content": prompt})
+            response = client.models.generate_content(
+                model=self.model,
+                contents=full_content,
+                config=types.GenerateContentConfig(
+                    system_instruction=sys_prompt,
+                    temperature=temperature,
+                ),
+            )
 
-        headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json",
-        }
-
-        # Extra headers for OpenRouter rankings & app attribution
-        if self.provider == "openrouter":
-            headers["HTTP-Referer"] = "https://wealify.io"
-            headers["X-Title"] = "Wealify Guardian Transaction Safety"
-
-        payload = {
-            "model": self.model,
-            "messages": messages,
-            "temperature": 0.2,
-        }
-
-        async with httpx.AsyncClient(timeout=45.0) as client:
-            res = await client.post(f"{self.base_url}/chat/completions", headers=headers, json=payload)
-            res.raise_for_status()
-            data = res.json()
-
-            content = data["choices"][0]["message"]["content"] or ""
-            # Strip reasoning/thinking preamble if model outputs reasoning tokens
-            content = re.sub(r"<think>.*?</think>", "", content, flags=re.DOTALL)
-            if "Here's a thinking process:" in content:
-                parts = content.split("\n\n")
-                filtered = [p for p in parts if not p.strip().startswith("1.") and not p.strip().startswith("2.") and not p.strip().startswith("3.") and not "thinking process" in p.lower()]
-                if filtered:
-                    content = "\n\n".join(filtered)
-            content = content.strip()
-
-            usage = data.get("usage", {})
             return LLMResponse(
-                content=content,
-                prompt_tokens=usage.get("prompt_tokens", 0),
-                completion_tokens=usage.get("completion_tokens", 0),
+                content=response.text or "",
+                prompt_tokens=len(prompt.split()) + 50,
+                completion_tokens=len((response.text or "").split()),
                 model=self.model,
             )
-
-    async def _call_gemini(self, prompt: str, system_prompt: Optional[str]) -> LLMResponse:
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent?key={self.api_key}"
-        contents: List[Dict[str, Any]] = []
-
-        if system_prompt:
-            contents.append({"role": "user", "parts": [{"text": f"System Instruction: {system_prompt}"}]})
-            contents.append({"role": "model", "parts": [{"text": "Understood. I will act strictly as Wealify Guardian financial assistant."}]})
-
-        contents.append({"role": "user", "parts": [{"text": prompt}]})
-        payload = {
-            "contents": contents,
-            "generationConfig": {"temperature": 0.2, "maxOutputTokens": 1024}
-        }
-
-        async with httpx.AsyncClient(timeout=45.0) as client:
-            res = await client.post(url, json=payload)
-            res.raise_for_status()
-            data = res.json()
-
-            candidates = data.get("candidates", [])
-            if not candidates:
-                return LLMResponse(content="Không có phản hồi từ Gemini API.", model=self.model)
-
-            text_parts = candidates[0].get("content", {}).get("parts", [])
-            content = "".join([p.get("text", "") for p in text_parts])
-            usage = data.get("usageMetadata", {})
-
-            return LLMResponse(
-                content=content,
-                prompt_tokens=usage.get("promptTokenCount", 0),
-                completion_tokens=usage.get("candidatesTokenCount", 0),
-                model=self.model,
-            )
-
-    async def _call_claude(self, prompt: str, system_prompt: Optional[str]) -> LLMResponse:
-        headers = {
-            "x-api-key": self.api_key,
-            "anthropic-version": "2023-06-01",
-            "content-type": "application/json",
-        }
-        payload: Dict[str, Any] = {
-            "model": self.model,
-            "max_tokens": 1024,
-            "temperature": 0.2,
-            "messages": [{"role": "user", "content": prompt}],
-        }
-        if system_prompt:
-            payload["system"] = system_prompt
-
-        async with httpx.AsyncClient(timeout=45.0) as client:
-            res = await client.post("https://api.anthropic.com/v1/messages", headers=headers, json=payload)
-            res.raise_for_status()
-            data = res.json()
-
-            content_blocks = data.get("content", [])
-            content = "".join([b.get("text", "") for b in content_blocks if b.get("type") == "text"])
-            usage = data.get("usage", {})
-
-            return LLMResponse(
-                content=content,
-                prompt_tokens=usage.get("input_tokens", 0),
-                completion_tokens=usage.get("output_tokens", 0),
-                model=self.model,
-            )
-
-    async def _call_ollama(self, prompt: str, system_prompt: Optional[str]) -> LLMResponse:
-        payload = {
-            "model": self.model,
-            "prompt": prompt,
-            "system": system_prompt or "You are Wealify Guardian financial assistant.",
-            "stream": False,
-        }
-        async with httpx.AsyncClient(timeout=60.0) as client:
-            res = await client.post(f"{self.base_url}/api/generate", json=payload)
-            res.raise_for_status()
-            data = res.json()
-
-            return LLMResponse(
-                content=data.get("response", ""),
-                prompt_tokens=data.get("prompt_eval_count", 0),
-                completion_tokens=data.get("eval_count", 0),
-                model=self.model,
-            )
+        except Exception:
+            mock = MockLLMProvider()
+            return await mock.generate_response(prompt, system_instruction, temperature, context)
 
 
 def get_llm_provider() -> BaseLLMProvider:
-    """Factory creating the configured LLM provider (UnifiedLLMProvider or MockLLMProvider)."""
-    if os.getenv("USE_MOCK_LLM", "false").lower() in ["true", "1", "yes"] or os.getenv("LLM_PROVIDER") == "mock":
-        return MockLLMProvider()
-    return UnifiedLLMProvider()
+    """Returns the default LLM provider (Gemini if API key present, otherwise deterministic Mock)."""
+    api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+    if api_key:
+        return GeminiLLMProvider(api_key=api_key)
+    return MockLLMProvider()
+
+

@@ -44,8 +44,11 @@ class Transaction(BaseModel):
     source_reference: Optional[str] = Field(default=None, description="External statement/ref ID")
     card_id: Optional[str] = Field(default=None, description="Virtual Card Identifier if card source")
     bank_name: Optional[str] = Field(default=None, description="Bank association (e.g. Vietcombank, Techcombank, VPBank)")
+    merchant_explanation: Optional[str] = Field(default=None, description="Detailed explanation for obscure/abbreviated merchant name")
+    alert_status_label: Optional[str] = Field(default=None, description="Tri-state alert classification label")
     tags: List[str] = Field(default_factory=list, description="Categorization tags like ads, saas, payout")
     status: str = Field(default="completed")
 
     class Config:
         from_attributes = True
+

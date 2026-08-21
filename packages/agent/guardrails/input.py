@@ -52,13 +52,15 @@ class InputGuardrail:
             "gửi ảnh", "ảnh", "kiểm tra", "xác minh", "xác thực", "có thật không",
             "nói wealify đã chuyển", "nói đã chuyển", "thư cảnh báo", "tại sao", "lý do"
         ])
+        is_report_request = any(k in cleaned for k in ["báo cáo", "report", "tổng kết", "thống kê"]) and ("email" in cleaned or "gửi" in cleaned)
         is_imperative_transfer = bool(
             re.search(r"^(?:hãy\s+|vui lòng\s+|tự\s+|hộ\s+)?(?:chuyển|bắn|gửi|rút|nạp|pay|transfer|send|wire)\s+\$?\d+", cleaned, re.IGNORECASE)
             or re.search(r"^(?:chuyển|transfer|send)\s+\$?\d+\s+(?:cho|tới|vào|sang)", cleaned, re.IGNORECASE)
         )
 
-        if is_verification and not is_imperative_transfer:
-            return True, None, "Input is an informational verification inquiry."
+        if (is_verification or is_report_request) and not is_imperative_transfer:
+            return True, None, "Input is an informational verification/report inquiry."
+
 
         for pattern, action in DISALLOWED_INPUT_PATTERNS:
             if re.search(pattern, cleaned, re.IGNORECASE):

@@ -6,14 +6,16 @@ and confidence metrics as CSV or JSON file.
 
 import io
 import csv
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List
 from fastapi import APIRouter, Query, Response
 from pydantic import BaseModel, Field
 
 from packages.financial.security.authenticity_engine import authenticity_engine
 from packages.financial.anomaly.duplicate_detector import DuplicateDetector
+from packages.financial.subscriptions.subscription_radar import SubscriptionRadar
 from packages.financial.reconciliation.payout_radar import PayoutRadar
+from packages.financial.reconciliation.reconciler import ReconciliationEngine
 from packages.connectors.mock.mock_sources import MockTransactionSource, MockEmailSource
 
 router = APIRouter(prefix="/api/v1/audit", tags=["Audit Trail & Logging"])
@@ -30,13 +32,13 @@ class AuditEntry(BaseModel):
     confidence_label: str
     classification: str
     dispute_deadline_days: int = 60
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 @router.get("/logs", response_model=List[AuditEntry])
 async def get_audit_logs(account_id: str = "acc_main"):
     """
-    Retrieves all flagged transactions, anomalies, and authenticity checks.
+    Retrieves all flagged transactions, anomalies, subscriptions, and reconciliation flags.
     """
     logs: List[AuditEntry] = []
     txs = await mock_txs.get_transactions()
@@ -50,35 +52,52 @@ async def get_audit_logs(account_id: str = "acc_main"):
             target_reference=case.claimed_transaction.reference or "N/A",
             amount=case.claimed_transaction.claimed_amount,
             reason=f"Evidence Conflict Score: {case.evidence_conflict_score}/100. {case.security_tag}",
-            confidence_label="Cao",
+            confidence_label="Mức độ tin cậy cao",
             classification=case.classification,
-            timestamp=case.created_at,
+            timestamp=datetime.fromisoformat(case.created_at) if isinstance(case.created_at, str) else case.created_at,
         ))
 
     # 2. Duplicate Card Debits
     for _, _, a in DuplicateDetector.find_duplicates(txs):
+        ref_id = a.transaction_ids[0] if a.transaction_ids else "N/A"
         logs.append(AuditEntry(
             id=a.id,
             event_type="DUPLICATE_DEBIT_FLAG",
-            target_reference=a.transaction_id or "N/A",
+            target_reference=ref_id,
             amount=a.amount or 0.0,
-            reason=a.message,
-            confidence_label=a.confidence_label.value if hasattr(a.confidence_label, 'value') else str(a.confidence_label),
-            classification="Cần bạn tự xác nhận",
+            reason=a.reason,
+            confidence_label=str(a.confidence_label),
+            classification=a.status.value if hasattr(a.status, 'value') else str(a.status),
             timestamp=a.created_at,
         ))
 
     # 3. Overdue Payouts
     for po in PayoutRadar.detect_overdue_payouts(payout_emails=emails, account_txs=txs):
+        ref_id = str(po.metadata.get("payout_ref", po.transaction_ids[0] if po.transaction_ids else "N/A"))
         logs.append(AuditEntry(
             id=po.id,
             event_type="OVERDUE_PAYOUT_FLAG",
-            target_reference=str(po.metadata.get("payout_ref", "N/A")),
+            target_reference=ref_id,
             amount=po.amount or 0.0,
-            reason=po.message,
-            confidence_label="Rất cao",
-            classification="Cần bạn tự xác nhận",
+            reason=po.reason,
+            confidence_label=str(po.confidence_label),
+            classification=po.status.value if hasattr(po.status, 'value') else str(po.status),
             timestamp=po.created_at,
+        ))
+
+    # 4. Subscription Price Hikes
+    _, sub_alerts = SubscriptionRadar.detect_subscriptions(txs)
+    for sa in sub_alerts:
+        ref_id = sa.transaction_ids[0] if sa.transaction_ids else "N/A"
+        logs.append(AuditEntry(
+            id=sa.id,
+            event_type="SUBSCRIPTION_PRICE_HIKE",
+            target_reference=ref_id,
+            amount=sa.amount or 0.0,
+            reason=sa.reason,
+            confidence_label=str(sa.confidence_label),
+            classification=sa.status.value if hasattr(sa.status, 'value') else str(sa.status),
+            timestamp=sa.created_at,
         ))
 
     return logs
@@ -99,7 +118,7 @@ async def export_audit_file(
         return Response(
             content=f"[{', '.join(entry.model_dump_json() for entry in logs)}]",
             media_type="application/json",
-            headers={"Content-Disposition": f"attachment; filename=wealify_audit_log_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.json"},
+            headers={"Content-Disposition": f"attachment; filename=wealify_audit_log_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.json"},
         )
 
     # Export CSV
@@ -133,5 +152,5 @@ async def export_audit_file(
     return Response(
         content=csv_data,
         media_type="text/csv",
-        headers={"Content-Disposition": f"attachment; filename=wealify_audit_log_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.csv"},
+        headers={"Content-Disposition": f"attachment; filename=wealify_audit_log_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.csv"},
     )

@@ -14,12 +14,16 @@ from apps.api.routes import (
     reconciliation_router,
     alerts_router,
     reports_router,
+    reminders_router,
+    monitor_router,
+    admin_router,
     advisory_router,
     hitl_router,
     notifications_router,
     security_router,
     audit_router,
 )
+
 
 
 @asynccontextmanager
@@ -57,7 +61,11 @@ app.include_router(transactions_router)
 app.include_router(reconciliation_router)
 app.include_router(alerts_router)
 app.include_router(reports_router)
+app.include_router(reminders_router)
+app.include_router(monitor_router)
+app.include_router(admin_router)
 app.include_router(advisory_router)
+
 app.include_router(hitl_router)
 app.include_router(notifications_router)
 app.include_router(security_router)

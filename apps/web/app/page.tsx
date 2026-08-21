@@ -6,21 +6,22 @@ import { UserSidebar } from '../components/user/UserSidebar';
 import { CopilotChat } from '../components/user/CopilotChat';
 import { ChatInput } from '../components/user/ChatInput';
 import { TransactionDetailPanel } from '../components/user/TransactionDetailPanel';
-import { OpsSidebar } from '../components/ops/OpsSidebar';
-import { OpsHeader } from '../components/ops/OpsHeader';
-import { OpsDashboard } from '../components/ops/OpsDashboard';
-import { SecurityCenterView } from '../components/ops/SecurityCenterView';
-import { BotPerformanceDashboard } from '../components/analytics/BotPerformanceDashboard';
-import { EmailNotificationCenter } from '../components/notifications/EmailNotificationCenter';
+import { DashboardView } from '../components/views/DashboardView';
+import { TransactionsView } from '../components/views/TransactionsView';
+import { ThreeWayReconciliationView } from '../components/views/ThreeWayReconciliationView';
+import { EmailMatchingView } from '../components/views/EmailMatchingView';
+import { AlertsView } from '../components/views/AlertsView';
+import { RemindersView } from '../components/views/RemindersView';
+import { ReportsView } from '../components/views/ReportsView';
+import { AuditTrailView } from '../components/views/AuditTrailView';
+import { ProactiveMonitorView } from '../components/views/ProactiveMonitorView';
 import { EvidenceVerificationModal } from '../components/modals/EvidenceVerificationModal';
 import { EmailConfirmationModal } from '../components/modals/EmailConfirmationModal';
-import { Message, AppMode, EmailModalState, Language } from '../types';
+import { Message, EmailModalState, Language } from '../types';
 import { TRANSLATIONS } from '../data/translations';
 
 export default function Home() {
-  const [appMode, setAppMode] = useState<AppMode>('user_copilot');
   const [userNav, setUserNav] = useState('chat');
-  const [opsNav, setOpsNav] = useState('dashboard');
   const [language, setLanguage] = useState<Language>('vi');
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
 
@@ -35,14 +36,14 @@ export default function Home() {
   const [emailModal, setEmailModal] = useState<EmailModalState>({
     isOpen: false,
     to: 'support@wealify.io',
-    subject: '[Guardian Report] Tra soát giao dịch $150 Facebook Ads & Xác minh chứng từ',
+    subject: '[Guardian Report] Báo cáo chi tiêu và đối soát giao dịch',
     body: `Kính gửi Người dùng Wealify,
 
-Hệ thống Wealify Guardian đã tổng hợp hồ sơ tra soát giao dịch của bạn:
-- Anomaly ID: AN-2026-08-19-001287
-- Giao dịch: -$150.00 USD (Facebook Ads, thẻ Volcano Ads •••• 4812)
-- Tình trạng: Phát hiện 2 giao dịch cách nhau 105 giây (nghi trùng).
-- Hạn khiếu nại còn lại: 42 ngày (hạn cuối: 17/10/2026).
+Hệ thống Wealify Guardian đã tổng hợp hồ sơ đối soát tài chính của bạn:
+- Tổng chi tiêu kỳ này: $5,235.48 USD
+- Tổng phí ngân hàng & thẻ: $12.50 USD
+- Cảnh báo bất thường: 3 giao dịch (đã chuẩn bị sẵn mẫu đơn tra soát)
+- Thời hạn khiếu nại ngân hàng: 60 ngày kể từ ngày nhận sao kê
 
 Trân trọng,
 Wealify Guardian Financial Safety Team`,
@@ -165,13 +166,11 @@ Wealify Guardian Financial Safety Team`,
               : data.intent === 'VERIFY_TRANSACTION_AUTHENTICITY' || isAuthCheck
               ? (language === 'vi' ? 'Cần bạn tự xác nhận' : 'Needs User Confirmation')
               : data.intent === 'DUPLICATE_CHECK'
-              ? (language === 'vi' ? 'Cà thẻ trùng lặp' : 'Duplicate Charge Detected')
+              ? (language === 'vi' ? 'Cần bạn tự xác nhận' : 'Needs User Confirmation')
               : data.intent === 'OVERDUE_PAYOUT_CHECK'
-              ? (language === 'vi' ? 'Payout chậm trễ' : 'Overdue Payout')
+              ? (language === 'vi' ? 'Cần bạn tự xác nhận' : 'Needs User Confirmation')
               : data.intent === 'BUSINESS_HEALTH_ADVISORY'
               ? (language === 'vi' ? 'Cố vấn tài chính & ROAS' : 'Financial Advisory')
-              : data.intent === 'TRANSACTION_SEARCH'
-              ? (language === 'vi' ? 'Tra cứu sổ cái' : 'Ledger Search')
               : data.intent === 'SUBSCRIPTION_INQUIRY'
               ? (language === 'vi' ? 'Định kỳ đã xác định' : 'Confirmed Recurring')
               : (language === 'vi' ? 'Đã đối soát an toàn' : 'Safety Verified'),
@@ -198,7 +197,7 @@ Wealify Guardian Financial Safety Team`,
               t.chipRecheckPartner,
             ] : data.intent === 'DUPLICATE_CHECK' ? [
               t.chipViewDisputeTime,
-              language === 'vi' ? 'Mẫu đơn tra soát VPBank' : 'VPBank Dispute Form',
+              language === 'vi' ? 'Tạo nhắc nhở 60 ngày' : 'Set 60-Day Reminder',
               t.chipSendReport,
             ] : [
               t.chipCheckTx,
@@ -245,7 +244,7 @@ Wealify Guardian Financial Safety Team`,
   };
 
   const handleChipClick = (chip: string) => {
-    if (chip === 'Báo cáo cho tôi' || chip === 'Gửi báo cáo cho tôi' || chip === 'Email report to me') {
+    if (chip === 'Báo cáo cho tôi' || chip === 'Gửi báo cáo cho tôi' || chip === 'Email report to me' || chip === 'Gửi báo cáo') {
       setEmailModal((prev) => ({ ...prev, isOpen: true }));
       return;
     }
@@ -253,107 +252,109 @@ Wealify Guardian Financial Safety Team`,
       setIsVerifyModalOpen(true);
       return;
     }
+    if (chip.includes('nhắc nhở') || chip.includes('reminder')) {
+      setUserNav('reminders');
+      return;
+    }
     handleSendMessage(chip);
   };
 
   return (
     <div className="flex flex-col h-screen w-screen bg-[var(--bg-primary)] text-[var(--text-primary)] overflow-hidden font-sans transition-colors duration-300">
-      {/* Top Global Mode Navigation */}
+      {/* Top Header with Mandatory Persistent Fixed Warning Banner */}
       <Header
-        appMode={appMode}
-        setAppMode={setAppMode}
         language={language}
         setLanguage={handleLanguageChange}
         theme={theme}
         setTheme={handleThemeChange}
       />
 
-      {/* Main Container Area */}
-      {appMode === 'user_copilot' ? (
-        /* End-User AI Copilot - Dynamic Navigation */
-        <div className="flex flex-1 overflow-hidden min-h-0">
-          <UserSidebar
-            activeNav={userNav}
-            setActiveNav={setUserNav}
-            isBalanceMasked={isBalanceMasked}
-            setIsBalanceMasked={setIsBalanceMasked}
-            language={language}
-          />
+      {/* Main App Layout */}
+      <div className="flex flex-1 overflow-hidden min-h-0">
+        {/* Left Navigation Sidebar */}
+        <UserSidebar
+          activeNav={userNav}
+          setActiveNav={setUserNav}
+          isBalanceMasked={isBalanceMasked}
+          setIsBalanceMasked={setIsBalanceMasked}
+          language={language}
+        />
 
-          {userNav === 'notifications' ? (
-            <main className="flex-1 flex flex-col bg-[var(--bg-primary)] overflow-y-auto">
-              <EmailNotificationCenter language={language} />
-            </main>
-          ) : userNav === 'dashboard' || userNav === 'reports' ? (
-            <main className="flex-1 flex flex-col bg-[var(--bg-primary)] overflow-y-auto">
-              <OpsDashboard language={language} />
-            </main>
-          ) : (
-            <>
-              {/* Chat Thread */}
-              <main className="flex-1 flex flex-col bg-[var(--bg-primary)] min-h-0 overflow-hidden">
-                <CopilotChat
-                  messages={messages}
-                  isTyping={isTyping}
-                  onChipClick={handleChipClick}
-                  chatEndRef={chatEndRef}
-                  language={language}
-                />
-
-                <ChatInput
-                  inputMsg={inputMsg}
-                  setInputMsg={setInputMsg}
-                  onSendMessage={handleSendMessage}
-                  onOpenVerifyModal={() => setIsVerifyModalOpen(true)}
-                  language={language}
-                  isTyping={isTyping}
-                />
-              </main>
-
-              <TransactionDetailPanel
-                copiedId={copiedId}
-                onCopy={handleCopy}
-                onSendMessage={handleSendMessage}
+        {/* Dynamic View Switcher */}
+        {userNav === 'dashboard' ? (
+          <main className="flex-1 flex flex-col bg-[var(--bg-primary)] overflow-y-auto">
+            <DashboardView
+              language={language}
+              onNavigate={setUserNav}
+              onAskCopilot={(prompt) => {
+                setUserNav('chat');
+                handleSendMessage(prompt);
+              }}
+            />
+          </main>
+        ) : userNav === 'transactions' ? (
+          <main className="flex-1 flex flex-col bg-[var(--bg-primary)] overflow-y-auto">
+            <TransactionsView language={language} />
+          </main>
+        ) : userNav === 'reconciliation' ? (
+          <main className="flex-1 flex flex-col bg-[var(--bg-primary)] overflow-y-auto">
+            <ThreeWayReconciliationView language={language} />
+          </main>
+        ) : userNav === 'email_matching' ? (
+          <main className="flex-1 flex flex-col bg-[var(--bg-primary)] overflow-y-auto">
+            <EmailMatchingView language={language} />
+          </main>
+        ) : userNav === 'alerts' ? (
+          <main className="flex-1 flex flex-col bg-[var(--bg-primary)] overflow-y-auto">
+            <AlertsView language={language} />
+          </main>
+        ) : userNav === 'reminders' ? (
+          <main className="flex-1 flex flex-col bg-[var(--bg-primary)] overflow-y-auto">
+            <RemindersView language={language} />
+          </main>
+        ) : userNav === 'reports' ? (
+          <main className="flex-1 flex flex-col bg-[var(--bg-primary)] overflow-y-auto">
+            <ReportsView language={language} />
+          </main>
+        ) : userNav === 'audit' ? (
+          <main className="flex-1 flex flex-col bg-[var(--bg-primary)] overflow-y-auto">
+            <AuditTrailView language={language} />
+          </main>
+        ) : userNav === 'monitor' ? (
+          <main className="flex-1 flex flex-col bg-[var(--bg-primary)] overflow-y-auto">
+            <ProactiveMonitorView language={language} />
+          </main>
+        ) : (
+          /* Default: AI Financial Copilot Chat Thread */
+          <>
+            <main className="flex-1 flex flex-col bg-[var(--bg-primary)] min-h-0 overflow-hidden">
+              <CopilotChat
+                messages={messages}
+                isTyping={isTyping}
+                onChipClick={handleChipClick}
+                chatEndRef={chatEndRef}
                 language={language}
               />
-            </>
-          )}
-        </div>
-      ) : (
-        /* Wealify Operations & Security Console */
-        <div className="flex flex-1 overflow-hidden">
-          <OpsSidebar
-            activeNav={opsNav}
-            setActiveNav={setOpsNav}
-            language={language}
-          />
 
-          <main className="flex-1 flex flex-col bg-[var(--bg-primary)] overflow-y-auto transition-colors duration-300">
-            <OpsHeader
-              activeNav={opsNav}
-              onOpenVerifyModal={() => setIsVerifyModalOpen(true)}
+              <ChatInput
+                inputMsg={inputMsg}
+                setInputMsg={setInputMsg}
+                onSendMessage={handleSendMessage}
+                onOpenVerifyModal={() => setIsVerifyModalOpen(true)}
+                language={language}
+                isTyping={isTyping}
+              />
+            </main>
+
+            <TransactionDetailPanel
+              copiedId={copiedId}
+              onCopy={handleCopy}
+              onSendMessage={handleSendMessage}
               language={language}
             />
-
-            {opsNav === 'security_center' ? (
-              <SecurityCenterView
-                onOpenVerifyModal={() => setIsVerifyModalOpen(true)}
-                onSelectCase={(caseId) => {
-                  showToast(language === 'vi' ? `Mở hồ sơ tra soát ${caseId}` : `Opening case ${caseId}`);
-                  setIsVerifyModalOpen(true);
-                }}
-                language={language}
-              />
-            ) : opsNav === 'notifications' ? (
-              <EmailNotificationCenter language={language} />
-            ) : opsNav === 'bot_list' || opsNav === 'system_stats' ? (
-              <BotPerformanceDashboard language={language} />
-            ) : (
-              <OpsDashboard language={language} />
-            )}
-          </main>
-        </div>
-      )}
+          </>
+        )}
+      </div>
 
       {/* Evidence Verification Modal */}
       <EvidenceVerificationModal
@@ -366,13 +367,13 @@ Wealify Guardian Financial Safety Team`,
         language={language}
       />
 
-      {/* Email Report Confirmation Modal */}
+      {/* Email Report Confirmation Modal (HITL Safety) */}
       <EmailConfirmationModal
         emailModal={emailModal}
         onClose={() => setEmailModal((prev) => ({ ...prev, isOpen: false }))}
         onConfirmSend={() => {
           setEmailModal((prev) => ({ ...prev, isOpen: false }));
-          showToast(language === 'vi' ? 'Đã gửi báo cáo qua email' : 'Report email sent successfully');
+          showToast(language === 'vi' ? 'Đã gửi báo cáo qua email thành công' : 'Report email sent successfully');
         }}
         language={language}
       />
