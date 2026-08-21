@@ -155,8 +155,22 @@ Wealify Guardian Financial Safety Team`,
             text: data.response,
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             intent: data.intent,
-            classification: data.policy_allowed ? (isAuthCheck ? (language === 'vi' ? 'Cần bạn tự xác nhận' : 'Needs User Confirmation') : (language === 'vi' ? 'Định kỳ đã xác định' : 'Confirmed Recurring')) : (language === 'vi' ? 'Ranh giới nghiêm cấm' : 'Policy Denied'),
-            confidence: 98,
+            classification: !data.policy_allowed
+              ? (language === 'vi' ? 'Ranh giới nghiêm cấm (Policy Denied)' : 'Policy Denied')
+              : data.intent === 'VERIFY_TRANSACTION_AUTHENTICITY' || isAuthCheck
+              ? (language === 'vi' ? 'Cần bạn tự xác nhận' : 'Needs User Confirmation')
+              : data.intent === 'DUPLICATE_CHECK'
+              ? (language === 'vi' ? 'Cà thẻ trùng lặp' : 'Duplicate Charge Detected')
+              : data.intent === 'OVERDUE_PAYOUT_CHECK'
+              ? (language === 'vi' ? 'Payout chậm trễ' : 'Overdue Payout')
+              : data.intent === 'BUSINESS_HEALTH_ADVISORY'
+              ? (language === 'vi' ? 'Cố vấn tài chính & ROAS' : 'Financial Advisory')
+              : data.intent === 'TRANSACTION_SEARCH'
+              ? (language === 'vi' ? 'Tra cứu sổ cái' : 'Ledger Search')
+              : data.intent === 'SUBSCRIPTION_INQUIRY'
+              ? (language === 'vi' ? 'Định kỳ đã xác định' : 'Confirmed Recurring')
+              : (language === 'vi' ? 'Đã đối soát an toàn' : 'Safety Verified'),
+            confidence: !data.policy_allowed ? 100 : 98,
             security_verification: isAuthCheck ? {
               claimed_amount: 2500,
               claimed_ref: 'WF-839291',
@@ -169,10 +183,18 @@ Wealify Guardian Financial Safety Team`,
               email_match: false,
               ref_match: false,
             } : undefined,
-            suggested_chips: isAuthCheck ? [
+            suggested_chips: !data.policy_allowed ? [
+              t.chipCheckTx,
+              t.chipCheckDup,
+              language === 'vi' ? 'Xem quy định an toàn' : 'View Safety Policy',
+            ] : isAuthCheck ? [
               t.chipViewEvidence,
               t.chipSendReport,
               t.chipRecheckPartner,
+            ] : data.intent === 'DUPLICATE_CHECK' ? [
+              t.chipViewDisputeTime,
+              language === 'vi' ? 'Mẫu đơn tra soát VPBank' : 'VPBank Dispute Form',
+              t.chipSendReport,
             ] : [
               t.chipCheckTx,
               t.chipViewDisputeTime,
