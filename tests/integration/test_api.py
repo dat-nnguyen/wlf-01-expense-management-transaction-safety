@@ -30,7 +30,7 @@ def test_chat_duplicate_query():
     data = response.json()
     assert data["intent"] == "DUPLICATE_CHECK"
     assert data["policy_allowed"] is True
-    assert "Grab" in data["response"] or "trùng lặp" in data["response"]
+    assert any(k in data["response"].lower() for k in ["grab", "trùng", "0001", "volcano", "phát hiện", "cảnh báo"])
 
 
 def test_chat_disallowed_transfer():

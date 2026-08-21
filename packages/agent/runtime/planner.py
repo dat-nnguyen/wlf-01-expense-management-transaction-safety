@@ -61,7 +61,20 @@ class IntentPlanner:
                 arguments={},
             )
 
-        # 5. Business Health & Financial Advisory
+        # 5. Spending Surge & Category Spike Detection (Chi tiêu đột biến bất thường)
+        if any(k in msg for k in [
+            "đột biến", "bất thường", "tiêu nhiều thế", "tăng vọt", "spending surge", "surge", "surging",
+            "spike", "spiking", "baseline", "spending increase", "spending higher",
+            "so với tuần trước", "so với tháng trước", "tại sao tuần này", "tại sao tháng này",
+            "chi tiêu bất thường", "chi tiêu đột biến", "tăng đột biến", "tăng nhiều thế",
+        ]):
+            return ExecutionPlan(
+                intent="SPENDING_SURGE_INQUIRY",
+                target_tool="detect_spending_surges",
+                arguments={"window_days": 7},
+            )
+
+        # 6. Business Health & Financial Advisory
         if any(k in msg for k in ["kinh doanh", "lợi nhuận", "lãi", "lỗ", "hiệu quả", "có nên tiếp tục", "sức khỏe", "tư vấn", "roas", "burn rate", "tình hình tài chính"]):
             return ExecutionPlan(
                 intent="BUSINESS_HEALTH_ADVISORY",

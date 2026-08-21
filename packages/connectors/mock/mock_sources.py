@@ -1,6 +1,6 @@
 import os
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 import pandas as pd
 
@@ -14,12 +14,14 @@ from packages.data.schemas.transaction import (
 )
 from packages.data.schemas.email import EmailEvidence, EmailType
 from packages.observability.logging import logger
+from packages.data.datasets.wealify_real_dataset import get_canonical_transactions
 
 
 class MockTransactionSource(BaseTransactionSource):
     """
     Official Transaction Source for Wealify Guardian.
-    Loads real dataset transactions from official sample CSVs and `wlf15_inbox_3users.xlsx`.
+    Loads real dataset transactions from official sample CSVs, `wlf15_inbox_3users.xlsx`,
+    and canonical Wealify platform scenario records.
     """
 
     ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -54,43 +56,53 @@ class MockTransactionSource(BaseTransactionSource):
         elif "spotify" in s:
             return "Spotify"
         elif "openai" in s or "chatgpt" in s:
-            return "OpenAI ChatGPT"
-        elif "canva" in s:
-            return "Canva"
-        elif "figma" in s:
-            return "Figma"
+            return "OpenAI"
         elif "paddle" in s:
-            return "Paddle"
-        elif "cloudways" in s:
-            return "Cloudways"
-        elif "nordvpn" in s:
-            return "NordVPN"
+            return "Paddle.net"
+        elif "aws" in s or "amazon web services" in s:
+            return "Amazon Web Services"
+        elif "amazon" in s:
+            return "Amazon"
+        elif "stripe" in s:
+            return "Stripe"
         elif "payoneer" in s:
             return "Payoneer"
         elif "paypal" in s:
             return "PayPal"
-        elif "amazon" in s:
-            return "Amazon"
-        elif "etsy" in s:
-            return "Etsy"
-        elif "shopee" in s:
-            return "Shopee"
-        elif "apple" in s:
-            return "Apple"
-        elif "topup" in s or "wallet" in s:
-            return "Wallet Topup"
-        elif "stripe" in s:
-            return "Stripe"
-        elif "payroll" in s or "salary" in s:
-            return "Payroll Tech Corp"
-        elif "*" in raw:
-            return raw.split("*")[-1].strip()
-        return raw.strip() if raw else "Merchant"
+        elif "pingpong" in s:
+            return "PingPong"
+        return raw.strip() if raw else "Unknown Merchant"
 
     def _parse_merchant_info(self, sender: str, subject: str, body: str) -> tuple[str, str]:
-        s = f"{sender} {subject}".lower()
-        norm = self._normalize_merchant(s)
-        return norm, sender or norm
+        sender_lower = (sender or "").lower()
+        subject_lower = (subject or "").lower()
+
+        if "netflix" in sender_lower or "netflix" in subject_lower:
+            return "Netflix", "NETFLIX.COM* PAYMENT"
+        elif "adobe" in sender_lower or "adobe" in subject_lower:
+            return "Adobe", "ADOBE *CREATIVE CLOUD"
+        elif "openai" in sender_lower or "openai" in subject_lower or "chatgpt" in subject_lower:
+            return "OpenAI", "OPENAI *CHATGPT PLUS"
+        elif "google" in sender_lower or "google" in subject_lower:
+            return "Google Ads", "GOOGLE *ADS 991823"
+        elif "facebook" in sender_lower or "meta" in sender_lower:
+            return "Facebook Ads", "FACEBK *ADS 83921948"
+        elif "paddle" in sender_lower or "paddle" in subject_lower:
+            return "Paddle.net", "Subscription PADDLE.NET* VIRTUAL TOOL"
+        elif "amazon" in sender_lower or "aws" in sender_lower:
+            return "Amazon Web Services", "AMAZON WEB SERVICES AWS.AMAZON.COM"
+        elif "stripe" in sender_lower or "stripe" in subject_lower:
+            return "Stripe", "Stripe Payout Settlement"
+        elif "payoneer" in sender_lower or "payoneer" in subject_lower:
+            return "Payoneer", "Payoneer Direct Deposit"
+        elif "paypal" in sender_lower or "paypal" in subject_lower:
+            return "PayPal", "PayPal Transfer Settlement"
+        elif "pingpong" in sender_lower or "pingpong" in subject_lower:
+            return "PingPong", "PingPong Global Payout"
+        
+        m_from = re.search(r"@([a-zA-Z0-9.-]+)", sender or "")
+        domain = m_from.group(1).split(".")[0].capitalize() if m_from else "Unknown"
+        return domain, sender or "External Payment"
 
     def _extract_amount(self, text: str) -> float:
         m = re.search(r"(?:USD|\$)\s*([\d,]+\.?\d*)", str(text))
@@ -100,12 +112,23 @@ class MockTransactionSource(BaseTransactionSource):
 
     def _load_all_sources(self) -> None:
         txs: List[Transaction] = []
+        seen_ids = set()
 
-        # 1. Load official Card Statements CSV
+        # 1. Load canonical dataset (Volcano Ads topup duplicates, VND ledger, spending surge data)
+        for t in get_canonical_transactions():
+            if t.id not in seen_ids:
+                txs.append(t)
+                seen_ids.add(t.id)
+
+        # 2. Load official Card Statements CSV
         if os.path.exists(self.cards_csv):
             try:
                 df_cards = pd.read_csv(self.cards_csv)
                 for _, r in df_cards.iterrows():
+                    t_id = str(r.get("id"))
+                    if t_id in seen_ids:
+                        continue
+
                     dt_str = str(r.get("date", ""))
                     try:
                         dt = datetime.fromisoformat(dt_str)
@@ -119,7 +142,7 @@ class MockTransactionSource(BaseTransactionSource):
 
                     txs.append(
                         Transaction(
-                            id=str(r.get("id")),
+                            id=t_id,
                             account_id="acc_main",
                             occurred_at=dt,
                             amount=float(r.get("amount", 0.0)),
@@ -134,14 +157,19 @@ class MockTransactionSource(BaseTransactionSource):
                             source_reference=str(r.get("ref_id", "")) if pd.notna(r.get("ref_id")) else None,
                         )
                     )
+                    seen_ids.add(t_id)
             except Exception as e:
                 logger.error(f"Error loading cards CSV: {e}")
 
-        # 2. Load official Account Transactions CSV
+        # 3. Load official Account Transactions CSV
         if os.path.exists(self.accounts_csv):
             try:
                 df_accs = pd.read_csv(self.accounts_csv)
                 for _, r in df_accs.iterrows():
+                    t_id = str(r.get("id"))
+                    if t_id in seen_ids:
+                        continue
+
                     dt_str = str(r.get("date", ""))
                     try:
                         dt = datetime.fromisoformat(dt_str)
@@ -154,7 +182,7 @@ class MockTransactionSource(BaseTransactionSource):
                     m_norm = self._normalize_merchant(m_raw)
                     txs.append(
                         Transaction(
-                            id=str(r.get("id")),
+                            id=t_id,
                             account_id=str(r.get("account_id", "acc_main")),
                             occurred_at=dt,
                             amount=float(r.get("amount", 0.0)),
@@ -168,14 +196,19 @@ class MockTransactionSource(BaseTransactionSource):
                             source_reference=str(r.get("ref_id", "")) if pd.notna(r.get("ref_id")) else None,
                         )
                     )
+                    seen_ids.add(t_id)
             except Exception as e:
                 logger.error(f"Error loading accounts CSV: {e}")
 
-        # 3. Load official Excel Inbox dataset (wlf15_inbox_3users.xlsx)
+        # 4. Load official Excel Inbox dataset (wlf15_inbox_3users.xlsx)
         if os.path.exists(self.excel_path):
             try:
                 df_inbox = pd.read_excel(self.excel_path, sheet_name="wealifytester")
                 for _, r in df_inbox.iterrows():
+                    t_id = f"tx_{r.get('email_id')}"
+                    if t_id in seen_ids:
+                        continue
+
                     amt = self._extract_amount(f"{r.get('body', '')} {r.get('snippet', '')}")
                     if amt <= 0:
                         continue
@@ -200,7 +233,7 @@ class MockTransactionSource(BaseTransactionSource):
 
                     txs.append(
                         Transaction(
-                            id=f"tx_{r.get('email_id')}",
+                            id=t_id,
                             account_id="acc_main",
                             occurred_at=dt,
                             amount=amt,
@@ -214,11 +247,12 @@ class MockTransactionSource(BaseTransactionSource):
                             bank_name="VPBank",
                         )
                     )
+                    seen_ids.add(t_id)
             except Exception as e:
                 logger.error(f"Error parsing transactions from Excel inbox: {e}")
 
         self._data = sorted(txs, key=lambda x: x.occurred_at, reverse=True)
-        logger.info(f"Loaded {len(self._data)} official transactions from CSVs and Excel inbox.")
+        logger.info(f"Loaded {len(self._data)} official transactions across all sources.")
 
     async def get_transactions(
         self,

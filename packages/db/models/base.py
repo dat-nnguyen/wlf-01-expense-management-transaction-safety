@@ -99,3 +99,47 @@ class AgentRunModel(Base):
     final_answer = Column(Text, nullable=False)
     policy_decision = Column(String(32), default="ALLOW")
     created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class VirtualCardModel(Base):
+    __tablename__ = "virtual_cards"
+
+    id = Column(String(64), primary_key=True, index=True)
+    account_id = Column(String(64), index=True, default="acc_main")
+    card_name = Column(String(128), nullable=False)  # e.g. "Volcano Ads"
+    card_masked_number = Column(String(32), nullable=False)  # "•••• •••• •••• 0001"
+    balance = Column(Float, nullable=False, default=1822.96)
+    currency = Column(String(8), default="USD")
+    status = Column(String(32), default="ACTIVE")
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class VirtualAccountModel(Base):
+    __tablename__ = "virtual_accounts"
+
+    id = Column(String(64), primary_key=True, index=True)
+    account_id = Column(String(64), index=True, default="acc_main")
+    account_name = Column(String(128), nullable=False)
+    channel_source = Column(String(64), nullable=False)  # Etsy, Payoneer, Paypal, PingPong, Amazon, Stripe
+    target_bank = Column(String(64), nullable=False)  # BIDV, MSB, BIDV_PREMIUM
+    total_received = Column(Float, nullable=False)
+    currency = Column(String(8), default="VND")
+    status = Column(String(32), default="Active")
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class WalletModel(Base):
+    __tablename__ = "wallets"
+
+    id = Column(String(64), primary_key=True, index=True)
+    account_id = Column(String(64), index=True, default="acc_main")
+    user_name = Column(String(128), default="Lê Minh Anh")
+    user_role = Column(String(64), default="Director")
+    total_balance_usd = Column(Float, default=4572.97)
+    wallet_balance_usd = Column(Float, default=2750.01)
+    card_balance_usd = Column(Float, default=1822.96)
+    wallet_balance_vnd = Column(Float, default=274436000.0)
+    monthly_payin_vnd = Column(Float, default=751111000.0)
+    monthly_payout_vnd = Column(Float, default=466514000.0)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
