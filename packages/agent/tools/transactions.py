@@ -56,3 +56,7 @@ class GetTransactionDetailsTool(BaseTool):
             data={"transaction": matched.model_dump(mode="json")},
             execution_time_ms=round(duration, 2),
         )
+
+
+# Alias
+GetTransactionTool = GetTransactionDetailsTool

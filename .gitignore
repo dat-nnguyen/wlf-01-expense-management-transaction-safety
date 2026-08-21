@@ -2,6 +2,7 @@
 achitech.md
 *.architecture.md
 internal_docs/
+deepseek-harness-architecture-handbook.md
 
 # Python
 __pycache__/

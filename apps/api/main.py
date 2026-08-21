@@ -11,6 +11,8 @@ from apps.api.routes import (
     reconciliation_router,
     alerts_router,
     reports_router,
+    advisory_router,
+    hitl_router,
 )
 
 
@@ -50,14 +52,25 @@ app.include_router(transactions_router)
 app.include_router(reconciliation_router)
 app.include_router(alerts_router)
 app.include_router(reports_router)
+app.include_router(advisory_router)
+app.include_router(hitl_router)
 
 
 @app.get("/")
 def root():
     return {
-        "message": "Welcome to Wealify Guardian API",
+        "service": "Wealify Guardian API",
+        "status": "online",
         "docs": "/docs",
         "health": "/health",
+        "capabilities": [
+            "14-15_day_overdue_payout_radar",
+            "virtual_card_double_swipe_radar",
+            "subscription_price_hike_radar",
+            "business_health_unit_economics_advisory",
+            "self_reflection_grounding_verification",
+            "human_in_the_loop_review_queue",
+        ],
     }
 
 

@@ -1,9 +1,13 @@
-id,date,merchant,amount,currency,direction,type,ref_id
-card_tx_001,2026-06-18,NETFLIX.COM* 109238,9.99,USD,debit,subscription,CARD_REF_01
-card_tx_002,2026-07-18,NETFLIX.COM* 109238,9.99,USD,debit,subscription,CARD_REF_02
-card_tx_003,2026-08-18,NETFLIX.COM* 109238,9.99,USD,debit,subscription,CARD_REF_03
-card_tx_004,2026-07-15,ADOBE *CREATIVE CLOUD,49.99,USD,debit,subscription,CARD_REF_04
-card_tx_005,2026-08-15,ADOBE *CREATIVE CLOUD,54.99,USD,debit,subscription,CARD_REF_05
-card_tx_006,2026-08-19 14:05:00,GRAB* TRANSPORT RIDE,24.50,USD,debit,card_purchase,CARD_REF_06
-card_tx_007,2026-08-19 14:07:30,GRAB* TRANSPORT RIDE,24.50,USD,debit,card_purchase,CARD_REF_07
-card_tx_008,2026-08-17,STARBUCKS COFFEE #491,5.75,USD,debit,card_purchase,CARD_REF_08
+id,date,merchant,amount,currency,direction,type,ref_id,card_id,bank_name
+card_tx_001,2026-06-18,NETFLIX.COM* 109238,9.99,USD,debit,subscription,CARD_REF_01,vcard_sub_01,Vietcombank
+card_tx_002,2026-07-18,NETFLIX.COM* 109238,9.99,USD,debit,subscription,CARD_REF_02,vcard_sub_01,Vietcombank
+card_tx_003,2026-08-18,NETFLIX.COM* 109238,9.99,USD,debit,subscription,CARD_REF_03,vcard_sub_01,Vietcombank
+card_tx_004,2026-07-15,ADOBE *CREATIVE CLOUD,49.99,USD,debit,subscription,CARD_REF_04,vcard_sub_02,Techcombank
+card_tx_005,2026-08-15,ADOBE *CREATIVE CLOUD,54.99,USD,debit,subscription,CARD_REF_05,vcard_sub_02,Techcombank
+card_tx_006,2026-08-19 14:05:00,GRAB* TRANSPORT RIDE,24.50,USD,debit,card_purchase,CARD_REF_06,vcard_ops_03,Techcombank
+card_tx_007,2026-08-19 14:07:30,GRAB* TRANSPORT RIDE,24.50,USD,debit,card_purchase,CARD_REF_07,vcard_ops_03,Techcombank
+card_tx_008,2026-08-17,STARBUCKS COFFEE #491,5.75,USD,debit,card_purchase,CARD_REF_08,vcard_ops_03,Techcombank
+card_tx_009,2026-08-20 18:20:00,FACEBOOK *ADS 84918239,150.00,USD,debit,card_purchase,CARD_REF_09,vcard_ad_fb,VPBank
+card_tx_010,2026-08-20 18:21:45,FACEBOOK *ADS 84918239,150.00,USD,debit,card_purchase,CARD_REF_10,vcard_ad_fb,VPBank
+card_tx_011,2026-08-17 15:40:00,OPENAI *CHATGPT PLUS,20.00,USD,debit,subscription,CARD_REF_11,vcard_sub_03,Vietcombank
+card_tx_012,2026-08-10,GOOGLE *ADS CC 9210,420.00,USD,debit,card_purchase,CARD_REF_12,vcard_ad_gg,VPBank

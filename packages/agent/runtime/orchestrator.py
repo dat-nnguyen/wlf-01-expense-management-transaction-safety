@@ -18,12 +18,21 @@ class AgentState(str, Enum):
     RECEIVED = "RECEIVED"
     CLASSIFIED = "CLASSIFIED"
     PLANNING = "PLANNING"
+    POLICY_CHECK = "POLICY_CHECK"
     TOOL_EXECUTION = "TOOL_EXECUTION"
     EVIDENCE_CHECK = "EVIDENCE_CHECK"
     RESPONSE_GENERATION = "RESPONSE_GENERATION"
+    GROUNDING_REFLECTION = "GROUNDING_REFLECTION"
     SAFETY_CHECK = "SAFETY_CHECK"
     COMPLETED = "COMPLETED"
     FAILED = "FAILED"
+
+
+class ExecutionStep(BaseModel):
+    step_name: str
+    status: str
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    details: Dict[str, Any] = Field(default_factory=dict)
 
 
 class AgentRunResult(BaseModel):
@@ -36,13 +45,16 @@ class AgentRunResult(BaseModel):
     tool_result: Dict[str, Any] = Field(default_factory=dict)
     state: AgentState = AgentState.COMPLETED
     policy_allowed: bool = True
+    grounding_verified: bool = True
+    grounding_notes: str = "Grounding OK"
+    steps: List[ExecutionStep] = Field(default_factory=list)
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 
 class AgentOrchestrator:
     """
     Coordinates the full Agentic Lifecycle:
-    User Message → Input Guardrails → Intent Planning → Safe Tool Execution → Evidence Validation → LLM Synthesis → Output Guardrails
+    User Message → Input Guardrails → Intent Planning → Safe Tool Execution → Evidence Validation → Grounding Reflection → LLM Synthesis → Output Guardrails
     """
 
     def __init__(
@@ -61,17 +73,17 @@ class AgentOrchestrator:
         account_id: str = "acc_main",
     ) -> AgentRunResult:
         run_id = f"run_{uuid.uuid4().hex[:10]}"
+        steps: List[ExecutionStep] = []
         logger.info(f"[{run_id}] Agent Run Started: '{user_message}'")
 
         # 1. State: RECEIVED
-        state = AgentState.RECEIVED
+        steps.append(ExecutionStep(step_name="RECEIVED", status="SUCCESS", details={"user_message": user_message}))
 
         # 2. State: CLASSIFIED (Input Guardrail Check)
-        state = AgentState.CLASSIFIED
         is_safe, action, reason = InputGuardrail.validate_user_message(user_message)
         if not is_safe:
             logger.warning(f"[{run_id}] Blocked by Input Guardrail: {reason}")
-            # Generate safe refusal response
+            steps.append(ExecutionStep(step_name="POLICY_DENIED", status="BLOCKED", details={"reason": reason}))
             llm_res = await self.llm.generate(
                 prompt=user_message,
                 context={"intent": "DISALLOWED_MUTATION", "reason": reason},
@@ -84,31 +96,35 @@ class AgentOrchestrator:
                 final_response=llm_res.content,
                 state=AgentState.COMPLETED,
                 policy_allowed=False,
+                grounding_verified=True,
+                steps=steps,
             )
 
+        steps.append(ExecutionStep(step_name="CLASSIFIED", status="SUCCESS", details={"safe": True}))
+
         # 3. State: PLANNING
-        state = AgentState.PLANNING
         plan: ExecutionPlan = IntentPlanner.plan(user_message)
+        steps.append(ExecutionStep(step_name="PLANNING", status="SUCCESS", details={"intent": plan.intent, "target_tool": plan.target_tool}))
         logger.info(f"[{run_id}] Plan generated: intent={plan.intent}, target_tool={plan.target_tool}")
 
         # 4. State: TOOL_EXECUTION
         tool_data: Dict[str, Any] = {}
         tool_name = plan.target_tool
         if tool_name:
-            state = AgentState.TOOL_EXECUTION
             context = ToolContext(session_id=session_id, account_id=account_id)
             tool_res = await self.executor.execute(tool_name, context, plan.arguments)
             if tool_res.success:
                 tool_data = tool_res.data
+                steps.append(ExecutionStep(step_name="TOOL_EXECUTION", status="SUCCESS", details={"tool": tool_name, "execution_time_ms": tool_res.execution_time_ms}))
             else:
                 logger.warning(f"[{run_id}] Tool {tool_name} returned error: {tool_res.error}")
                 tool_data = {"error": tool_res.error}
+                steps.append(ExecutionStep(step_name="TOOL_EXECUTION", status="FAILED", details={"tool": tool_name, "error": tool_res.error}))
 
         # 5. State: EVIDENCE_CHECK
-        state = AgentState.EVIDENCE_CHECK
+        steps.append(ExecutionStep(step_name="EVIDENCE_CHECK", status="SUCCESS", details={"evidence_count": len(tool_data)}))
 
         # 6. State: RESPONSE_GENERATION
-        state = AgentState.RESPONSE_GENERATION
         llm_response = await self.llm.generate(
             prompt=user_message,
             context={
@@ -118,13 +134,18 @@ class AgentOrchestrator:
             },
         )
         metrics_tracker.record_tokens(llm_response.prompt_tokens, llm_response.completion_tokens)
+        steps.append(ExecutionStep(step_name="RESPONSE_GENERATION", status="SUCCESS", details={"tokens": llm_response.completion_tokens}))
 
-        # 7. State: SAFETY_CHECK (Output Guardrail)
-        state = AgentState.SAFETY_CHECK
+        # 7. State: GROUNDING_REFLECTION (Self-Reflection Check)
+        grounding_ok, grounding_msg = OutputGuardrail.verify_grounding(llm_response.content, tool_data, plan.intent)
+        steps.append(ExecutionStep(step_name="GROUNDING_REFLECTION", status="SUCCESS" if grounding_ok else "WARNING", details={"message": grounding_msg}))
+
+        # 8. State: SAFETY_CHECK (Output Guardrail)
         _, sanitized_text = OutputGuardrail.sanitize_output(llm_response.content)
+        steps.append(ExecutionStep(step_name="SAFETY_CHECK", status="SUCCESS", details={"sanitized": True}))
 
-        # 8. State: COMPLETED
-        state = AgentState.COMPLETED
+        # 9. State: COMPLETED
+        steps.append(ExecutionStep(step_name="COMPLETED", status="SUCCESS"))
         logger.info(f"[{run_id}] Agent Run Completed Successfully.")
 
         return AgentRunResult(
@@ -135,6 +156,9 @@ class AgentOrchestrator:
             final_response=sanitized_text,
             tool_called=tool_name,
             tool_result=tool_data,
-            state=state,
+            state=AgentState.COMPLETED,
             policy_allowed=True,
+            grounding_verified=grounding_ok,
+            grounding_notes=grounding_msg,
+            steps=steps,
         )

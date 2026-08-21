@@ -1,21 +1,26 @@
 from packages.agent.tools.base import BaseTool, ToolContext, ToolResult, ToolRegistry
-from packages.agent.tools.transactions import SearchTransactionsTool, GetTransactionDetailsTool
-from packages.agent.tools.reconciliation import ReconcileTransactionsTool
 from packages.agent.tools.duplicates import FindDuplicatesTool
 from packages.agent.tools.subscriptions import FindSubscriptionsTool
-from packages.agent.tools.emails import SearchEmailsTool
+from packages.agent.tools.reconciliation import ReconcileTransactionsTool
+from packages.agent.tools.transactions import SearchTransactionsTool, GetTransactionTool, GetTransactionDetailsTool
 from packages.agent.tools.reports import GenerateExpenseReportTool
+from packages.agent.tools.emails import SearchEmailsTool
+from packages.agent.tools.payouts import DetectOverduePayoutsTool
+from packages.agent.tools.advisory import AnalyzeBusinessHealthTool
+from typing import Dict, List, Optional
 
 
 def create_default_tool_registry() -> ToolRegistry:
     registry = ToolRegistry()
-    registry.register(SearchTransactionsTool())
-    registry.register(GetTransactionDetailsTool())
-    registry.register(ReconcileTransactionsTool())
     registry.register(FindDuplicatesTool())
     registry.register(FindSubscriptionsTool())
-    registry.register(SearchEmailsTool())
+    registry.register(ReconcileTransactionsTool())
+    registry.register(SearchTransactionsTool())
+    registry.register(GetTransactionDetailsTool())
     registry.register(GenerateExpenseReportTool())
+    registry.register(SearchEmailsTool())
+    registry.register(DetectOverduePayoutsTool())
+    registry.register(AnalyzeBusinessHealthTool())
     return registry
 
 
@@ -24,12 +29,15 @@ __all__ = [
     "ToolContext",
     "ToolResult",
     "ToolRegistry",
-    "SearchTransactionsTool",
-    "GetTransactionDetailsTool",
-    "ReconcileTransactionsTool",
     "FindDuplicatesTool",
     "FindSubscriptionsTool",
-    "SearchEmailsTool",
+    "ReconcileTransactionsTool",
+    "SearchTransactionsTool",
+    "GetTransactionTool",
+    "GetTransactionDetailsTool",
     "GenerateExpenseReportTool",
+    "SearchEmailsTool",
+    "DetectOverduePayoutsTool",
+    "AnalyzeBusinessHealthTool",
     "create_default_tool_registry",
 ]

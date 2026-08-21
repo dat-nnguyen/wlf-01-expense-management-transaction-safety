@@ -8,6 +8,7 @@ class EmailType(str, Enum):
     RECEIPT = "receipt"
     SUBSCRIPTION_UPDATE = "subscription_update"
     TRANSFER_CONFIRMATION = "transfer_confirmation"
+    PAYOUT_NOTIFICATION = "payout_notification"
     ALERT = "alert"
     OTHER = "other"
 
@@ -23,6 +24,8 @@ class EmailEvidence(BaseModel):
     currency: Optional[str] = Field(default="USD")
     body_snippet: Optional[str] = Field(default=None, description="Sanitized excerpt for evidence")
     email_type: EmailType = Field(default=EmailType.RECEIPT)
+    payout_ref: Optional[str] = Field(default=None, description="Extracted payout / transfer reference code")
+    expected_settlement_days: int = Field(default=3, description="Expected settlement SLA days (e.g. 2-3 business days)")
 
     class Config:
         from_attributes = True

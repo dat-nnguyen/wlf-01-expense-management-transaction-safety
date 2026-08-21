@@ -1,5 +1,27 @@
 [
   {
+    "id": "em_amz_001",
+    "date": "2026-08-05 10:30:00",
+    "sender": "payments-update@amazon.com",
+    "subject": "Amazon Services: Disbursement Notification for Store #US-9182",
+    "merchant": "Amazon Seller Central",
+    "amount": 4250.00,
+    "currency": "USD",
+    "body_snippet": "We have initiated a payout of $4,250.00 to your bank account ending in ...8821. Reference ID: AMZ-DISB-20260805-9182. Settlement typically takes 2-3 business days.",
+    "email_type": "transfer_confirmation"
+  },
+  {
+    "id": "em_stp_002",
+    "date": "2026-08-16 08:15:00",
+    "sender": "support@stripe.com",
+    "subject": "Payout of $1,890.00 is on its way to your account",
+    "merchant": "Stripe",
+    "amount": 1890.00,
+    "currency": "USD",
+    "body_snippet": "Your scheduled payout of $1,890.00 USD (Transfer ID: po_1OqL2839) is on its way and should arrive in your bank account within 1-2 business days.",
+    "email_type": "transfer_confirmation"
+  },
+  {
     "id": "em_001",
     "date": "2026-08-18 09:15:00",
     "sender": "info@mailer.netflix.com",
@@ -7,7 +29,7 @@
     "merchant": "Netflix",
     "amount": 9.99,
     "currency": "USD",
-    "body_snippet": "Your monthly streaming membership was renewed for $9.99.",
+    "body_snippet": "Your monthly streaming membership was renewed for $9.99 on your virtual card ending in 4491.",
     "email_type": "receipt"
   },
   {
@@ -18,8 +40,19 @@
     "merchant": "Adobe",
     "amount": 54.99,
     "currency": "USD",
-    "body_snippet": "Your annual plan is billed monthly at $54.99.",
+    "body_snippet": "Your annual plan is billed monthly at $54.99 (increased from $49.99).",
     "email_type": "subscription_update"
+  },
+  {
+    "id": "em_oai_003",
+    "date": "2026-08-17 15:40:00",
+    "sender": "billing@openai.com",
+    "subject": "OpenAI Invoice for ChatGPT Plus & API Usage",
+    "merchant": "OpenAI",
+    "amount": 20.00,
+    "currency": "USD",
+    "body_snippet": "Thank you for your payment of $20.00 USD for ChatGPT Plus subscription. Charged to virtual card ...1092.",
+    "email_type": "receipt"
   },
   {
     "id": "em_003",
@@ -29,7 +62,18 @@
     "merchant": "Grab",
     "amount": 24.50,
     "currency": "USD",
-    "body_snippet": "Thank you for riding with Grab. Fare charged: $24.50.",
+    "body_snippet": "Thank you for riding with Grab. Fare charged to your Techcombank Virtual Card: $24.50.",
+    "email_type": "receipt"
+  },
+  {
+    "id": "em_fb_004",
+    "date": "2026-08-20 18:22:00",
+    "sender": "advertise-noreply@facebookmail.com",
+    "subject": "Meta Ads: Receipt for Ad Account #84918239",
+    "merchant": "Facebook Ads",
+    "amount": 150.00,
+    "currency": "USD",
+    "body_snippet": "Your Meta Ads payment of $150.00 USD was successfully processed on VPBank Virtual Card ...9012.",
     "email_type": "receipt"
   }
 ]

@@ -10,7 +10,7 @@ class SecurityBoundaryViolation(PermissionError):
 class PolicyEngine:
     """
     Security Policy Engine enforcing strict read-only financial safety.
-    Denies any tool or action attempting financial mutation or external communication.
+    Denies any tool or action attempting financial mutation or autonomous external execution.
     """
 
     POLICY_RULES: Dict[ActionType, Tuple[PolicyDecision, str]] = {
@@ -22,11 +22,21 @@ class PolicyEngine:
         ActionType.RUN_RECONCILIATION: (PolicyDecision.ALLOW, "Financial reconciliation calculation is permitted."),
         ActionType.DETECT_DUPLICATES: (PolicyDecision.ALLOW, "Duplicate anomaly detection is permitted."),
         ActionType.DETECT_SUBSCRIPTIONS: (PolicyDecision.ALLOW, "Subscription detection is permitted."),
+        ActionType.DETECT_OVERDUE_PAYOUTS: (PolicyDecision.ALLOW, "Overdue/missing payout detection is permitted."),
+        ActionType.ANALYZE_BUSINESS_HEALTH: (PolicyDecision.ALLOW, "Business financial health analysis is permitted."),
 
         # Human-in-the-loop
         ActionType.SEND_EMAIL_TO_SELF: (
             PolicyDecision.CONFIRMATION_REQUIRED,
             "Sending reports to verified user email requires explicit user confirmation."
+        ),
+        ActionType.GENERATE_DISPUTE_TICKET: (
+            PolicyDecision.CONFIRMATION_REQUIRED,
+            "Generating and confirming dispute ticket filing requires explicit user approval."
+        ),
+        ActionType.CONFIRM_HITL_ACTION: (
+            PolicyDecision.CONFIRMATION_REQUIRED,
+            "Executing advisory action suggestions requires user confirmation."
         ),
 
         # Strictly Denied Mutations & External Operations

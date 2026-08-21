@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from typing import Optional
+from typing import List, Optional
 from pydantic import BaseModel, Field
 
 
@@ -16,6 +16,7 @@ class TransactionType(str, Enum):
     FEE = "fee"
     PAYIN = "payin"
     PAYOUT = "payout"
+    AD_SPEND = "ad_spend"
     UNKNOWN = "unknown"
 
 
@@ -38,6 +39,9 @@ class Transaction(BaseModel):
     merchant_normalized: str = Field(default="", description="Normalized merchant name")
     source: TransactionSource = Field(default=TransactionSource.ACCOUNT)
     source_reference: Optional[str] = Field(default=None, description="External statement/ref ID")
+    card_id: Optional[str] = Field(default=None, description="Virtual Card Identifier if card source")
+    bank_name: Optional[str] = Field(default=None, description="Bank association (e.g. Vietcombank, Techcombank, VPBank)")
+    tags: List[str] = Field(default_factory=list, description="Categorization tags like ads, saas, payout")
     status: str = Field(default="completed")
 
     class Config:

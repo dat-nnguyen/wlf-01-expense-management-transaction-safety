@@ -1,6 +1,7 @@
-id,date,merchant,amount,currency,direction,type,ref_id
-acc_tx_001,2026-08-01,Tech Corp Payroll,3500.00,USD,credit,payin,REF_PAY_001
-acc_tx_002,2026-08-05,Landlord Rent Transfer,1200.00,USD,debit,transfer,REF_RENT_001
-acc_tx_003,2026-08-10,Wallet Topup,50.00,USD,debit,transfer,REF_WAL_001
-acc_tx_004,2026-08-12,Electric Utility Power,85.50,USD,debit,fee,REF_UTIL_001
-acc_tx_005,2026-08-15,ATM Cash Withdrawal,100.00,USD,debit,fee,REF_ATM_001
+id,date,merchant,amount,currency,direction,type,ref_id,account_id,bank_name
+acc_tx_001,2026-08-01,Tech Corp Payroll,3500.00,USD,credit,payin,REF_PAY_001,acc_main,Vietcombank
+acc_tx_002,2026-08-05,Landlord Rent Transfer,1200.00,USD,debit,transfer,REF_RENT_001,acc_main,Vietcombank
+acc_tx_003,2026-08-10,Wallet Topup,50.00,USD,debit,transfer,REF_WAL_001,acc_main,Techcombank
+acc_tx_004,2026-08-12,Electric Utility Power,85.50,USD,debit,fee,REF_UTIL_001,acc_main,Vietcombank
+acc_tx_005,2026-08-15,ATM Cash Withdrawal,100.00,USD,debit,fee,REF_ATM_001,acc_main,Techcombank
+acc_tx_006,2026-08-17,Stripe Payout Settlement,1890.00,USD,credit,payin,REF_PAY_STP_01,acc_main,VPBank

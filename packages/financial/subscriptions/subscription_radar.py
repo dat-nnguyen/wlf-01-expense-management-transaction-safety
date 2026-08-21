@@ -10,7 +10,7 @@ from packages.evidence.confidence import get_confidence_label
 
 class SubscriptionRadar:
     """
-    Detects recurring subscription cadences and identifies price hikes.
+    Detects recurring subscription cadences and identifies price hikes across SaaS tools and services.
     """
 
     @staticmethod
@@ -37,7 +37,7 @@ class SubscriptionRadar:
                 diff_days = (tx_list[i].occurred_at.date() - tx_list[i - 1].occurred_at.date()).days
                 intervals.append(diff_days)
 
-            avg_interval = sum(intervals) / len(intervals)
+            avg_interval = sum(intervals) / len(intervals) if intervals else 0
 
             cadence = None
             if 25 <= avg_interval <= 35:
@@ -54,7 +54,7 @@ class SubscriptionRadar:
                 annual_mult = 1
             else:
                 # If known subscription name, default monthly
-                if any(k in merchant.lower() for k in ["netflix", "spotify", "chatgpt", "openai", "adobe", "icloud"]):
+                if any(k in merchant.lower() for k in ["netflix", "spotify", "chatgpt", "openai", "adobe", "icloud", "figma", "notion", "aws"]):
                     cadence = SubscriptionCadence.MONTHLY
                     next_date = tx_list[-1].occurred_at + timedelta(days=30)
                     annual_mult = 12
@@ -86,18 +86,29 @@ class SubscriptionRadar:
 
             # Generate Price hike Alert if price increased
             if price_changed and latest_tx.amount > prev_tx.amount:
+                annual_increase = (latest_tx.amount - prev_tx.amount) * annual_mult
                 alerts.append(
                     Alert(
                         id=f"alt_price_{uuid.uuid4().hex[:8]}",
                         alert_type=AlertType.PRICE_HIKE,
-                        title=f"Tăng giá dịch vụ: {merchant}",
+                        title=f"📈 Tăng giá dịch vụ: {merchant} (+${latest_tx.amount - prev_tx.amount:,.2f})",
                         status=AlertStatus.NEEDS_USER_CONFIRMATION,
-                        reason=f"Khoản thanh toán {merchant} tăng từ ${prev_tx.amount:.2f} lên ${latest_tx.amount:.2f}.",
+                        reason=(
+                            f"Phần mềm/Dịch vụ {merchant} đã tăng phí từ ${prev_tx.amount:,.2f} lên ${latest_tx.amount:,.2f} "
+                            f"(Dự kiến phát sinh thêm +${annual_increase:,.2f}/năm)."
+                        ),
                         confidence=0.95,
                         confidence_label=get_confidence_label(0.95),
                         deadline_days=60,
+                        amount=latest_tx.amount,
+                        action_suggestion=f"Đánh giá lại mức độ sử dụng của gói {merchant} hoặc chuyển đổi tier tiết kiệm hơn.",
                         transaction_ids=[latest_tx.id, prev_tx.id],
                         evidence_ids=[f"ev_tx_{latest_tx.id}", f"ev_tx_{prev_tx.id}"],
+                        metadata={
+                            "previous_amount": prev_tx.amount,
+                            "new_amount": latest_tx.amount,
+                            "annual_increase": annual_increase,
+                        },
                         created_at=datetime.utcnow(),
                     )
                 )

@@ -60,19 +60,35 @@ def parse_transactions_csv(
         
         tx_type_raw = cleaned_row.get("type", "").lower()
         tx_type = TransactionType.UNKNOWN
-        if "sub" in tx_type_raw:
+        tags = []
+
+        m_lower = (normalized_merchant or raw_merchant).lower()
+        if any(ad in m_lower for ad in ["facebook *ads", "google *ads", "tiktok ads", "meta ads"]):
+            tx_type = TransactionType.AD_SPEND
+            tags.append("ad_spend")
+        elif "sub" in tx_type_raw or any(s in m_lower for s in ["netflix", "adobe", "openai", "chatgpt", "spotify"]):
             tx_type = TransactionType.SUBSCRIPTION
-        elif "fee" in tx_type_raw:
+            tags.append("subscription")
+        elif "fee" in tx_type_raw or "atm" in m_lower:
             tx_type = TransactionType.FEE
-        elif "transfer" in tx_type_raw:
+            tags.append("fee")
+        elif "transfer" in tx_type_raw or "wallet" in m_lower:
             tx_type = TransactionType.TRANSFER
+            tags.append("transfer")
+        elif "payin" in tx_type_raw or direction == TransactionDirection.CREDIT:
+            tx_type = TransactionType.PAYIN
+            tags.append("payout" if "payout" in m_lower or "settlement" in m_lower else "income")
         elif "card" in tx_type_raw or source_type == TransactionSource.CARD:
             tx_type = TransactionType.CARD_PURCHASE
+            tags.append("card")
+
+        card_id = cleaned_row.get("card_id")
+        bank_name = cleaned_row.get("bank_name") or ("Vietcombank" if source_type == TransactionSource.ACCOUNT else "VPBank")
 
         transactions.append(
             Transaction(
                 id=tx_id,
-                account_id=account_id,
+                account_id=cleaned_row.get("account_id", account_id),
                 occurred_at=occurred_at,
                 amount=amount,
                 currency=currency,
@@ -82,6 +98,9 @@ def parse_transactions_csv(
                 merchant_normalized=normalized_merchant,
                 source=source_type,
                 source_reference=cleaned_row.get("ref_id") or cleaned_row.get("reference"),
+                card_id=card_id,
+                bank_name=bank_name,
+                tags=tags,
                 status=cleaned_row.get("status", "completed"),
             )
         )
