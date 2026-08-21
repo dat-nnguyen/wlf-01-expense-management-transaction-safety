@@ -32,8 +32,8 @@ export const Header: React.FC<HeaderProps> = ({
       <header className="h-14 border-b border-[var(--border-subtle)] bg-[var(--bg-header)] backdrop-blur-md px-6 flex items-center justify-between transition-colors">
         {/* Left: Wealify Brand Logo & Status */}
         <div className="flex items-center gap-3">
-          <div className="w-7 h-7 rounded-lg bg-[#FC6508] flex items-center justify-center text-white shrink-0 shadow-sm">
-            <ShieldCheck className="w-4 h-4 stroke-[2.4]" />
+          <div className="w-8 h-8 shrink-0 flex items-center justify-center">
+            <img src="/logo.png" alt="Wealify Guardian Logo" className="w-full h-full object-contain" />
           </div>
           <div className="flex items-center gap-2">
             <span className="font-bold text-sm tracking-tight text-[var(--text-primary)]">

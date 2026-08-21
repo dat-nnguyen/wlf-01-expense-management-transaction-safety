@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <!-- Orange Squircle Background with Transparent Canvas -->
+  <rect width="512" height="512" rx="116" fill="#FC6508"/>
+  
+  <!-- Shield Outline -->
+  <path d="M256 128C320 156 368 160 368 256C368 340 304 380 256 404C208 380 144 340 144 256C144 160 192 156 256 128Z" 
+        stroke="#FFFFFF" 
+        stroke-width="32" 
+        stroke-linecap="round" 
+        stroke-linejoin="round"/>
+        
+  <!-- Checkmark Inside Shield -->
+  <path d="M216 264L248 296L304 236" 
+        stroke="#FFFFFF" 
+        stroke-width="32" 
+        stroke-linecap="round" 
+        stroke-linejoin="round"/>
+</svg>
