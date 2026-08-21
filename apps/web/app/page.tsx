@@ -102,7 +102,7 @@ Wealify Guardian Financial Safety Team`,
       const response = await fetch(`${apiUrl}/api/v1/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: textToSend, session_id: 'ses_web', account_id: 'acc_main' }),
+        body: JSON.stringify({ message: textToSend, session_id: 'ses_web', account_id: 'acc_main', language }),
         signal: controller.signal,
       });
 

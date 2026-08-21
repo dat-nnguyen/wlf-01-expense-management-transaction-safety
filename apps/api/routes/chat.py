@@ -8,9 +8,10 @@ router = APIRouter(prefix="/api/v1", tags=["Chat"])
 
 
 class ChatRequest(BaseModel):
-    message: str = Field(..., example="Khoản Netflix $9.99 này là gì?")
+    message: str = Field(..., description="User message/query")
     session_id: str = Field(default="ses_default")
     account_id: str = Field(default="acc_main")
+    language: str = Field(default="vi", description="Language preference: 'vi' or 'en'")
 
 
 class ChatResponse(BaseModel):
@@ -33,6 +34,7 @@ async def chat_endpoint(
         user_message=req.message,
         session_id=req.session_id,
         account_id=req.account_id,
+        language=req.language,
     )
     return ChatResponse(
         run_id=result.run_id,
