@@ -22,15 +22,20 @@ jobs:
     name: 🐍 Backend Safety & Regression Tests
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      PYTHONPATH: .
+      APP_ENV: test
+      LLM_PROVIDER: mock
+      DATABASE_URL: sqlite:///:memory:
 
     steps:
       - name: 📥 Checkout Repository
         uses: actions/checkout@v4
 
-      - name: ⚙️ Set up Python 3.12
+      - name: ⚙️ Set up Python 3.11
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: '3.11'
           cache: 'pip'
 
       - name: 📦 Install Backend Dependencies
@@ -48,11 +53,7 @@ jobs:
           print('✅ Official Excel dataset verified with sheets:', xl.sheet_names)
           "
 
-      - name: 🧪 Run Pytest Suite (25+ Tests)
-        env:
-          APP_ENV: test
-          LLM_PROVIDER: mock
-          DATABASE_URL: sqlite:///:memory:
+      - name: 🧪 Run Pytest Suite (28 Tests)
         run: |
           pytest tests/ -v --durations=10
 
@@ -83,12 +84,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: apps/web/package-lock.json
 
       - name: 📦 Install Frontend Dependencies
         working-directory: apps/web
-        run: npm ci || npm install
+        run: npm install
 
       - name: 🔍 TypeScript Strict Typecheck (Zero-Regression Guarantee)
         working-directory: apps/web
