@@ -1,8 +1,9 @@
 import os
 import re
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 import pandas as pd
+
 
 from packages.connectors.base.base_source import BaseTransactionSource, BaseEmailSource
 from packages.connectors.excel_inbox_connector import ExcelInboxConnector
@@ -26,6 +27,7 @@ class MockTransactionSource(BaseTransactionSource):
 
     ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
     DEFAULT_EXCEL_PATH = os.path.join(ROOT_DIR, "wlf15_inbox_3users.xlsx")
+    DEFAULT_TX_HISTORY_EXCEL = os.path.join(ROOT_DIR, "Transaction_history.xlsx")
     DEFAULT_CARDS_CSV = os.path.join(ROOT_DIR, "data", "sample", "card_statements.csv")
     DEFAULT_ACCOUNTS_CSV = os.path.join(ROOT_DIR, "data", "sample", "account_transactions.csv")
 
@@ -34,12 +36,15 @@ class MockTransactionSource(BaseTransactionSource):
         excel_path: Optional[str] = None,
         cards_csv: Optional[str] = None,
         accounts_csv: Optional[str] = None,
+        tx_history_excel: Optional[str] = None,
     ):
         self.excel_path = excel_path or self.DEFAULT_EXCEL_PATH
         self.cards_csv = cards_csv or self.DEFAULT_CARDS_CSV
         self.accounts_csv = accounts_csv or self.DEFAULT_ACCOUNTS_CSV
+        self.tx_history_excel = tx_history_excel or self.DEFAULT_TX_HISTORY_EXCEL
         self._data: List[Transaction] = []
         self._load_all_sources()
+
 
     def _normalize_merchant(self, raw: str) -> str:
         s = (raw or "").lower()
@@ -109,6 +114,18 @@ class MockTransactionSource(BaseTransactionSource):
         if not m:
             m = re.search(r"([\d,]+\.?\d*)\s*(?:USD|\$)", str(text))
         return float(m.group(1).replace(",", "")) if m else 0.0
+
+    @staticmethod
+    def _clean_float(val: Any) -> float:
+        if val is None or pd.isna(val):
+            return 0.0
+        if isinstance(val, (int, float)):
+            return float(val)
+        s = str(val).replace(",", "").replace(" ", "").replace("$", "").replace("VND", "").strip()
+        try:
+            return float(s)
+        except Exception:
+            return 0.0
 
     def _load_all_sources(self) -> None:
         txs: List[Transaction] = []
@@ -250,6 +267,59 @@ class MockTransactionSource(BaseTransactionSource):
                     seen_ids.add(t_id)
             except Exception as e:
                 logger.error(f"Error parsing transactions from Excel inbox: {e}")
+
+        # 5. Load official Transaction History Excel (Transaction_history.xlsx)
+        if os.path.exists(self.tx_history_excel):
+            try:
+                df_txh = pd.read_excel(self.tx_history_excel)
+                for _, r in df_txh.iterrows():
+                    t_id = str(r.get("Id", "")).strip()
+                    if not t_id or t_id in seen_ids or t_id == "nan":
+                        continue
+
+                    dt_str = str(r.get("Thời gian", ""))
+                    try:
+                        dt = datetime.fromisoformat(dt_str)
+                        if dt.tzinfo is not None:
+                            dt = dt.replace(tzinfo=None)
+                    except Exception:
+                        dt = datetime.utcnow()
+
+                    tx_type_raw = str(r.get("Loại giao dịch", "")).strip().lower()
+                    is_topup = "top up" in tx_type_raw or "topup" in tx_type_raw
+                    direction = TransactionDirection.CREDIT if is_topup else TransactionDirection.DEBIT
+                    tx_type = TransactionType.PAYIN if is_topup else TransactionType.CARD_PURCHASE
+
+                    desc = str(r.get("Nội dung chuyển khoản", ""))
+                    if desc == "-" or pd.isna(desc) or desc == "nan":
+                        desc = "Thẻ ảo Wealify Top Up" if is_topup else "Rút tiền tài khoản Wealify"
+
+                    card_num = str(r.get("Số thẻ", "")).strip().replace("'", "")
+                    norm_merchant = self._normalize_merchant(desc)
+
+                    amt_val = self._clean_float(r.get("Số tiền", 0.0))
+                    if amt_val <= 0:
+                        continue
+
+                    txs.append(
+                        Transaction(
+                            id=t_id,
+                            account_id="acc_main",
+                            occurred_at=dt,
+                            amount=amt_val,
+                            currency=str(r.get("Đơn vị tiền tệ", "USD")),
+                            direction=direction,
+                            transaction_type=tx_type,
+                            merchant_raw=desc,
+                            merchant_normalized=norm_merchant,
+                            card_id=card_num if card_num and card_num != "nan" else None,
+                            bank_name="VPBank",
+                            source=TransactionSource.CARD if card_num and card_num != "nan" else TransactionSource.ACCOUNT,
+                        )
+                    )
+                    seen_ids.add(t_id)
+            except Exception as e:
+                logger.error(f"Error loading Transaction_history.xlsx: {e}")
 
         self._data = sorted(txs, key=lambda x: x.occurred_at, reverse=True)
         logger.info(f"Loaded {len(self._data)} official transactions across all sources.")
