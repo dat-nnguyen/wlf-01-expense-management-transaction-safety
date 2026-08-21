@@ -268,6 +268,8 @@ class EmailAlertDispatcher:
         smtp_port = int(os.getenv("SMTP_PORT", "587"))
         smtp_user = os.getenv("SMTP_USER", "").strip()
         smtp_pass = os.getenv("SMTP_PASSWORD", "").strip()
+        if "gmail" in smtp_host.lower():
+            smtp_pass = smtp_pass.replace(" ", "")
         smtp_from_name = os.getenv("SMTP_FROM_NAME", "Wealify Guardian Copilot").strip()
         smtp_use_ssl = os.getenv("SMTP_USE_SSL", "false").lower() in ["true", "1", "yes"]
 
