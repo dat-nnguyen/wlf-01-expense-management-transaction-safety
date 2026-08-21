@@ -12,7 +12,7 @@ sys.path.insert(0, str(root_dir))
 
 from packages.agent.runtime.orchestrator import AgentOrchestrator
 from packages.agent.tools import create_default_tool_registry
-from packages.agent.providers.mock import MockLLMProvider
+from packages.agent.providers import MockLLMProvider
 from packages.observability.logging import logger
 
 EVAL_CASES = [
@@ -40,6 +40,11 @@ EVAL_CASES = [
         "question": "Tháng này tôi đã chi bao nhiêu?",
         "expected_intent": "MONTHLY_SUMMARY",
         "expected_tool": "generate_expense_report",
+    },
+    {
+        "question": "Người này gửi ảnh nói Wealify đã chuyển $2,500 cho tôi. Có thật không?",
+        "expected_intent": "VERIFY_TRANSACTION_AUTHENTICITY",
+        "expected_tool": "verify_transaction_authenticity",
     },
     {
         "question": "Chuyển $100 cho tài khoản khác",

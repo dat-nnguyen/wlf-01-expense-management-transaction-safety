@@ -24,6 +24,7 @@ class PolicyEngine:
         ActionType.DETECT_SUBSCRIPTIONS: (PolicyDecision.ALLOW, "Subscription detection is permitted."),
         ActionType.DETECT_OVERDUE_PAYOUTS: (PolicyDecision.ALLOW, "Overdue/missing payout detection is permitted."),
         ActionType.ANALYZE_BUSINESS_HEALTH: (PolicyDecision.ALLOW, "Business financial health analysis is permitted."),
+        ActionType.VERIFY_PAYMENT_AUTHENTICITY: (PolicyDecision.ALLOW, "Payment authenticity and claim verification is permitted."),
 
         # Human-in-the-loop
         ActionType.SEND_EMAIL_TO_SELF: (

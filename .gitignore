@@ -3,6 +3,9 @@ achitech.md
 *.architecture.md
 internal_docs/
 deepseek-harness-architecture-handbook.md
+wlf15_inbox_3users.xlsx
+*.xlsx
+*.xls
 
 # Python
 __pycache__/

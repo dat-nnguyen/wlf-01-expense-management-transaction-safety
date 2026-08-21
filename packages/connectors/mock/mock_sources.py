@@ -129,6 +129,47 @@ class MockTransactionSource(BaseTransactionSource):
                 merchant_normalized="Tech Corp Payroll",
                 source=TransactionSource.ACCOUNT,
             ),
+            # 6. Stripe Payout Settlement
+            Transaction(
+                id="acc_tx_006",
+                account_id="acc_main",
+                occurred_at=now - timedelta(days=4),
+                amount=1890.00,
+                currency="USD",
+                direction=TransactionDirection.CREDIT,
+                transaction_type=TransactionType.PAYIN,
+                merchant_raw="Stripe Payout Settlement",
+                merchant_normalized="Stripe",
+                source_reference="REF_PAY_STP_01",
+                source=TransactionSource.ACCOUNT,
+            ),
+            # 7. Facebook Ads Double Swipe on Virtual Card
+            Transaction(
+                id="card_tx_009",
+                account_id="acc_main",
+                occurred_at=now - timedelta(days=1, minutes=10),
+                amount=150.00,
+                currency="USD",
+                direction=TransactionDirection.DEBIT,
+                transaction_type=TransactionType.CARD_PURCHASE,
+                merchant_raw="FACEBOOK *ADS 84918239",
+                merchant_normalized="Facebook Ads",
+                card_id="vcard_ad_fb",
+                source=TransactionSource.CARD,
+            ),
+            Transaction(
+                id="card_tx_010",
+                account_id="acc_main",
+                occurred_at=now - timedelta(days=1, minutes=8),
+                amount=150.00,
+                currency="USD",
+                direction=TransactionDirection.DEBIT,
+                transaction_type=TransactionType.CARD_PURCHASE,
+                merchant_raw="FACEBOOK *ADS 84918239",
+                merchant_normalized="Facebook Ads",
+                card_id="vcard_ad_fb",
+                source=TransactionSource.CARD,
+            ),
         ]
 
     async def get_transactions(
@@ -139,6 +180,9 @@ class MockTransactionSource(BaseTransactionSource):
         if account_id:
             return [t for t in self._data if t.account_id == account_id][:limit]
         return self._data[:limit]
+
+    def get_all_transactions(self) -> List[Transaction]:
+        return list(self._data)
 
 
 class MockEmailSource(BaseEmailSource):
@@ -180,6 +224,17 @@ class MockEmailSource(BaseEmailSource):
                 body_snippet="Your plan has renewed at $54.99 / month. Plan includes Photoshop, Illustrator.",
                 email_type=EmailType.SUBSCRIPTION_UPDATE,
             ),
+            EmailEvidence(
+                id="em_stp_002",
+                date=now - timedelta(days=5),
+                sender="support@stripe.com",
+                subject="Payout of $1,890.00 is on its way to your account",
+                merchant="Stripe",
+                amount=1890.00,
+                currency="USD",
+                body_snippet="Your scheduled payout of $1,890.00 USD (Transfer ID: REF_PAY_STP_01) is on its way.",
+                email_type=EmailType.TRANSFER_CONFIRMATION,
+            ),
         ]
 
     async def get_emails(
@@ -191,3 +246,7 @@ class MockEmailSource(BaseEmailSource):
             q = query.lower()
             return [e for e in self._emails if q in e.merchant.lower() or q in e.subject.lower()][:limit]
         return self._emails[:limit]
+
+    def list_messages(self) -> List[EmailEvidence]:
+        return list(self._emails)
+

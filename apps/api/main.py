@@ -1,6 +1,9 @@
 from contextlib import asynccontextmanager
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
+load_dotenv()
 
 from packages.db.session import init_db
 from packages.observability.logging import logger
@@ -14,6 +17,7 @@ from apps.api.routes import (
     advisory_router,
     hitl_router,
     notifications_router,
+    security_router,
 )
 
 
@@ -55,6 +59,7 @@ app.include_router(reports_router)
 app.include_router(advisory_router)
 app.include_router(hitl_router)
 app.include_router(notifications_router)
+app.include_router(security_router)
 
 
 @app.get("/")

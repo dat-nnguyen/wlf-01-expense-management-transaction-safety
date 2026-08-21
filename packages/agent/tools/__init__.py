@@ -7,6 +7,7 @@ from packages.agent.tools.reports import GenerateExpenseReportTool
 from packages.agent.tools.emails import SearchEmailsTool
 from packages.agent.tools.payouts import DetectOverduePayoutsTool
 from packages.agent.tools.advisory import AnalyzeBusinessHealthTool
+from packages.agent.tools.authenticity import VerifyTransactionAuthenticityTool
 from typing import Dict, List, Optional
 
 
@@ -21,6 +22,7 @@ def create_default_tool_registry() -> ToolRegistry:
     registry.register(SearchEmailsTool())
     registry.register(DetectOverduePayoutsTool())
     registry.register(AnalyzeBusinessHealthTool())
+    registry.register(VerifyTransactionAuthenticityTool())
     return registry
 
 
@@ -39,5 +41,7 @@ __all__ = [
     "SearchEmailsTool",
     "DetectOverduePayoutsTool",
     "AnalyzeBusinessHealthTool",
+    "VerifyTransactionAuthenticityTool",
     "create_default_tool_registry",
 ]
+
