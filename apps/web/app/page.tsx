@@ -70,8 +70,8 @@ Wealify Guardian Financial Safety Team`,
   };
 
   const handleSendMessage = async (customText?: string) => {
-    const textToSend = customText || inputMsg;
-    if (!textToSend.trim()) return;
+    const textToSend = (customText !== undefined ? customText : inputMsg).trim();
+    if (!textToSend || isTyping) return;
 
     const newMsg: Message = {
       id: `usr_${Date.now()}`,
@@ -81,17 +81,32 @@ Wealify Guardian Financial Safety Team`,
     };
 
     setMessages((prev) => [...prev, newMsg]);
-    if (!customText) setInputMsg('');
+    setInputMsg('');
     setIsTyping(true);
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 35000);
+
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      // Smart API resolution: env variable -> localhost:8000 -> live Render backend
+      let apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+      if (!apiUrl) {
+        if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+          apiUrl = 'http://127.0.0.1:8000';
+        } else {
+          apiUrl = 'https://wealify-guardian-api.onrender.com';
+        }
+      }
+      apiUrl = apiUrl.replace(/\/+$/, '');
+
       const response = await fetch(`${apiUrl}/api/v1/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: textToSend, session_id: 'ses_web', account_id: 'acc_main' }),
+        signal: controller.signal,
       });
 
+      clearTimeout(timeoutId);
       setIsTyping(false);
 
       if (response.ok) {
@@ -138,7 +153,7 @@ Wealify Guardian Financial Safety Team`,
           {
             id: `bot_${Date.now()}`,
             sender: 'bot',
-            text: `⚠️ **Lỗi kết nối Backend (${response.status})**: Không thể nhận phản hồi từ Agent Orchestrator. Vui lòng kiểm tra lại dịch vụ API tại \`http://localhost:8000\`.`,
+            text: `⚠️ **Lỗi kết nối Backend (${response.status})**: Không thể nhận phản hồi từ Agent Orchestrator. Vui lòng kiểm tra lại dịch vụ API tại \`${apiUrl}\`.`,
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             classification: 'Chưa đủ dữ liệu',
             confidence: 0,
@@ -146,13 +161,17 @@ Wealify Guardian Financial Safety Team`,
         ]);
       }
     } catch (err: any) {
+      clearTimeout(timeoutId);
       setIsTyping(false);
+      const isAbort = err.name === 'AbortError';
       setMessages((prev) => [
         ...prev,
         {
           id: `bot_${Date.now()}`,
           sender: 'bot',
-          text: `⚠️ **Không thể kết nối đến máy chủ Backend**: ${err.message || 'Lỗi mạng'}. Hãy đảm bảo server FastAPI đang chạy tại \`http://127.0.0.1:8000\`.`,
+          text: isAbort
+            ? '⏱️ **Hết thời gian phản hồi (Timeout)**: Yêu cầu phân tích AI mất nhiều thời gian hơn dự kiến. Vui lòng thử gửi lại câu hỏi.'
+            : `⚠️ **Không thể kết nối đến máy chủ Backend**: ${err.message || 'Lỗi mạng'}. Hãy đảm bảo server FastAPI đang chạy tại \`http://127.0.0.1:8000\` hoặc trên Render.`,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           classification: 'Chưa đủ dữ liệu',
           confidence: 0,
@@ -208,6 +227,7 @@ Wealify Guardian Financial Safety Team`,
               onSendMessage={handleSendMessage}
               onOpenVerifyModal={() => setIsVerifyModalOpen(true)}
               language={language}
+              isTyping={isTyping}
             />
           </main>
 
