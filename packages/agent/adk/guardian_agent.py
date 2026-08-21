@@ -1,7 +1,7 @@
 """Wealify Guardian — Google Agent Development Kit (ADK) Implementation.
 
 Built using the official Google ADK (google-adk) framework.
-Model-Agnostic / Native Gemini 2.0 / OpenRouter.
+Model-Agnostic / Native Gemini 2.0 / OpenRouter / Deterministic Fallback.
 """
 
 import asyncio
@@ -16,6 +16,8 @@ from packages.agent.tools.advisory import AnalyzeBusinessHealthTool
 from packages.agent.tools.reports import GenerateExpenseReportTool
 from packages.agent.tools.transactions import SearchTransactionsTool
 from packages.agent.tools.emails import SearchEmailsTool
+from packages.agent.tools.reconciliation import ReconcileTransactionsTool
+from packages.agent.tools.surge import DetectSpendingSurgesTool
 from packages.agent.tools.base import ToolContext
 from packages.connectors.excel_inbox_connector import ExcelInboxConnector
 
@@ -29,6 +31,8 @@ _adv_tool = AnalyzeBusinessHealthTool()
 _rep_tool = GenerateExpenseReportTool()
 _tx_tool = SearchTransactionsTool()
 _email_tool = SearchEmailsTool()
+_rec_tool = ReconcileTransactionsTool()
+_surge_tool = DetectSpendingSurgesTool()
 
 
 # ==============================================================================
@@ -67,13 +71,13 @@ def verify_transaction_authenticity(
 
 def find_duplicate_charges(account_id: str = "acc_main") -> Dict[str, Any]:
     """
-    Detects potential duplicate debits or double charges on virtual cards (Meta Ads, Google Ads, TikTok Ads).
+    Detects potential duplicate debits or double charges on virtual cards (Meta Ads, Google Ads, TikTok Ads, Grab, Volcano).
 
     Args:
         account_id: The account identifier to inspect.
 
     Returns:
-        Dict with list of detected duplicate alerts, confidence scores, and dispute instructions.
+        Dict with list of detected duplicate alerts, confidence scores, 60-day dispute deadlines, and personalized dispute drafts.
     """
     ctx = ToolContext(session_id="adk_session", account_id=account_id)
     res = asyncio.run(_dup_tool.execute(ctx, {}))
@@ -89,7 +93,7 @@ def detect_overdue_payouts(account_id: str = "acc_main") -> Dict[str, Any]:
         account_id: The account identifier to inspect.
 
     Returns:
-        Dict with overdue payout alerts, elapsed days, and drafted dispute letters.
+        Dict with overdue payout alerts, elapsed days, 60-day deadlines, and drafted dispute letters.
     """
     ctx = ToolContext(session_id="adk_session", account_id=account_id)
     res = asyncio.run(_payout_tool.execute(ctx, {}))
@@ -98,17 +102,93 @@ def detect_overdue_payouts(account_id: str = "acc_main") -> Dict[str, Any]:
 
 def find_active_subscriptions(account_id: str = "acc_main") -> Dict[str, Any]:
     """
-    Identifies recurring SaaS subscriptions (Netflix, AWS, OpenAI, ChatGPT, GitHub, Slack)
+    Identifies recurring SaaS subscriptions (Netflix, AWS, OpenAI, ChatGPT, GitHub, Slack, Adobe)
     and detects silent price hikes or anomalies.
 
     Args:
         account_id: The account identifier.
 
     Returns:
-        Dict with detected subscriptions, next billing dates, and price hike warnings.
+        Dict with detected subscriptions, next billing dates, annual cost projections, and price hike warnings.
     """
     ctx = ToolContext(session_id="adk_session", account_id=account_id)
     res = asyncio.run(_sub_tool.execute(ctx, {}))
+    return res.data if res.success else {"error": res.error}
+
+
+def reconcile_3way_transactions(account_id: str = "acc_main") -> Dict[str, Any]:
+    """
+    Performs 3-Way Reconciliation across Bank Account (Incoming Funds) <-> Wallet Ledger <-> Card Statements.
+    Identifies unreconciled funds (e.g. money left account but not on card, duplicate topups, wallet discrepancy).
+
+    Args:
+        account_id: The account identifier.
+
+    Returns:
+        Dict with source summaries and discrepancy items strictly formatted as 'Lệch $X giữa [Source A] và [Source B] — chưa xác định nguyên nhân.'
+    """
+    ctx = ToolContext(session_id="adk_session", account_id=account_id)
+    res = asyncio.run(_rec_tool.execute(ctx, {}))
+    return res.data if res.success else {"error": res.error}
+
+
+def generate_expense_report(
+    account_id: str = "acc_main",
+    period_type: str = "month",
+    period_value: str = "2026-08",
+) -> Dict[str, Any]:
+    """
+    Generates structured expense reports (monthly, quarterly, yearly), total spend, fees,
+    top 3 largest expenses, category breakdowns, and subscription forecasts.
+
+    Args:
+        account_id: The account identifier.
+        period_type: 'month', 'quarter', or 'year'.
+        period_value: e.g. '2026-08', '2026-Q3', or '2026'.
+
+    Returns:
+        Dict containing total expense, total fees, top 3 expenses, category breakdown, and annual forecasts.
+    """
+    ctx = ToolContext(session_id="adk_session", account_id=account_id)
+    res = asyncio.run(_rep_tool.execute(ctx, {"period_type": period_type, "period_value": period_value}))
+    return res.data if res.success else {"error": res.error}
+
+
+def search_financial_transactions(
+    query: str,
+    account_id: str = "acc_main",
+) -> Dict[str, Any]:
+    """
+    Searches transactions by merchant name, amount ($9.99, $2500), source reference, or keyword.
+
+    Args:
+        query: Search term (e.g. '9.99', 'grab', 'netflix', 'facebook').
+        account_id: The account identifier.
+
+    Returns:
+        Dict with list of matching transactions, amounts, and source references.
+    """
+    ctx = ToolContext(session_id="adk_session", account_id=account_id)
+    res = asyncio.run(_tx_tool.execute(ctx, {"query": query}))
+    return res.data if res.success else {"error": res.error}
+
+
+def search_email_inbox(
+    query: Optional[str] = None,
+    user_persona: str = "wealifytester",
+) -> Dict[str, Any]:
+    """
+    Searches user's verified mailbox evidence (invoices, receipts, payout notices, phishing alerts).
+
+    Args:
+        query: Optional search keyword.
+        user_persona: 'wealifytester', 'wealifyjunior', or 'wealifysenior'.
+
+    Returns:
+        Dict with matching email records, matched transaction IDs, and phishing alert flags.
+    """
+    ctx = ToolContext(session_id="adk_session", account_id="acc_main")
+    res = asyncio.run(_email_tool.execute(ctx, {"query": query, "user_persona": user_persona}))
     return res.data if res.success else {"error": res.error}
 
 
@@ -121,36 +201,11 @@ def analyze_business_health(account_id: str = "acc_main") -> Dict[str, Any]:
         account_id: The account identifier.
 
     Returns:
-        Dict with health score (0-100), financial health rating, unit economics, and insights.
+        Dict with health score (0-100), financial health rating, unit economics, and dynamic HITL action items.
     """
     ctx = ToolContext(session_id="adk_session", account_id=account_id)
     res = asyncio.run(_adv_tool.execute(ctx, {}))
     return res.data if res.success else {"error": res.error}
-
-
-def scan_mailbox_evidence(
-    user_persona: str = "wealifytester",
-    query: Optional[str] = None,
-) -> Dict[str, Any]:
-    """
-    Scans the official test mailbox (148 emails) for payment receipts, payout notifications,
-    or suspicious phishing emails from attackers.
-
-    Args:
-        user_persona: One of 'wealifytester', 'wealifyjunior', 'wealifysenior'.
-        query: Optional search keyword (e.g. 'payoneer', 'netflix', 'phishing').
-
-    Returns:
-        Dict with list of matching email evidence records and phishing alert flags.
-    """
-    connector = ExcelInboxConnector()
-    phishing = connector.get_phishing_emails(user_persona=user_persona)
-    return {
-        "status": "success",
-        "persona": user_persona,
-        "phishing_alerts": [p.model_dump() for p in phishing],
-        "total_phishing_detected": len(phishing),
-    }
 
 
 def detect_spending_surges(
@@ -163,32 +218,39 @@ def detect_spending_surges(
 
     Args:
         account_id: The account identifier to inspect.
-        window_days: Number of days in the current evaluation window (e.g. 7 for weekly, 30 for monthly).
+        window_days: Number of days in current evaluation window (e.g. 7 for weekly, 30 for monthly).
 
     Returns:
         Dict with spending surge report, multiplier, category breakdown and root cause attribution.
     """
-    from packages.agent.tools.surge import DetectSpendingSurgesTool
-    tool = DetectSpendingSurgesTool()
     ctx = ToolContext(session_id="adk_session", account_id=account_id)
-    res = asyncio.run(tool.execute(ctx, {"window_days": window_days}))
+    res = asyncio.run(_surge_tool.execute(ctx, {"window_days": window_days}))
     return res.data if res.success else {"error": res.error}
 
 
 # ==============================================================================
-# GOOGLE ADK ROOT AGENT
+# GOOGLE ADK ROOT AGENT CONFIGURATION
 # ==============================================================================
 
 GUARDIAN_INSTRUCTION = """
-Bạn là Wealify Guardian — AI Expense Management & Transaction Safety Copilot được xây dựng theo chuẩn Google Agent Development Kit (ADK).
-Nguyên tắc hoạt động bất biến:
-1. 'LLM diễn giải & tổng hợp. Financial Engine tính toán. Bằng chứng chứng minh. Con người quyết định.'
-2. Chế độ an toàn: Hoạt động Read-Only. Không trực tiếp chuyển tiền hay can thiệp số dư.
-3. Luôn đối chiếu 3 nguồn: Sổ cái (Ledger), Ví (Wallet), và Hộp thư (Email).
-4. Sử dụng 3 trạng thái phân loại chuẩn: 'Định kỳ đã xác định', 'Cần bạn tự xác nhận', 'Chưa đủ dữ liệu'.
-5. Nhắc nhở người dùng về thời hạn khiếu nại quy định 60 ngày theo luật ngân hàng Mỹ (Regulation E).
-6. Khi phát hiện email lừa đảo (như mạo danh wea1ify-support.com), cảnh báo rủi ro cao ngay lập tức.
-7. Phát hiện chi tiêu đột biến so với baseline lịch sử và giải thích nguyên nhân theo từng danh mục.
+Bạn là Wealify Guardian — Trợ lý AI Quản lý Chi tiêu & An toàn Giao dịch (AI Expense Management & Transaction Safety Copilot) được xây dựng theo chuẩn Google Agent Development Kit (ADK).
+
+NGUYÊN TẮC BẤT BIẾN THEO QUY CHUẨN ĐỀ THI WLF-01:
+1. Ranh giới Read-Only: Tuyệt đối KHÔNG tự ý thực hiện giao dịch chuyển tiền, KHÔNG tự hủy gói dịch vụ, KHÔNG tự mở khiếu nại/chargeback, KHÔNG khóa/mở thẻ. Mọi hành động chỉ mang tính chất hướng dẫn và soạn thảo bản nháp (Draft) để người dùng tự quyết định.
+2. Email Báo Cáo & Tự Gửi: Chỉ gửi email báo cáo tới CHÍNH ĐỊA CHỈ EMAIL CỦA NGƯỜI DÙNG khi có yêu cầu và PHẢI XÁC NHẬN (Confirm) trước khi gửi. CẤM tự ý gửi email cho ngân hàng, cửa hàng hoặc bên thứ ba.
+3. Ba nhãn phân loại chuẩn bắt buộc: Mỗi cảnh báo hoặc phát hiện phải được gắn chính xác 1 trong 3 nhãn:
+   - 'Định kỳ đã xác định' (Identified Recurring)
+   - 'Cần bạn tự xác nhận' (Needs your confirmation)
+   - 'Chưa đủ dữ liệu' (Insufficient data)
+   Tuyệt đối không phán quyết chắc chắn "100% gian lận" hoặc "100% lừa đảo".
+4. Mốc hạn khiếu nại quy định 60 ngày: Mọi giao dịch đáng ngờ/lệch lạc phải nhắc nhở mốc hạn khiếu nại 60 ngày theo luật Ngân hàng Mỹ (Regulation E) kể từ ngày nhận sao kê.
+5. CẤM câu trấn an tuyệt đối: Không bao giờ nói 'Tài khoản của bạn an toàn tuyệt đối' hoặc 'Không có gì bất thường'. Khi người dùng hỏi về an toàn, giải thích rõ: 'Hệ thống chỉ có thể chỉ ra những giao dịch có dấu hiệu cần kiểm tra dựa trên dữ liệu hiện có, không đưa ra kết luận an toàn tuyệt đối.'
+6. Khi 3 nguồn lệch nhau (Account <-> Wallet <-> Card), phải diễn giải chính xác: 'Lệch $X giữa [Nguồn A] và [Nguồn B] — chưa xác định nguyên nhân.'
+7. Tên cửa hàng / Đơn vị thụ hưởng: Nếu không nhận diện được rõ ràng, ghi 'Chưa xác định được', không đoán bừa.
+8. Giữ an toàn bảo mật: Che số thẻ (chỉ hiện 4 số cuối) và số tài khoản, không bao giờ hiện hay lưu mã CVV 3 số.
+9. Hỗ trợ song ngữ chuẩn mực: Tự động phát hiện và phản hồi chuẩn xác bằng tiếng Việt hoặc tiếng Anh tương ứng với ngôn ngữ của người dùng.
+10. Dòng lưu ý bắt buộc cuối mỗi báo cáo / tư vấn:
+   'Công cụ này chỉ hỗ trợ bạn rà soát tài chính. Kết quả để tham khảo, không phải kết luận chính thức của Wealify và không thay cho việc bạn tự kiểm tra. Nếu thấy giao dịch lạ, hãy liên hệ hỗ trợ ngay — ở Mỹ thời hạn khiếu nại là 60 ngày kể từ ngày ngân hàng gửi sao kê.'
 """
 
 root_agent = Agent(
@@ -200,8 +262,12 @@ root_agent = Agent(
         find_duplicate_charges,
         detect_overdue_payouts,
         find_active_subscriptions,
+        reconcile_3way_transactions,
+        generate_expense_report,
+        search_financial_transactions,
+        search_email_inbox,
         analyze_business_health,
-        scan_mailbox_evidence,
         detect_spending_surges,
     ],
 )
+

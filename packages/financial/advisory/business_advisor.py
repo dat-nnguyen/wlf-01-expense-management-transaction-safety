@@ -112,13 +112,17 @@ class BusinessAdvisor:
                 recommendations.append(
                     "Tối ưu lại các nhóm quảng cáo có ROAS thấp trên Facebook/Google Ads để bảo vệ dòng tiền."
                 )
+                top_ad = max(ad_txs, key=lambda x: x.amount) if ad_txs else None
+                campaign_desc = (top_ad.merchant_normalized or top_ad.merchant_raw) if top_ad else "Facebook Ads"
+                campaign_ref = (top_ad.source_reference or top_ad.id) if top_ad else "84918239"
+
                 hitl_actions.append(
                     HITLActionItem(
                         id=f"hitl_ad_{uuid.uuid4().hex[:6]}",
-                        title="Đề xuất: Giảm ngân sách chiến dịch Facebook Ads #84918239",
-                        description="Tạm giảm 30% ngân sách chiến dịch để cân bằng dòng tiền cho tới khi Payout về.",
+                        title=f"Đề xuất: Tối ưu ngân sách chiến dịch {campaign_desc} (#{campaign_ref})",
+                        description=f"Tạm giảm 30% ngân sách chiến dịch {campaign_desc} (${top_ad.amount if top_ad else total_ad_spend:,.2f}) để cân bằng dòng tiền.",
                         action_type="pause_ad_campaign",
-                        payload={"campaign_id": "84918239", "reduction": 0.30},
+                        payload={"campaign_id": campaign_ref, "merchant": campaign_desc, "reduction": 0.30},
                         status=HITLActionStatus.PENDING,
                     )
                 )

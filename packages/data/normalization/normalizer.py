@@ -91,6 +91,22 @@ MERCHANT_DICTIONARY: Dict[str, Dict[str, str]] = {
         "name": "Shopify Payout",
         "explanation": "Doanh thu thanh toán giải ngân từ sàn thương mại điện tử Shopify.",
     },
+    r"payoneer(?:\s+payout)?": {
+        "name": "Payoneer Payout",
+        "explanation": "Doanh thu thanh toán giải ngân quốc tế từ cổng Payoneer.",
+    },
+    r"pingpong(?:\s+payout)?": {
+        "name": "PingPong Payout",
+        "explanation": "Doanh thu thanh toán giải ngân bán hàng quốc tế từ PingPong Payments.",
+    },
+    r"paddle(?:\.net)?": {
+        "name": "Paddle.net",
+        "explanation": "Cổng thanh toán và đăng ký phần mềm số định kỳ Paddle.net.",
+    },
+    r"volcano": {
+        "name": "Volcano Ads / Virtual Card Top-up",
+        "explanation": "Giao dịch nạp số dư chạy quảng cáo và phát hành thẻ ảo Volcano.",
+    },
     r"atm\s+fee|service\s+fee|monthly\s+fee|overdraft": {
         "name": "Phí Dịch Vụ Ngân Hàng",
         "explanation": "Phí duy trì tài khoản, phí rút tiền ATM hoặc phí giao dịch ngân hàng phát hành.",

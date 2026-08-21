@@ -57,4 +57,5 @@ def test_monthly_report_endpoint():
     assert response.status_code == 200
     report = response.json()
     assert "total_expense" in report
-    assert "breakdown" in report
+    assert "category_breakdown" in report
+
