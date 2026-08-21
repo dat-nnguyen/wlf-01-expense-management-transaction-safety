@@ -234,6 +234,33 @@ class EmailAlertDispatcher:
         )
         cls._SENT_LOGS.insert(0, log)
         logger.info(f"EMAIL_ALERT_DISPATCHED | notif_id={log.id} | to={recipient_email} | type={alert.alert_type.value} | subject={alert.title}")
+
+        # Real SMTP Delivery if credentials configured in .env
+        import os
+        smtp_host = os.getenv("SMTP_HOST")
+        smtp_port = int(os.getenv("SMTP_PORT", "587"))
+        smtp_user = os.getenv("SMTP_USER")
+        smtp_pass = os.getenv("SMTP_PASSWORD")
+        if smtp_host and smtp_user and smtp_pass:
+            try:
+                import smtplib
+                from email.mime.text import MIMEText
+                from email.mime.multipart import MIMEMultipart
+
+                msg = MIMEMultipart("alternative")
+                msg["Subject"] = log.subject
+                msg["From"] = f"Wealify Guardian <{smtp_user}>"
+                msg["To"] = recipient_email
+                msg.attach(MIMEText(html, "html", "utf-8"))
+
+                with smtplib.SMTP(smtp_host, smtp_port, timeout=10.0) as server:
+                    server.starttls()
+                    server.login(smtp_user, smtp_pass)
+                    server.sendmail(smtp_user, [recipient_email], msg.as_string())
+                logger.info(f"REAL_SMTP_SUCCESS | Sent live email to {recipient_email}")
+            except Exception as e:
+                logger.warning(f"REAL_SMTP_FAILED | Failed sending to {recipient_email}: {e}")
+
         return log
 
     @classmethod
