@@ -24,6 +24,7 @@ export default function Home() {
   const [userNav, setUserNav] = useState('chat');
   const [language, setLanguage] = useState<Language>('vi');
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+  const [hasMounted, setHasMounted] = useState(false);
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMsg, setInputMsg] = useState('');
@@ -76,6 +77,7 @@ Wealify Guardian Financial Safety Team`,
     } catch {
       // Ignore
     }
+    setHasMounted(true);
   }, []);
 
   const handleNavChange = (newNav: string) => {
@@ -272,6 +274,21 @@ Wealify Guardian Financial Safety Team`,
     }
     handleSendMessage(chip);
   };
+
+  if (!hasMounted) {
+    return (
+      <div className="flex h-screen w-screen bg-[#080c14] items-center justify-center">
+        <div className="flex items-center gap-3 animate-pulse">
+          <div className="w-8 h-8 shrink-0 flex items-center justify-center">
+            <img src="/logo.png" alt="Wealify Guardian Logo" className="w-full h-full object-contain" />
+          </div>
+          <span className="font-bold text-sm text-white tracking-wider">
+            WEALIFY <span className="text-[#FC6508]">GUARDIAN</span>
+          </span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-screen w-screen bg-[var(--bg-primary)] text-[var(--text-primary)] overflow-hidden font-sans transition-colors duration-300">
