@@ -11,6 +11,8 @@ import {
 } from 'lucide-react';
 import { Language } from '../../types';
 
+import { translateReminderNotes } from '../../utils/translationHelper';
+
 interface RemindersViewProps {
   language: Language;
 }
@@ -196,7 +198,9 @@ export const RemindersView: React.FC<RemindersViewProps> = ({ language }) => {
                 </div>
 
                 {/* Notes */}
-                <p className="text-xs text-[var(--text-secondary)] leading-relaxed">{rem.notes}</p>
+                <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                  {translateReminderNotes(rem.notes, language)}
+                </p>
               </div>
 
               {/* Action Buttons */}

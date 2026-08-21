@@ -11,6 +11,14 @@ import {
 } from 'lucide-react';
 import { Language } from '../../types';
 
+import {
+  translateStatus,
+  translateConfidence,
+  translateAlertTitle,
+  translateAlertReason,
+  translateActionSuggestion,
+} from '../../utils/translationHelper';
+
 interface AlertsViewProps {
   language: Language;
   onOpenReminderModal?: (alert: any) => void;
@@ -51,29 +59,29 @@ export const AlertsView: React.FC<AlertsViewProps> = ({
   });
 
   const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'Định kỳ đã xác định':
-        return (
-          <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5 w-max">
-            <CheckCircle2 className="w-3.5 h-3.5" />
-            <span>{language === 'vi' ? '① Định kỳ đã xác định' : '① Confirmed Recurring'}</span>
-          </span>
-        );
-      case 'Cần bạn tự xác nhận':
-        return (
-          <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-500/15 text-rose-400 border border-rose-500/30 flex items-center gap-1.5 w-max">
-            <AlertTriangle className="w-3.5 h-3.5" />
-            <span>{language === 'vi' ? '② Cần bạn tự xác nhận' : '② Needs Confirmation'}</span>
-          </span>
-        );
-      default:
-        return (
-          <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30 flex items-center gap-1.5 w-max">
-            <HelpCircle className="w-3.5 h-3.5" />
-            <span>{language === 'vi' ? '③ Chưa đủ dữ liệu' : '③ Insufficient Data'}</span>
-          </span>
-        );
+    const translatedText = translateStatus(status, language);
+    if (status === 'Định kỳ đã xác định') {
+      return (
+        <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5 w-max">
+          <CheckCircle2 className="w-3.5 h-3.5" />
+          <span>{translatedText}</span>
+        </span>
+      );
     }
+    if (status === 'Cần bạn tự xác nhận') {
+      return (
+        <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-500/15 text-rose-400 border border-rose-500/30 flex items-center gap-1.5 w-max">
+          <AlertTriangle className="w-3.5 h-3.5" />
+          <span>{translatedText}</span>
+        </span>
+      );
+    }
+    return (
+      <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30 flex items-center gap-1.5 w-max">
+        <HelpCircle className="w-3.5 h-3.5" />
+        <span>{translatedText}</span>
+      </span>
+    );
   };
 
   const handleCopyDraft = (draft: string) => {
@@ -140,7 +148,9 @@ export const AlertsView: React.FC<AlertsViewProps> = ({
 
               {/* Title & Amount */}
               <div className="flex items-start justify-between gap-2">
-                <h3 className="font-bold text-sm text-[var(--text-primary)]">{a.title}</h3>
+                <h3 className="font-bold text-sm text-[var(--text-primary)]">
+                  {translateAlertTitle(a.title, language)}
+                </h3>
                 {a.amount && (
                   <span className="font-mono font-bold text-sm text-[var(--text-primary)] shrink-0">
                     ${Number(a.amount).toFixed(2)} USD
@@ -149,12 +159,14 @@ export const AlertsView: React.FC<AlertsViewProps> = ({
               </div>
 
               {/* Reason */}
-              <p className="text-xs text-[var(--text-secondary)] leading-relaxed">{a.reason}</p>
+              <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                {translateAlertReason(a.reason, language)}
+              </p>
 
               {/* Confidence & Source */}
               <div className="flex items-center gap-3 text-[11px] pt-1">
                 <span className="text-emerald-400 font-medium">
-                  {language === 'vi' ? 'Độ tin cậy:' : 'Confidence:'} {a.confidence_label} ({Math.round(a.confidence * 100)}%)
+                  {language === 'vi' ? 'Độ tin cậy:' : 'Confidence:'} {translateConfidence(a.confidence_label, language)} ({Math.round(a.confidence * 100)}%)
                 </span>
                 <span className="text-[var(--text-muted)]">•</span>
                 <span className="text-[var(--text-muted)] font-mono">
@@ -166,7 +178,7 @@ export const AlertsView: React.FC<AlertsViewProps> = ({
             {/* Bottom Actions */}
             <div className="pt-3 border-t border-[var(--border-subtle)] flex items-center justify-between gap-2">
               <div className="text-[11px] text-[var(--text-muted)] italic truncate max-w-[240px]">
-                {a.action_suggestion || (language === 'vi' ? 'Kiểm tra lại sao kê ngân hàng.' : 'Review bank statement records.')}
+                {translateActionSuggestion(a.action_suggestion, language) || (language === 'vi' ? 'Kiểm tra lại sao kê ngân hàng.' : 'Review bank statement records.')}
               </div>
               {a.dispute_draft && (
                 <button

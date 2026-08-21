@@ -13,6 +13,13 @@ import {
 } from 'lucide-react';
 import { Language } from '../../types';
 
+import {
+  translateStatus,
+  translateConfidence,
+  translateFindingTitle,
+  translateFindingExplanation,
+} from '../../utils/translationHelper';
+
 interface ThreeWayReconciliationViewProps {
   language: Language;
 }
@@ -171,35 +178,37 @@ export const ThreeWayReconciliationView: React.FC<ThreeWayReconciliationViewProp
             <tbody className="divide-y divide-[var(--border-subtle)]">
               {(report?.discrepancies || [
                 {
-                  title: language === 'vi' ? 'Tiền rời Account nhưng chưa lên Card' : 'Money left Account but not credited to Card',
+                  title: 'Tiền rời Account nhưng chưa lên Card',
                   source_a: 'Account Statement',
                   source_b: 'Card Statement',
                   amount_diff: 50.0,
-                  explanation: language === 'vi' ? 'Lệch $50.00 giữa Account và Card Statement — chưa xác định nguyên nhân.' : 'Diff of $50.00 between Account and Card Statement — root cause undetermined.',
-                  status: language === 'vi' ? 'Cần bạn tự xác nhận' : 'Needs confirmation',
-                  confidence_label: language === 'vi' ? 'Mức độ tin cậy cao' : 'High Confidence',
+                  explanation: 'Lệch $50.00 giữa Account và Card Statement — chưa xác định nguyên nhân.',
+                  status: 'Cần bạn tự xác nhận',
+                  confidence_label: 'Mức độ tin cậy cao',
                 },
                 {
-                  title: language === 'vi' ? 'Tiền nạp vào Wallet bị trùng' : 'Duplicate Wallet Topup detected',
+                  title: 'Tiền nạp vào Wallet bị trùng',
                   source_a: 'Wallet Topup 1',
                   source_b: 'Wallet Topup 2',
                   amount_diff: 500.0,
-                  explanation: language === 'vi' ? 'Lệch nạp trùng $500.00 trong Wallet — chưa xác định nguyên nhân.' : 'Duplicate $500.00 topup recorded in Wallet — root cause undetermined.',
-                  status: language === 'vi' ? 'Cần bạn tự xác nhận' : 'Needs confirmation',
-                  confidence_label: language === 'vi' ? 'Mức độ tin cậy cao' : 'High Confidence',
+                  explanation: 'Lệch nạp trùng $500.00 trong Wallet — chưa xác định nguyên nhân.',
+                  status: 'Cần bạn tự xác nhận',
+                  confidence_label: 'Mức độ tin cậy cao',
                 },
                 {
-                  title: language === 'vi' ? 'Phí bị tính 2 lần giữa các nguồn' : 'Fee charged twice across sources',
+                  title: 'Phí bị tính 2 lần giữa các nguồn',
                   source_a: 'Account Fee',
                   source_b: 'Card Fee',
                   amount_diff: 2.50,
-                  explanation: language === 'vi' ? 'Lệch phí $2.50 xuất hiện đồng thời trên Account và Card — chưa xác định nguyên nhân.' : 'Fee of $2.50 appeared concurrently on Account and Card — root cause undetermined.',
-                  status: language === 'vi' ? 'Cần bạn tự xác nhận' : 'Needs confirmation',
-                  confidence_label: language === 'vi' ? 'Mức độ tin cậy cao' : 'High Confidence',
+                  explanation: 'Lệch phí $2.50 xuất hiện đồng thời trên Account và Card — chưa xác định nguyên nhân.',
+                  status: 'Cần bạn tự xác nhận',
+                  confidence_label: 'Mức độ tin cậy cao',
                 },
               ]).map((d: any, idx: number) => (
                 <tr key={idx} className="hover:bg-[var(--bg-secondary)]/50 transition-colors">
-                  <td className="py-3 px-4 font-semibold text-[var(--text-primary)]">{d.title}</td>
+                  <td className="py-3 px-4 font-semibold text-[var(--text-primary)]">
+                    {translateFindingTitle(d.title, language)}
+                  </td>
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-1.5 font-mono text-[11px] text-[var(--text-secondary)]">
                       <span>{d.source_a}</span>
@@ -211,20 +220,16 @@ export const ThreeWayReconciliationView: React.FC<ThreeWayReconciliationViewProp
                     ${Number(d.amount_diff || 0).toFixed(2)} USD
                   </td>
                   <td className="py-3 px-4 font-medium text-[11px] text-[var(--text-secondary)] max-w-sm">
-                    {d.explanation}
+                    {translateFindingExplanation(d.explanation, language)}
                   </td>
                   <td className="py-3 px-4">
                     <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/15 text-rose-400 border border-rose-500/30 flex items-center gap-1 w-max">
                       <AlertTriangle className="w-3 h-3" />
-                      <span>
-                        {d.status === 'Cần bạn tự xác nhận'
-                          ? (language === 'vi' ? 'Cần bạn tự xác nhận' : 'Needs confirmation')
-                          : (d.status?.value || d.status)}
-                      </span>
+                      <span>{translateStatus(d.status, language)}</span>
                     </span>
                   </td>
                   <td className="py-3 px-4 text-[11px] text-emerald-400 font-medium">
-                    {d.confidence_label}
+                    {translateConfidence(d.confidence_label, language)}
                   </td>
                 </tr>
               ))}

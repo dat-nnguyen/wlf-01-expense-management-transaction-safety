@@ -10,6 +10,12 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { Language } from '../../types';
+import {
+  translateStatus,
+  translateConfidence,
+  translateEmailReason,
+  translateEmailSource,
+} from '../../utils/translationHelper';
 
 interface EmailMatchingViewProps {
   language: Language;
@@ -26,10 +32,10 @@ export const EmailMatchingView: React.FC<EmailMatchingViewProps> = ({ language }
     try {
       let apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
       apiUrl = apiUrl.replace(/\/+$/, '');
-      const res = await fetch(`${apiUrl}/api/v1/reconciliation/email-matches`);
+      const res = await fetch(`${apiUrl}/api/v1/email-reconciliation/matches`);
       if (res.ok) {
         const data = await res.json();
-        setMatches(data);
+        setMatches(data.matches || []);
       }
     } catch (err) {
       console.error('Failed to fetch email matches:', err);
@@ -55,29 +61,29 @@ export const EmailMatchingView: React.FC<EmailMatchingViewProps> = ({ language }
   });
 
   const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'Có email khớp':
-        return (
-          <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5 w-max">
-            <CheckCircle2 className="w-3.5 h-3.5" />
-            <span>{language === 'vi' ? 'Có email khớp' : 'Matched Email'}</span>
-          </span>
-        );
-      case 'Email nghi giả':
-        return (
-          <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-500/15 text-rose-400 border border-rose-500/30 flex items-center gap-1.5 w-max">
-            <ShieldAlert className="w-3.5 h-3.5" />
-            <span>{language === 'vi' ? 'Email nghi giả' : 'Suspicious Fake'}</span>
-          </span>
-        );
-      default:
-        return (
-          <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30 flex items-center gap-1.5 w-max">
-            <HelpCircle className="w-3.5 h-3.5" />
-            <span>{language === 'vi' ? 'Không tìm thấy' : 'Not Found'}</span>
-          </span>
-        );
+    const translatedText = translateStatus(status, language);
+    if (status === 'Có email khớp') {
+      return (
+        <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5 w-max">
+          <CheckCircle2 className="w-3.5 h-3.5" />
+          <span>{translatedText}</span>
+        </span>
+      );
     }
+    if (status === 'Email nghi giả') {
+      return (
+        <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-500/15 text-rose-400 border border-rose-500/30 flex items-center gap-1.5 w-max">
+          <ShieldAlert className="w-3.5 h-3.5" />
+          <span>{translatedText}</span>
+        </span>
+      );
+    }
+    return (
+      <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30 flex items-center gap-1.5 w-max">
+        <HelpCircle className="w-3.5 h-3.5" />
+        <span>{translatedText}</span>
+      </span>
+    );
   };
 
   return (
@@ -199,17 +205,17 @@ export const EmailMatchingView: React.FC<EmailMatchingViewProps> = ({ language }
                       {item.confidence_percentage}
                     </div>
                     <div className="text-[10px] text-[var(--text-muted)]">
-                      {item.confidence_label}
+                      {translateConfidence(item.confidence_label, language)}
                     </div>
                   </td>
 
                   {/* Col 5: Lý do & Source */}
                   <td className="py-3 px-4 max-w-sm">
                     <div className="text-[11px] text-[var(--text-secondary)] leading-relaxed">
-                      {item.match_reason}
+                      {translateEmailReason(item.match_reason, language)}
                     </div>
                     <div className="text-[10px] text-[var(--text-muted)] font-mono mt-1">
-                      {language === 'vi' ? 'Nguồn:' : 'Source:'} {item.source_used}
+                      {language === 'vi' ? 'Nguồn:' : 'Source:'} {translateEmailSource(item.source_used, language)}
                     </div>
                   </td>
                 </tr>

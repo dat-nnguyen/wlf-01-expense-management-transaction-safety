@@ -205,7 +205,16 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ language }) => {
                   </div>
                   <div>
                     <div className="font-semibold text-xs text-[var(--text-primary)]">{item.merchant}</div>
-                    <div className="text-[11px] text-[var(--text-muted)]">{item.category} • {language === 'vi' ? 'Ngày:' : 'Date:'} {item.date}</div>
+                    <div className="text-[11px] text-[var(--text-muted)]">
+                      {item.category === 'ad_spend'
+                        ? (language === 'vi' ? 'Quảng cáo (Ads)' : 'Advertising (Ads)')
+                        : item.category === 'subscription'
+                        ? (language === 'vi' ? 'Thuê bao (SaaS)' : 'Subscriptions (SaaS)')
+                        : item.category === 'cloud'
+                        ? (language === 'vi' ? 'Máy chủ (Cloud)' : 'Cloud Infrastructure')
+                        : item.category}{' '}
+                      • {language === 'vi' ? 'Ngày:' : 'Date:'} {item.date}
+                    </div>
                   </div>
                 </div>
                 <div className="font-mono font-bold text-sm text-[var(--text-primary)]">
