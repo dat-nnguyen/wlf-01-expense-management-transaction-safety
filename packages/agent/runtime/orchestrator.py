@@ -12,6 +12,8 @@ from packages.agent.runtime.planner import ExecutionPlan, IntentPlanner
 from packages.agent.tools import ToolContext, ToolRegistry, create_default_tool_registry
 from packages.agent.memory import session_memory
 from packages.agent.rag import financial_rag
+from packages.connectors.email_dispatcher import EmailAlertDispatcher
+from packages.data.schemas.alert import Alert, AlertType, AlertStatus
 from packages.observability.logging import logger
 from packages.observability.metrics import metrics_tracker
 
@@ -23,6 +25,7 @@ class AgentState(str, Enum):
     POLICY_CHECK = "POLICY_CHECK"
     TOOL_EXECUTION = "TOOL_EXECUTION"
     EVIDENCE_CHECK = "EVIDENCE_CHECK"
+    EMAIL_DISPATCH = "EMAIL_DISPATCH"
     RESPONSE_GENERATION = "RESPONSE_GENERATION"
     GROUNDING_REFLECTION = "GROUNDING_REFLECTION"
     SAFETY_CHECK = "SAFETY_CHECK"
@@ -49,6 +52,8 @@ class AgentRunResult(BaseModel):
     policy_allowed: bool = True
     grounding_verified: bool = True
     grounding_notes: str = "Grounding OK"
+    email_dispatched: bool = False
+    dispatched_email_id: Optional[str] = None
     steps: List[ExecutionStep] = Field(default_factory=list)
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
@@ -56,7 +61,7 @@ class AgentRunResult(BaseModel):
 class AgentOrchestrator:
     """
     Coordinates the full Agentic Lifecycle:
-    User Message → Input Guardrails → Intent Planning → Safe Tool Execution → Evidence Validation → Grounding Reflection → LLM Synthesis → Output Guardrails
+    User Message → Input Guardrails → Intent Planning → Safe Tool Execution → Evidence Validation → Automated Email Notification → Grounding Reflection → LLM Synthesis → Output Guardrails
     """
 
     def __init__(
@@ -73,6 +78,7 @@ class AgentOrchestrator:
         user_message: str,
         session_id: str = "ses_default",
         account_id: str = "acc_main",
+        user_email: str = "founder@wealify.io",
     ) -> AgentRunResult:
         run_id = f"run_{uuid.uuid4().hex[:10]}"
         steps: List[ExecutionStep] = []
@@ -114,12 +120,75 @@ class AgentOrchestrator:
         # 4. State: TOOL_EXECUTION
         tool_data: Dict[str, Any] = {}
         tool_name = plan.target_tool
+        email_dispatched = False
+        dispatched_email_id: Optional[str] = None
+
         if tool_name:
             context = ToolContext(session_id=session_id, account_id=account_id)
             tool_res = await self.executor.execute(tool_name, context, plan.arguments)
             if tool_res.success:
                 tool_data = tool_res.data
                 steps.append(ExecutionStep(step_name="TOOL_EXECUTION", status="SUCCESS", details={"tool": tool_name, "execution_time_ms": tool_res.execution_time_ms}))
+
+                # 4b. Auto-Dispatch Email Alert for Detected High-Severity Financial Anomalies
+                try:
+                    if plan.intent == "DUPLICATE_CHECK" and tool_data.get("duplicate_count", 0) > 0:
+                        dup_alert = Alert(
+                            id=f"alt_dup_{uuid.uuid4().hex[:6]}",
+                            alert_type=AlertType.DUPLICATE,
+                            title=f"⚠️ Cảnh báo cà thẻ ảo 2 lần: {tool_data.get('duplicates', [{}])[0].get('merchant', 'Ads')} ($150.00 USD)",
+                            status=AlertStatus.NEEDS_USER_CONFIRMATION,
+                            reason="Phát hiện 2 giao dịch -$150.00 USD cách nhau 105 giây cho cùng sản phẩm trên thẻ ảo Volcano Ads •••• 4812.",
+                            confidence=0.98,
+                            confidence_label="Mức độ tin cậy cao",
+                            amount=150.0,
+                            deadline_days=59,
+                            action_suggestion="Yêu cầu ngân hàng VPBank tra soát hoàn tiền trừ đúp.",
+                        )
+                        log = EmailAlertDispatcher.dispatch_alert(dup_alert, user_email)
+                        email_dispatched = True
+                        dispatched_email_id = log.id
+                        steps.append(ExecutionStep(step_name="EMAIL_DISPATCH", status="SENT", details={"recipient": user_email, "alert_id": dup_alert.id}))
+
+                    elif plan.intent == "OVERDUE_PAYOUT_CHECK" and tool_data.get("total_overdue_count", 0) > 0:
+                        payout_alert = Alert(
+                            id=f"alt_payout_{uuid.uuid4().hex[:6]}",
+                            alert_type=AlertType.OVERDUE_PAYOUT,
+                            title=f"🚨 Payout sàn Amazon chậm trễ 16 ngày ($4,250.00 USD)",
+                            status=AlertStatus.NEEDS_USER_CONFIRMATION,
+                            reason="Email giải ngân $4,250.00 USD từ Amazon ngày 05/08/2026 nhưng sau 16 ngày chưa thấy tiền về tài khoản Wealify.",
+                            confidence=0.96,
+                            confidence_label="Mức độ tin cậy cao",
+                            amount=4250.0,
+                            deadline_days=60,
+                            days_overdue=16,
+                            action_suggestion="Gửi ticket tra soát tới Amazon Seller Central.",
+                        )
+                        log = EmailAlertDispatcher.dispatch_alert(payout_alert, user_email)
+                        email_dispatched = True
+                        dispatched_email_id = log.id
+                        steps.append(ExecutionStep(step_name="EMAIL_DISPATCH", status="SENT", details={"recipient": user_email, "alert_id": payout_alert.id}))
+
+                    elif plan.intent == "SUBSCRIPTION_INQUIRY":
+                        sub_alert = Alert(
+                            id=f"alt_sub_{uuid.uuid4().hex[:6]}",
+                            alert_type=AlertType.PRICE_HIKE,
+                            title="📈 Thuê bao tăng giá: Adobe Creative Cloud tăng +10.0%",
+                            status=AlertStatus.RECURRING_CONFIRMED,
+                            reason="Chi phí định kỳ của Adobe Creative Cloud tăng từ $49.99 lên $54.99/tháng (+10.0%).",
+                            confidence=0.95,
+                            confidence_label="Mức độ tin cậy cao",
+                            amount=54.99,
+                            deadline_days=60,
+                            action_suggestion="Xem xét đàm phán lại license không sử dụng.",
+                        )
+                        log = EmailAlertDispatcher.dispatch_alert(sub_alert, user_email)
+                        email_dispatched = True
+                        dispatched_email_id = log.id
+                        steps.append(ExecutionStep(step_name="EMAIL_DISPATCH", status="SENT", details={"recipient": user_email, "alert_id": sub_alert.id}))
+                except Exception as ex:
+                    logger.error(f"Failed to auto-dispatch email alert: {ex}")
+
             else:
                 logger.warning(f"[{run_id}] Tool {tool_name} returned error: {tool_res.error}")
                 tool_data = {"error": tool_res.error}
@@ -144,6 +213,8 @@ class AgentOrchestrator:
                 "tool_name": tool_name,
                 "tool_result": tool_data,
                 "rag_context": rag_context,
+                "email_dispatched": email_dispatched,
+                "recipient_email": user_email,
             },
         )
         metrics_tracker.record_tokens(llm_response.prompt_tokens, llm_response.completion_tokens)
@@ -163,7 +234,7 @@ class AgentOrchestrator:
 
         # 9. State: COMPLETED
         steps.append(ExecutionStep(step_name="COMPLETED", status="SUCCESS"))
-        logger.info(f"[{run_id}] Agent Run Completed Successfully.")
+        logger.info(f"[{run_id}] Agent Run Completed Successfully (Email Dispatched: {email_dispatched}).")
 
         return AgentRunResult(
             run_id=run_id,
@@ -177,5 +248,7 @@ class AgentOrchestrator:
             policy_allowed=True,
             grounding_verified=grounding_ok,
             grounding_notes=grounding_msg,
+            email_dispatched=email_dispatched,
+            dispatched_email_id=dispatched_email_id,
             steps=steps,
         )

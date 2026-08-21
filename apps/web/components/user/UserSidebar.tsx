@@ -1,6 +1,5 @@
 import React from 'react';
 import {
-  Shield,
   MessagesSquare,
   LayoutDashboard,
   Receipt,
@@ -16,12 +15,15 @@ import {
   EyeOff,
   TrendingUp,
 } from 'lucide-react';
+import { Language } from '../../types';
+import { TRANSLATIONS } from '../../data/translations';
 
 interface UserSidebarProps {
   activeNav: string;
   setActiveNav: (nav: string) => void;
   isBalanceMasked: boolean;
   setIsBalanceMasked: (masked: boolean) => void;
+  language: Language;
 }
 
 export const UserSidebar: React.FC<UserSidebarProps> = ({
@@ -29,144 +31,152 @@ export const UserSidebar: React.FC<UserSidebarProps> = ({
   setActiveNav,
   isBalanceMasked,
   setIsBalanceMasked,
+  language,
 }) => {
+  const t = TRANSLATIONS[language];
+
   return (
-    <aside className="w-64 bg-[#090e1a] border-r border-[rgba(255,255,255,0.08)] flex flex-col justify-between p-4 shrink-0 overflow-y-auto min-h-0">
-      <div className="space-y-6">
-        {/* Branding header inside sidebar */}
-        <div className="flex items-center gap-2.5 px-2">
-          <div className="w-7 h-7 rounded-lg bg-purple-600/30 border border-purple-500/50 flex items-center justify-center text-purple-400">
-            <Shield className="w-4 h-4" />
-          </div>
-          <div>
-            <div className="font-bold text-xs tracking-wider text-white">WEALIFY</div>
-            <div className="text-[10px] text-purple-400 tracking-widest uppercase">GUARDIAN</div>
-          </div>
-        </div>
-
-        {/* Primary AI Chat Button */}
-        <button
-          onClick={() => setActiveNav('chat')}
-          className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl bg-[#3b2a6f] text-white text-sm font-semibold border border-purple-500/40 shadow-lg shadow-purple-900/30 transition-all hover:brightness-110"
-        >
-          <MessagesSquare className="w-4 h-4 text-purple-300" />
-          <span>AI Chat</span>
-        </button>
-
-        {/* Navigation Section: TỔNG QUAN */}
+    <aside className="w-64 bg-[var(--bg-sidebar)] border-r border-[var(--border-subtle)] flex flex-col justify-between p-4 shrink-0 overflow-y-auto min-h-0 transition-colors">
+      <div className="space-y-5">
+        {/* Navigation Section: TỔNG QUAN / OVERVIEW */}
         <div className="space-y-1">
-          <div className="px-3 text-[11px] font-bold tracking-wider text-[#64748b] uppercase">TỔNG QUAN</div>
+          <div className="px-2 text-[10px] font-bold tracking-wider text-[var(--text-muted)] uppercase">
+            {t.overview}
+          </div>
+          <button
+            onClick={() => setActiveNav('chat')}
+            className={`sidebar-link ${activeNav === 'chat' ? 'active' : ''}`}
+          >
+            <MessagesSquare className="w-4 h-4" />
+            <span>{t.aiChat}</span>
+          </button>
           <button
             onClick={() => setActiveNav('dashboard')}
             className={`sidebar-link ${activeNav === 'dashboard' ? 'active' : ''}`}
           >
             <LayoutDashboard className="w-4 h-4" />
-            <span>Dashboard</span>
+            <span>{t.dashboard}</span>
           </button>
           <button
             onClick={() => setActiveNav('transactions')}
             className={`sidebar-link ${activeNav === 'transactions' ? 'active' : ''}`}
           >
             <Receipt className="w-4 h-4" />
-            <span>Giao dịch</span>
+            <span>{t.transactions}</span>
           </button>
           <button
             onClick={() => setActiveNav('cards')}
             className={`sidebar-link ${activeNav === 'cards' ? 'active' : ''}`}
           >
             <WalletCards className="w-4 h-4" />
-            <span>Thẻ &amp; Ví</span>
+            <span>{t.cardsAndWallets}</span>
           </button>
           <button
             onClick={() => setActiveNav('reports')}
             className={`sidebar-link ${activeNav === 'reports' ? 'active' : ''}`}
           >
             <BarChart3 className="w-4 h-4" />
-            <span>Báo cáo</span>
+            <span>{t.reports}</span>
           </button>
         </div>
 
         {/* Navigation Section: ANOMALY */}
         <div className="space-y-1">
-          <div className="px-3 text-[11px] font-bold tracking-wider text-[#64748b] uppercase">ANOMALY</div>
+          <div className="px-2 text-[10px] font-bold tracking-wider text-[var(--text-muted)] uppercase">
+            {t.anomaly}
+          </div>
           <button
             onClick={() => setActiveNav('anomalies')}
             className={`sidebar-link ${activeNav === 'anomalies' ? 'active' : ''}`}
           >
-            <AlertTriangle className="w-4 h-4 text-rose-400" />
-            <span>Bất thường</span>
+            <AlertTriangle className="w-4 h-4" />
+            <span>{t.anomalies}</span>
           </button>
           <button
             onClick={() => setActiveNav('reconciliation')}
             className={`sidebar-link ${activeNav === 'reconciliation' ? 'active' : ''}`}
           >
-            <Repeat className="w-4 h-4 text-amber-400" />
-            <span>Đối soát</span>
-          </button>
-          <button
-            onClick={() => setActiveNav('payouts')}
-            className={`sidebar-link ${activeNav === 'payouts' ? 'active' : ''}`}
-          >
-            <DollarSign className="w-4 h-4 text-emerald-400" />
-            <span>Payouts</span>
+            <Repeat className="w-4 h-4" />
+            <span>{t.reconciliation}</span>
           </button>
           <button
             onClick={() => setActiveNav('subscriptions')}
             className={`sidebar-link ${activeNav === 'subscriptions' ? 'active' : ''}`}
           >
-            <Repeat className="w-4 h-4 text-purple-400" />
-            <span>Subscriptions</span>
+            <DollarSign className="w-4 h-4" />
+            <span>{t.subscriptions}</span>
+          </button>
+          <button
+            onClick={() => setActiveNav('payout_radar')}
+            className={`sidebar-link ${activeNav === 'payout_radar' ? 'active' : ''}`}
+          >
+            <TrendingUp className="w-4 h-4" />
+            <span>{t.payoutRadar}</span>
           </button>
         </div>
 
-        {/* Navigation Section: KHÁC */}
+        {/* Navigation Section: HỆ THỐNG / SYSTEM */}
         <div className="space-y-1">
-          <div className="px-3 text-[11px] font-bold tracking-wider text-[#64748b] uppercase">KHÁC</div>
+          <div className="px-2 text-[10px] font-bold tracking-wider text-[var(--text-muted)] uppercase">
+            {t.system}
+          </div>
           <button
-            onClick={() => setActiveNav('alerts')}
-            className={`sidebar-link ${activeNav === 'alerts' ? 'active' : ''}`}
+            onClick={() => setActiveNav('notifications')}
+            className={`sidebar-link justify-between ${activeNav === 'notifications' ? 'active' : ''}`}
           >
-            <Bell className="w-4 h-4" />
-            <span>Cảnh báo</span>
+            <div className="flex items-center gap-2.5">
+              <Bell className="w-4 h-4" />
+              <span>{t.notifications}</span>
+            </div>
+            <span className="px-1.5 py-0.2 rounded bg-rose-500/15 text-rose-400 text-[10px] font-mono font-bold">
+              3
+            </span>
           </button>
           <button
-            onClick={() => setActiveNav('emails')}
-            className={`sidebar-link ${activeNav === 'emails' ? 'active' : ''}`}
+            onClick={() => setActiveNav('support')}
+            className={`sidebar-link ${activeNav === 'support' ? 'active' : ''}`}
           >
             <Mail className="w-4 h-4" />
-            <span>Hộp thư &amp; Email</span>
+            <span>{t.support}</span>
           </button>
           <button
             onClick={() => setActiveNav('settings')}
             className={`sidebar-link ${activeNav === 'settings' ? 'active' : ''}`}
           >
             <Settings className="w-4 h-4" />
-            <span>Cài đặt</span>
+            <span>{t.settings}</span>
           </button>
         </div>
       </div>
 
-      {/* Bottom Maskable Account Balance Card */}
-      <div className="p-3.5 rounded-2xl bg-[#0c111e] border border-[rgba(255,255,255,0.08)] shadow-inner">
-        <div className="flex items-center justify-between text-xs text-[#94a3b8] mb-1.5">
-          <span className="font-semibold text-white">Tài khoản chính</span>
+      {/* Account Balance Widget */}
+      <div className="p-3.5 rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] space-y-2 mt-4">
+        <div className="flex items-center justify-between text-xs text-[var(--text-muted)]">
+          <span className="font-medium">{t.balanceTitle}</span>
           <button
             onClick={() => setIsBalanceMasked(!isBalanceMasked)}
-            className="text-[#64748b] hover:text-white transition-colors"
-            title="Ẩn / Hiện số dư"
+            className="hover:text-[var(--text-primary)] transition-colors p-0.5"
+            title={isBalanceMasked ? t.showBalance : t.maskBalance}
           >
             {isBalanceMasked ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
           </button>
         </div>
-        <div className="text-[11px] text-[#64748b]">Số dư khả dụng</div>
-        <div className="text-lg font-bold text-white tracking-tight mt-0.5">
-          {isBalanceMasked ? '•••••••• USD' : '$0.00 USD'}
+
+        <div>
+          <div className="text-lg font-bold text-[var(--text-primary)] tracking-tight font-mono">
+            {isBalanceMasked ? '•••••••• USD' : '$128,490.50'} <span className="text-xs text-[var(--text-muted)] font-normal">USD</span>
+          </div>
+          <div className="text-[11px] text-[var(--text-muted)] font-mono">
+            {isBalanceMasked ? '≈ •••••••• ₫' : '≈ 3.26 Tỷ VNĐ'}
+          </div>
         </div>
-        <div className="text-xs text-[#94a3b8] font-medium">
-          {isBalanceMasked ? '= ••••••••• VND' : '= 0 VND'}
-        </div>
-        <div className="text-[11px] text-[#64748b] font-medium mt-1.5 flex items-center gap-1">
-          <span>Chế độ: Read-Only an toàn</span>
+
+        <div className="flex items-center justify-between text-[11px] pt-1.5 border-t border-[var(--border-subtle)]">
+          <span className="text-emerald-400 font-medium flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+            {t.userProBadge}
+          </span>
+          <span className="text-[var(--text-muted)] font-mono text-[10px]">4 Thẻ VPBank</span>
         </div>
       </div>
     </aside>

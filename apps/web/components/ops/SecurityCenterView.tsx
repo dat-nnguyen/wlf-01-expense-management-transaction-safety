@@ -1,119 +1,120 @@
 import React from 'react';
-import { Upload } from 'lucide-react';
+import { Upload, ShieldAlert, AlertTriangle, FileText, CheckCircle2, ArrowRight } from 'lucide-react';
+import { Language } from '../../types';
+import { TRANSLATIONS } from '../../data/translations';
 import { DEMO_SECURITY_CASES } from '../../data/mockData';
 
 interface SecurityCenterViewProps {
   onOpenVerifyModal: () => void;
   onSelectCase: (caseId: string) => void;
+  language: Language;
 }
 
 export const SecurityCenterView: React.FC<SecurityCenterViewProps> = ({
   onOpenVerifyModal,
   onSelectCase,
+  language,
 }) => {
+  const t = TRANSLATIONS[language];
+
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-5 transition-colors">
       {/* Security Overview KPIs */}
-      <div className="grid grid-cols-5 gap-4">
-        <div className="p-4 rounded-2xl bg-[#0c111e] border border-rose-500/30 space-y-1 shadow-lg">
-          <div className="text-xs text-[#94a3b8]">Total Security Alerts</div>
-          <div className="text-2xl font-black text-rose-400">12</div>
-          <div className="text-[10px] text-rose-300">Yêu cầu tra soát ngay</div>
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-3.5">
+        <div className="p-3.5 rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] space-y-1">
+          <div className="text-xs text-[var(--text-muted)] font-medium">{t.totalSecurityAlerts}</div>
+          <div className="text-xl font-bold text-rose-400 font-mono">12</div>
+          <div className="text-[10px] text-[var(--text-muted)]">{t.requireInvestigationNow}</div>
         </div>
-        <div className="p-4 rounded-2xl bg-[#0c111e] border border-rose-500/30 space-y-1 shadow-lg">
-          <div className="text-xs text-[#94a3b8]">High Risk Cases</div>
-          <div className="text-2xl font-black text-rose-400">3</div>
-          <div className="text-[10px] text-rose-300">Score &gt; 70/100</div>
+        <div className="p-3.5 rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] space-y-1">
+          <div className="text-xs text-[var(--text-muted)] font-medium">{t.highRiskCases}</div>
+          <div className="text-xl font-bold text-rose-400 font-mono">3</div>
+          <div className="text-[10px] text-[var(--text-muted)]">{t.scoreOver70}</div>
         </div>
-        <div className="p-4 rounded-2xl bg-[#0c111e] border border-amber-500/30 space-y-1 shadow-lg">
-          <div className="text-xs text-[#94a3b8]">Evidence Conflicts</div>
-          <div className="text-2xl font-black text-amber-400">7</div>
-          <div className="text-[10px] text-amber-300">Mâu thuẫn chứng từ</div>
+        <div className="p-3.5 rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] space-y-1">
+          <div className="text-xs text-[var(--text-muted)] font-medium">{t.evidenceConflicts}</div>
+          <div className="text-xl font-bold text-[var(--text-primary)] font-mono">7</div>
+          <div className="text-[10px] text-[var(--text-muted)]">{t.conflictingDocs}</div>
         </div>
-        <div className="p-4 rounded-2xl bg-[#0c111e] border border-cyan-500/30 space-y-1 shadow-lg">
-          <div className="text-xs text-[#94a3b8]">Unverified Payment Claims</div>
-          <div className="text-2xl font-black text-cyan-400">5</div>
-          <div className="text-[10px] text-cyan-300">Chưa vào sổ cái</div>
+        <div className="p-3.5 rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] space-y-1">
+          <div className="text-xs text-[var(--text-muted)] font-medium">{t.unverifiedClaims}</div>
+          <div className="text-xl font-bold text-[var(--text-primary)] font-mono">5</div>
+          <div className="text-[10px] text-[var(--text-muted)]">{t.notInLedger}</div>
         </div>
-        <div className="p-4 rounded-2xl bg-[#0c111e] border border-purple-500/30 space-y-1 shadow-lg">
-          <div className="text-xs text-[#94a3b8]">Unmatched References</div>
-          <div className="text-2xl font-black text-purple-400">4</div>
-          <div className="text-[10px] text-purple-300">Mã giao dịch giả mạo</div>
+        <div className="p-3.5 rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] space-y-1">
+          <div className="text-xs text-[var(--text-muted)] font-medium">{t.unmatchedRefs}</div>
+          <div className="text-xl font-bold text-[var(--text-primary)] font-mono">4</div>
+          <div className="text-[10px] text-[var(--text-muted)]">{t.fraudReference}</div>
         </div>
       </div>
 
       {/* Security Alert Table */}
-      <div className="p-5 rounded-2xl bg-[#0c111e] border border-[rgba(255,255,255,0.08)] space-y-4 shadow-xl">
+      <div className="p-4 rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] space-y-3">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-sm font-bold text-white">Security Alert Queue — Hàng đợi xử lý gian lận</h2>
-            <p className="text-xs text-[#64748b]">Tất cả các vụ việc mâu thuẫn chứng từ và ảnh chụp màn hình chuyển khoản</p>
+            <h2 className="text-xs font-bold text-[var(--text-primary)] uppercase tracking-wider">{t.securityAlertQueue}</h2>
+            <p className="text-xs text-[var(--text-muted)]">{t.securityQueueDesc}</p>
           </div>
           <button
             onClick={onOpenVerifyModal}
-            className="btn-secondary text-xs"
+            className="btn-wealify text-xs py-1.5 px-3"
           >
-            <Upload className="w-3.5 h-3.5 text-purple-400" />
-            <span>Xác minh ảnh chứng từ mới</span>
+            <Upload className="w-3.5 h-3.5" />
+            <span>{t.verifyNewImage}</span>
           </button>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="text-[#64748b] border-b border-white/5 pb-2.5">
-                <th className="pb-2">Mã Case</th>
-                <th className="pb-2">Loại rủi ro</th>
-                <th className="pb-2">Số tiền tuyên bố</th>
-                <th className="pb-2">Mã tham chiếu</th>
-                <th className="pb-2">Evidence Score</th>
-                <th className="pb-2">Trạng thái</th>
-                <th className="pb-2 text-right">Thao tác</th>
+              <tr className="border-b border-[var(--border-subtle)] text-[var(--text-muted)]">
+                <th className="pb-2.5 font-semibold uppercase text-[10px]">{t.caseId}</th>
+                <th className="pb-2.5 font-semibold uppercase text-[10px]">{t.customerName}</th>
+                <th className="pb-2.5 font-semibold uppercase text-[10px]">{t.claimedAmount}</th>
+                <th className="pb-2.5 font-semibold uppercase text-[10px]">{t.refCode}</th>
+                <th className="pb-2.5 font-semibold uppercase text-[10px]">{t.conflictScore}</th>
+                <th className="pb-2.5 font-semibold uppercase text-[10px]">{t.status}</th>
+                <th className="pb-2.5 font-semibold uppercase text-[10px]">{t.action}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5">
-              {DEMO_SECURITY_CASES.length > 0 ? (
-                DEMO_SECURITY_CASES.map((c, cIdx) => (
-                  <tr key={cIdx} className="hover:bg-white/5 transition-colors">
-                    <td className="py-3 font-mono text-purple-400 font-medium">{c.id}</td>
-                    <td className="py-3 font-medium text-white">{c.title}</td>
-                    <td className="py-3 font-bold text-rose-400">{c.amount}</td>
-                    <td className="py-3 font-mono text-[#94a3b8]">{c.ref}</td>
-                    <td className="py-3">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                        c.score > 70 ? 'bg-rose-500/20 text-rose-300' : 'bg-amber-500/20 text-amber-300'
-                      }`}>
-                        {c.score}/100
+            <tbody className="divide-y divide-[var(--border-subtle)]">
+              {DEMO_SECURITY_CASES.map((item, idx) => (
+                <tr key={idx} className="hover:bg-[var(--bg-card-hover)] transition-colors">
+                  <td className="py-3 font-mono font-medium text-[var(--text-muted)]">{item.id}</td>
+                  <td className="py-3">
+                    <div className="font-semibold text-[var(--text-primary)]">{item.title}</div>
+                    <div className="text-[10px] text-[var(--text-muted)] font-mono">User ID: acc_main (Dat Nguyen)</div>
+                  </td>
+                  <td className="py-3 font-mono font-bold text-[var(--text-primary)]">{item.amount}</td>
+                  <td className="py-3 font-mono text-[var(--text-secondary)]">{item.ref}</td>
+                  <td className="py-3">
+                    <div className="flex items-center gap-1.5 font-mono">
+                      <span className={`font-bold ${item.score > 70 ? 'text-rose-400' : 'text-amber-400'}`}>
+                        {item.score}/100
                       </span>
-                    </td>
-                    <td className="py-3">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
-                        c.status === 'Đang điều tra'
-                          ? 'bg-amber-500/20 text-amber-300'
-                          : c.status === 'Đã giải quyết'
-                          ? 'bg-emerald-500/20 text-emerald-300'
-                          : 'bg-rose-500/20 text-rose-300'
-                      }`}>
-                        {c.status}
-                      </span>
-                    </td>
-                    <td className="py-3 text-right">
-                      <button
-                        onClick={() => onSelectCase(c.id)}
-                        className="px-2.5 py-1 rounded bg-purple-600/30 hover:bg-purple-600/50 text-purple-200 text-[11px] font-medium transition-colors"
-                      >
-                        Tra soát
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={7} className="py-10 text-center text-xs text-[#64748b]">
-                    Chưa có hồ sơ cảnh báo an ninh nào trong hàng đợi. Hệ thống đang bảo vệ an toàn.
+                    </div>
+                  </td>
+                  <td className="py-3">
+                    <span
+                      className={`px-2 py-0.5 rounded text-[10px] font-medium border ${
+                        item.score > 70
+                          ? 'bg-rose-500/15 text-rose-400 border-rose-500/25'
+                          : 'bg-amber-500/15 text-amber-400 border-amber-500/25'
+                      }`}
+                    >
+                      {item.badge}
+                    </span>
+                  </td>
+                  <td className="py-3">
+                    <button
+                      onClick={() => onSelectCase(item.id)}
+                      className="px-2.5 py-1 rounded-lg bg-[var(--bg-secondary)] hover:bg-[var(--bg-card)] text-[var(--text-primary)] font-medium text-[11px] border border-[var(--border-subtle)] transition-colors"
+                    >
+                      {t.viewDetails}
+                    </button>
                   </td>
                 </tr>
-              )}
+              ))}
             </tbody>
           </table>
         </div>

@@ -1,12 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { AppMode, Language, Message, EmailModalState } from '../types';
-import { INITIAL_MESSAGES } from '../data/mockData';
-
-// Layout & Modular Components
 import { Header } from '../components/layout/Header';
-import { Toast } from '../components/layout/Toast';
 import { UserSidebar } from '../components/user/UserSidebar';
 import { CopilotChat } from '../components/user/CopilotChat';
 import { ChatInput } from '../components/user/ChatInput';
@@ -15,29 +10,31 @@ import { OpsSidebar } from '../components/ops/OpsSidebar';
 import { OpsHeader } from '../components/ops/OpsHeader';
 import { OpsDashboard } from '../components/ops/OpsDashboard';
 import { SecurityCenterView } from '../components/ops/SecurityCenterView';
+import { BotPerformanceDashboard } from '../components/analytics/BotPerformanceDashboard';
+import { EmailNotificationCenter } from '../components/notifications/EmailNotificationCenter';
 import { EvidenceVerificationModal } from '../components/modals/EvidenceVerificationModal';
 import { EmailConfirmationModal } from '../components/modals/EmailConfirmationModal';
+import { Message, AppMode, EmailModalState, Language } from '../types';
+import { TRANSLATIONS } from '../data/translations';
 
-export default function WealifyGuardianApp() {
-  // Navigation & Mode States
+export default function Home() {
   const [appMode, setAppMode] = useState<AppMode>('user_copilot');
   const [userNav, setUserNav] = useState('chat');
   const [opsNav, setOpsNav] = useState('dashboard');
   const [language, setLanguage] = useState<Language>('vi');
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
 
-  // User View States
-  const [isBalanceMasked, setIsBalanceMasked] = useState(false);
-  const [messages, setMessages] = useState<Message[]>(INITIAL_MESSAGES);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [inputMsg, setInputMsg] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
-
-  // Modals
   const [isVerifyModalOpen, setIsVerifyModalOpen] = useState(false);
+  const [isBalanceMasked, setIsBalanceMasked] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
   const [emailModal, setEmailModal] = useState<EmailModalState>({
     isOpen: false,
-    to: 'founder@wealify.io',
+    to: 'support@wealify.io',
     subject: '[Guardian Report] Tra soát giao dịch $150 Facebook Ads & Xác minh chứng từ',
     body: `Kính gửi Người dùng Wealify,
 
@@ -52,6 +49,48 @@ Wealify Guardian Financial Safety Team`,
   });
 
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const t = TRANSLATIONS[language];
+
+  // Initialize theme & language from localStorage on client
+  useEffect(() => {
+    try {
+      const savedTheme = localStorage.getItem('wealify_theme') as 'dark' | 'light' | null;
+      if (savedTheme) {
+        setTheme(savedTheme);
+        document.documentElement.classList.toggle('light', savedTheme === 'light');
+        document.documentElement.classList.toggle('dark', savedTheme === 'dark');
+      } else {
+        document.documentElement.classList.add('dark');
+      }
+
+      const savedLang = localStorage.getItem('wealify_lang') as Language | null;
+      if (savedLang) {
+        setLanguage(savedLang);
+      }
+    } catch {
+      // Ignore
+    }
+  }, []);
+
+  const handleThemeChange = (newTheme: 'dark' | 'light') => {
+    setTheme(newTheme);
+    try {
+      localStorage.setItem('wealify_theme', newTheme);
+      document.documentElement.classList.toggle('light', newTheme === 'light');
+      document.documentElement.classList.toggle('dark', newTheme === 'dark');
+    } catch {
+      // Ignore
+    }
+  };
+
+  const handleLanguageChange = (newLang: Language) => {
+    setLanguage(newLang);
+    try {
+      localStorage.setItem('wealify_lang', newLang);
+    } catch {
+      // Ignore
+    }
+  };
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -65,13 +104,13 @@ Wealify Guardian Financial Safety Team`,
   const handleCopy = (text: string, id: string) => {
     navigator.clipboard?.writeText(text);
     setCopiedId(id);
-    showToast(`Đã sao chép: ${text}`);
+    showToast(`${t.copiedSuccess} ${text}`);
     setTimeout(() => setCopiedId(null), 2000);
   };
 
   const handleSendMessage = async (customText?: string) => {
-    const textToSend = (customText !== undefined ? customText : inputMsg).trim();
-    if (!textToSend || isTyping) return;
+    const textToSend = customText || inputMsg;
+    if (!textToSend.trim() || isTyping) return;
 
     const newMsg: Message = {
       id: `usr_${Date.now()}`,
@@ -81,14 +120,13 @@ Wealify Guardian Financial Safety Team`,
     };
 
     setMessages((prev) => [...prev, newMsg]);
-    setInputMsg('');
+    if (!customText) setInputMsg('');
     setIsTyping(true);
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 35000);
 
     try {
-      // Smart API resolution: env variable -> localhost:8000 -> live Render backend
       let apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
       if (!apiUrl) {
         if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
@@ -122,28 +160,50 @@ Wealify Guardian Financial Safety Team`,
             text: data.response,
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             intent: data.intent,
-            classification: data.policy_allowed ? (isAuthCheck ? 'Cần bạn tự xác nhận' : 'Định kỳ đã xác định') : 'Ranh giới nghiêm cấm',
-            confidence: 98,
+            classification: !data.policy_allowed
+              ? (language === 'vi' ? 'Ranh giới nghiêm cấm (Policy Denied)' : 'Policy Denied')
+              : data.intent === 'VERIFY_TRANSACTION_AUTHENTICITY' || isAuthCheck
+              ? (language === 'vi' ? 'Cần bạn tự xác nhận' : 'Needs User Confirmation')
+              : data.intent === 'DUPLICATE_CHECK'
+              ? (language === 'vi' ? 'Cà thẻ trùng lặp' : 'Duplicate Charge Detected')
+              : data.intent === 'OVERDUE_PAYOUT_CHECK'
+              ? (language === 'vi' ? 'Payout chậm trễ' : 'Overdue Payout')
+              : data.intent === 'BUSINESS_HEALTH_ADVISORY'
+              ? (language === 'vi' ? 'Cố vấn tài chính & ROAS' : 'Financial Advisory')
+              : data.intent === 'TRANSACTION_SEARCH'
+              ? (language === 'vi' ? 'Tra cứu sổ cái' : 'Ledger Search')
+              : data.intent === 'SUBSCRIPTION_INQUIRY'
+              ? (language === 'vi' ? 'Định kỳ đã xác định' : 'Confirmed Recurring')
+              : (language === 'vi' ? 'Đã đối soát an toàn' : 'Safety Verified'),
+            confidence: !data.policy_allowed ? 100 : 98,
             security_verification: isAuthCheck ? {
               claimed_amount: 2500,
               claimed_ref: 'WF-839291',
               claimed_status: 'COMPLETED',
               source_type: 'SCREENSHOT',
               conflict_score: 92,
-              security_tag: 'Có mâu thuẫn bằng chứng',
+              security_tag: language === 'vi' ? 'Có mâu thuẫn bằng chứng' : 'Evidence Conflict Detected',
               ledger_match: false,
               wallet_match: false,
               email_match: false,
               ref_match: false,
             } : undefined,
-            suggested_chips: isAuthCheck ? [
-              'Xem chi tiết bằng chứng',
-              'Gửi báo cáo cho tôi',
-              'Kiểm tra lại với đối tác',
+            suggested_chips: !data.policy_allowed ? [
+              t.chipCheckTx,
+              t.chipCheckDup,
+              language === 'vi' ? 'Xem quy định an toàn' : 'View Safety Policy',
+            ] : isAuthCheck ? [
+              t.chipViewEvidence,
+              t.chipSendReport,
+              t.chipRecheckPartner,
+            ] : data.intent === 'DUPLICATE_CHECK' ? [
+              t.chipViewDisputeTime,
+              language === 'vi' ? 'Mẫu đơn tra soát VPBank' : 'VPBank Dispute Form',
+              t.chipSendReport,
             ] : [
-              'Kiểm tra giao dịch',
-              'Xem hạn khiếu nại',
-              'Báo cáo cho tôi',
+              t.chipCheckTx,
+              t.chipViewDisputeTime,
+              t.chipSendReport,
             ],
           },
         ]);
@@ -153,9 +213,11 @@ Wealify Guardian Financial Safety Team`,
           {
             id: `bot_${Date.now()}`,
             sender: 'bot',
-            text: `⚠️ **Lỗi kết nối Backend (${response.status})**: Không thể nhận phản hồi từ Agent Orchestrator. Vui lòng kiểm tra lại dịch vụ API tại \`${apiUrl}\`.`,
+            text: language === 'vi' 
+              ? `⚠️ **Lỗi kết nối Backend (${response.status})**: Không thể nhận phản hồi từ Agent Orchestrator. Vui lòng kiểm tra lại dịch vụ API tại \`${apiUrl}\`.`
+              : `⚠️ **Backend Connection Error (${response.status})**: Unable to receive response from Agent Orchestrator. Please check API server at \`${apiUrl}\`.`,
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            classification: 'Chưa đủ dữ liệu',
+            classification: language === 'vi' ? 'Chưa đủ dữ liệu' : 'Insufficient Data',
             confidence: 0,
           },
         ]);
@@ -170,10 +232,12 @@ Wealify Guardian Financial Safety Team`,
           id: `bot_${Date.now()}`,
           sender: 'bot',
           text: isAbort
-            ? '⏱️ **Hết thời gian phản hồi (Timeout)**: Yêu cầu phân tích AI mất nhiều thời gian hơn dự kiến. Vui lòng thử gửi lại câu hỏi.'
-            : `⚠️ **Không thể kết nối đến máy chủ Backend**: ${err.message || 'Lỗi mạng'}. Hãy đảm bảo server FastAPI đang chạy tại \`http://127.0.0.1:8000\` hoặc trên Render.`,
+            ? (language === 'vi' ? '⏱️ **Hết thời gian phản hồi (Timeout)**: Yêu cầu phân tích AI mất nhiều thời gian hơn dự kiến. Vui lòng thử gửi lại câu hỏi.' : '⏱️ **Request Timeout**: The AI analysis request took longer than expected. Please retry.')
+            : (language === 'vi' 
+                ? `⚠️ **Không thể kết nối đến máy chủ Backend**: ${err.message || 'Lỗi mạng'}. Hãy đảm bảo server FastAPI đang chạy tại \`http://127.0.0.1:8000\`.`
+                : `⚠️ **Unable to connect to Backend Server**: ${err.message || 'Network error'}. Please ensure FastAPI server is active at \`http://127.0.0.1:8000\`.`),
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          classification: 'Chưa đủ dữ liệu',
+          classification: language === 'vi' ? 'Chưa đủ dữ liệu' : 'Insufficient Data',
           confidence: 0,
         },
       ]);
@@ -181,11 +245,11 @@ Wealify Guardian Financial Safety Team`,
   };
 
   const handleChipClick = (chip: string) => {
-    if (chip === 'Báo cáo cho tôi' || chip === 'Gửi báo cáo cho tôi') {
+    if (chip === 'Báo cáo cho tôi' || chip === 'Gửi báo cáo cho tôi' || chip === 'Email report to me') {
       setEmailModal((prev) => ({ ...prev, isOpen: true }));
       return;
     }
-    if (chip.includes('bằng chứng') || chip.includes('ảnh')) {
+    if (chip.includes('bằng chứng') || chip.includes('ảnh') || chip.includes('evidence')) {
       setIsVerifyModalOpen(true);
       return;
     }
@@ -193,74 +257,99 @@ Wealify Guardian Financial Safety Team`,
   };
 
   return (
-    <div className="flex flex-col h-screen w-screen bg-[#060913] text-[#f8fafc] overflow-hidden font-sans">
+    <div className="flex flex-col h-screen w-screen bg-[var(--bg-primary)] text-[var(--text-primary)] overflow-hidden font-sans transition-colors duration-300">
       {/* Top Global Mode Navigation */}
       <Header
         appMode={appMode}
         setAppMode={setAppMode}
         language={language}
-        setLanguage={setLanguage}
+        setLanguage={handleLanguageChange}
+        theme={theme}
+        setTheme={handleThemeChange}
       />
 
       {/* Main Container Area */}
       {appMode === 'user_copilot' ? (
-        /* End-User AI Copilot (Screenshot 1) - 3 Column Layout */
+        /* End-User AI Copilot - Dynamic Navigation */
         <div className="flex flex-1 overflow-hidden min-h-0">
           <UserSidebar
             activeNav={userNav}
             setActiveNav={setUserNav}
             isBalanceMasked={isBalanceMasked}
             setIsBalanceMasked={setIsBalanceMasked}
+            language={language}
           />
 
-          <main className="flex-1 flex flex-col bg-[#060913] overflow-hidden min-h-0">
-            <CopilotChat
-              messages={messages}
-              isTyping={isTyping}
-              onChipClick={handleChipClick}
-              chatEndRef={chatEndRef}
-            />
+          {userNav === 'notifications' ? (
+            <main className="flex-1 flex flex-col bg-[var(--bg-primary)] overflow-y-auto">
+              <EmailNotificationCenter language={language} />
+            </main>
+          ) : userNav === 'dashboard' || userNav === 'reports' ? (
+            <main className="flex-1 flex flex-col bg-[var(--bg-primary)] overflow-y-auto">
+              <OpsDashboard language={language} />
+            </main>
+          ) : (
+            <>
+              {/* Chat Thread */}
+              <main className="flex-1 flex flex-col bg-[var(--bg-primary)] min-h-0 overflow-hidden">
+                <CopilotChat
+                  messages={messages}
+                  isTyping={isTyping}
+                  onChipClick={handleChipClick}
+                  chatEndRef={chatEndRef}
+                  language={language}
+                />
 
-            <ChatInput
-              inputMsg={inputMsg}
-              setInputMsg={setInputMsg}
-              onSendMessage={handleSendMessage}
-              onOpenVerifyModal={() => setIsVerifyModalOpen(true)}
-              language={language}
-              isTyping={isTyping}
-            />
-          </main>
+                <ChatInput
+                  inputMsg={inputMsg}
+                  setInputMsg={setInputMsg}
+                  onSendMessage={handleSendMessage}
+                  onOpenVerifyModal={() => setIsVerifyModalOpen(true)}
+                  language={language}
+                  isTyping={isTyping}
+                />
+              </main>
 
-          <TransactionDetailPanel
-            copiedId={copiedId}
-            onCopy={handleCopy}
-            onSendMessage={handleSendMessage}
-          />
+              <TransactionDetailPanel
+                copiedId={copiedId}
+                onCopy={handleCopy}
+                onSendMessage={handleSendMessage}
+                language={language}
+              />
+            </>
+          )}
         </div>
       ) : (
-        /* Wealify Operations & Security Console (Screenshot 2) */
+        /* Wealify Operations & Security Console */
         <div className="flex flex-1 overflow-hidden">
           <OpsSidebar
             activeNav={opsNav}
             setActiveNav={setOpsNav}
+            language={language}
           />
 
-          <main className="flex-1 flex flex-col bg-[#060913] overflow-y-auto">
+          <main className="flex-1 flex flex-col bg-[var(--bg-primary)] overflow-y-auto transition-colors duration-300">
             <OpsHeader
               activeNav={opsNav}
               onOpenVerifyModal={() => setIsVerifyModalOpen(true)}
+              language={language}
             />
 
             {opsNav === 'security_center' ? (
               <SecurityCenterView
                 onOpenVerifyModal={() => setIsVerifyModalOpen(true)}
                 onSelectCase={(caseId) => {
-                  showToast(`Mở hồ sơ tra soát ${caseId}`);
+                  showToast(language === 'vi' ? `Mở hồ sơ tra soát ${caseId}` : `Opening case ${caseId}`);
                   setIsVerifyModalOpen(true);
                 }}
+                language={language}
               />
+            ) : opsNav === 'notifications' ? (
+              <EmailNotificationCenter language={language} />
+            ) : opsNav === 'bot_list' || opsNav === 'system_stats' ? (
+              <BotPerformanceDashboard language={language} />
             ) : (
-              <OpsDashboard />
+              <OpsDashboard language={language} />
             )}
           </main>
         </div>
@@ -274,20 +363,27 @@ Wealify Guardian Financial Safety Team`,
           setIsVerifyModalOpen(false);
           setEmailModal((prev) => ({ ...prev, isOpen: true }));
         }}
+        language={language}
       />
 
-      {/* Explicit User Email Confirmation Modal */}
+      {/* Email Report Confirmation Modal */}
       <EmailConfirmationModal
         emailModal={emailModal}
         onClose={() => setEmailModal((prev) => ({ ...prev, isOpen: false }))}
         onConfirmSend={() => {
           setEmailModal((prev) => ({ ...prev, isOpen: false }));
-          showToast(`✓ Đã gửi báo cáo bảo mật tới email: ${emailModal.to}`);
+          showToast(language === 'vi' ? 'Đã gửi báo cáo qua email' : 'Report email sent successfully');
         }}
+        language={language}
       />
 
-      {/* Toast Notification */}
-      {toastMessage && <Toast message={toastMessage} />}
+      {/* Floating Status Toast */}
+      {toastMessage && (
+        <div className="fixed bottom-6 right-6 px-4 py-2.5 rounded-xl bg-slate-900 border border-[var(--border-subtle)] text-xs text-[var(--text-primary)] shadow-2xl flex items-center gap-2 animate-fadeIn z-50">
+          <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+          <span>{toastMessage}</span>
+        </div>
+      )}
     </div>
   );
 }

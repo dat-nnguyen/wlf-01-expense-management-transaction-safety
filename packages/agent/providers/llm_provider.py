@@ -217,7 +217,9 @@ class MockLLMProvider(BaseLLMProvider):
             if txs:
                 lines = [f"🔎 **Tìm thấy {len(txs)} giao dịch liên quan:**\n"]
                 for t in txs:
-                    lines.append(f"• `{t.get('date')}` | **{t.get('merchant')}**: ${t.get('amount', 0):.2f} ({t.get('source')})")
+                    date_str = str(t.get('occurred_at') or t.get('date') or '')[:10]
+                    merchant_name = t.get('merchant_normalized') or t.get('merchant_raw') or t.get('merchant') or 'Giao dịch'
+                    lines.append(f"• `{date_str}` | **{merchant_name}**: ${t.get('amount', 0):.2f} USD ({t.get('source', 'card')})")
                 text = "\n".join(lines)
             else:
                 text = "Không tìm thấy giao dịch nào phù hợp với từ khóa của bạn."
@@ -263,21 +265,37 @@ class UnifiedLLMProvider(BaseLLMProvider):
         api_key: Optional[str] = None,
         base_url: Optional[str] = None,
     ):
-        self.provider = (provider or os.getenv("LLM_PROVIDER", "openrouter")).lower()
-        self.model = model or os.getenv("LLM_MODEL", "nvidia/nemotron-3.5-lightning:free")
+        load_dotenv(override=True)
+        self.provider = (provider or os.getenv("LLM_PROVIDER", "openrouter")).lower().strip()
+        self.model = model or os.getenv("LLM_MODEL") or self._default_model_for_provider()
         self.api_key = api_key or self._resolve_api_key()
         self.base_url = base_url or self._resolve_base_url()
         self.mock_fallback = MockLLMProvider()
 
+    def _default_model_for_provider(self) -> str:
+        defaults = {
+            "openrouter": "openai/gpt-4o-mini",
+            "openai": "gpt-4o-mini",
+            "gemini": "gemini-1.5-flash",
+            "google": "gemini-1.5-flash",
+            "claude": "claude-3-5-sonnet-20241022",
+            "anthropic": "claude-3-5-sonnet-20241022",
+            "groq": "llama-3.3-70b-versatile",
+            "deepseek": "deepseek-chat",
+            "ollama": "llama3",
+            "mock": "mock-guardian",
+        }
+        return defaults.get(self.provider, "openai/gpt-4o-mini")
+
     def _resolve_api_key(self) -> str:
         if self.provider == "openrouter":
-            return os.getenv("OPENROUTER_API_KEY") or ""
+            return os.getenv("OPENROUTER_API_KEY") or os.getenv("OPENAI_API_KEY") or ""
         elif self.provider in ["openai"]:
             return os.getenv("OPENAI_API_KEY") or ""
         elif self.provider in ["gemini", "google"]:
             return os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY") or ""
         elif self.provider in ["claude", "anthropic"]:
-            return os.getenv("ANTHROPIC_API_KEY") or ""
+            return os.getenv("ANTHROPIC_API_KEY") or os.getenv("CLAUDE_API_KEY") or ""
         elif self.provider == "groq":
             return os.getenv("GROQ_API_KEY") or ""
         elif self.provider == "deepseek":
@@ -303,8 +321,14 @@ class UnifiedLLMProvider(BaseLLMProvider):
         system_prompt: Optional[str] = None,
         context: Optional[Dict[str, Any]] = None,
     ) -> LLMResponse:
-        # If explicitly in mock testing mode, use mock generator
-        if self.provider == "mock":
+        # If disallowed mutation, return standard compliant policy response
+        if context and context.get("intent") == "DISALLOWED_MUTATION":
+            return await self.mock_fallback.generate(prompt, system_prompt, context)
+
+        # If mock mode or missing API key, use safe mock generator
+        if self.provider == "mock" or (not self.api_key and self.provider not in ["ollama", "local"]):
+            if self.provider != "mock" and not self.api_key:
+                logger.warning(f"No API key provided for '{self.provider}'. Falling back to deterministic Mock provider.")
             return await self.mock_fallback.generate(prompt, system_prompt, context)
 
         # If missing API key in live mode, return maintenance message

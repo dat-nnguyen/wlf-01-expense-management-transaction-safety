@@ -1,69 +1,73 @@
 import React from 'react';
 import { Mail, AlertTriangle, Check } from 'lucide-react';
-import { EmailModalState } from '../../types';
+import { EmailModalState, Language } from '../../types';
+import { TRANSLATIONS } from '../../data/translations';
 
 interface EmailConfirmationModalProps {
   emailModal: EmailModalState;
   onClose: () => void;
   onConfirmSend: () => void;
+  language: Language;
 }
 
 export const EmailConfirmationModal: React.FC<EmailConfirmationModalProps> = ({
   emailModal,
   onClose,
   onConfirmSend,
+  language,
 }) => {
   if (!emailModal.isOpen) return null;
+  const t = TRANSLATIONS[language];
 
   return (
-    <div className="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fadeIn">
-      <div className="w-full max-w-lg bg-[#0c111e] border border-purple-500/50 rounded-3xl p-6 space-y-5 shadow-2xl">
-        <div className="flex items-center gap-3 border-b border-white/10 pb-4">
-          <div className="w-10 h-10 rounded-xl bg-purple-600/30 text-purple-300 flex items-center justify-center">
-            <Mail className="w-5 h-5" />
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn">
+      <div className="w-full max-w-lg bg-[var(--bg-modal)] border border-[var(--border-subtle)] rounded-2xl p-5 space-y-4 shadow-xl">
+        <div className="flex items-center gap-2.5 border-b border-[var(--border-subtle)] pb-3">
+          <div className="w-8 h-8 rounded-lg bg-[#FC6508] text-white flex items-center justify-center">
+            <Mail className="w-4 h-4" />
           </div>
           <div>
-            <h3 className="font-bold text-base text-white">Xác Nhận Gửi Email Báo Cáo</h3>
-            <p className="text-xs text-[#94a3b8]">Chỉ gửi tới email đã xác thực của chính bạn</p>
+            <h3 className="font-bold text-sm text-[var(--text-primary)]">{t.emailModalTitle}</h3>
+            <p className="text-[11px] text-[var(--text-muted)]">{t.emailModalSubtitle}</p>
           </div>
         </div>
 
-        <div className="space-y-3 text-xs">
-          <div className="p-3 rounded-xl bg-[#131b2e] border border-white/5 space-y-1">
-            <div className="text-[#64748b]">Người nhận (Verified User Email Only):</div>
-            <div className="font-bold text-purple-300 text-sm font-mono">{emailModal.to}</div>
+        <div className="space-y-2.5 text-xs">
+          <div className="p-3 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-subtle)] space-y-0.5">
+            <div className="text-[var(--text-muted)] font-medium">{t.recipientLabel}</div>
+            <div className="font-bold text-[var(--text-primary)] text-xs font-mono">{emailModal.to}</div>
           </div>
 
-          <div className="p-3 rounded-xl bg-[#131b2e] border border-white/5 space-y-1">
-            <div className="text-[#64748b]">Tiêu đề thư:</div>
-            <div className="font-semibold text-white">{emailModal.subject}</div>
+          <div className="p-3 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-subtle)] space-y-0.5">
+            <div className="text-[var(--text-muted)] font-medium">{t.subjectLabel}</div>
+            <div className="font-semibold text-[var(--text-primary)]">{emailModal.subject}</div>
           </div>
 
-          <div className="p-3 rounded-xl bg-[#131b2e] border border-white/5 space-y-1 max-h-36 overflow-y-auto font-mono text-[11px] text-[#94a3b8] whitespace-pre-line">
+          <div className="p-3 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-subtle)] space-y-0.5 max-h-32 overflow-y-auto font-mono text-[11px] text-[var(--text-secondary)] whitespace-pre-line leading-relaxed">
             {emailModal.body}
           </div>
         </div>
 
-        <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-300 flex items-center gap-2">
-          <AlertTriangle className="w-4 h-4 shrink-0" />
+        <div className="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-400 flex items-center gap-2 font-medium">
+          <AlertTriangle className="w-4 h-4 shrink-0 text-[#FC6508]" />
           <span>
-            Chính sách an toàn: Wealify Guardian không bao giờ tự động gửi email cho bên thứ ba, sàn giao dịch hay ngân hàng.
+            {t.emailSafetyPolicy}
           </span>
         </div>
 
-        <div className="flex items-center justify-end gap-3 pt-2">
+        <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-[var(--border-subtle)]">
           <button
             onClick={onClose}
             className="btn-secondary text-xs"
           >
-            Hủy bỏ
+            {t.cancel}
           </button>
           <button
             onClick={onConfirmSend}
-            className="btn-primary text-xs"
+            className="btn-wealify text-xs"
           >
             <Check className="w-3.5 h-3.5" />
-            <span>Xác nhận &amp; Gửi ngay</span>
+            <span>{t.confirmAndSend}</span>
           </button>
         </div>
       </div>

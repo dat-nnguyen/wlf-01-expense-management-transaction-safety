@@ -1,6 +1,7 @@
 import React from 'react';
-import { Upload, Send, Search, ShieldAlert, Mail, CreditCard, Repeat, Loader2 } from 'lucide-react';
+import { Upload, Send, Search, ShieldAlert, CreditCard, Loader2 } from 'lucide-react';
 import { Language } from '../../types';
+import { TRANSLATIONS } from '../../data/translations';
 
 interface ChatInputProps {
   inputMsg: string;
@@ -19,114 +20,98 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   language,
   isTyping = false,
 }) => {
+  const t = TRANSLATIONS[language];
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (inputMsg.trim() && !isTyping) {
-      onSendMessage(inputMsg);
+      onSendMessage();
     }
   };
 
   return (
-    <div className="flex flex-col shrink-0">
+    <div className="flex flex-col shrink-0 transition-colors">
       {/* Quick Action Chips Bar */}
-      <div className="px-6 py-2 border-t border-[rgba(255,255,255,0.06)] bg-[#090e1a]/80 flex items-center gap-2 overflow-x-auto">
+      <div className="px-6 py-2 border-t border-[var(--border-subtle)] bg-[var(--bg-header)] flex items-center gap-2 overflow-x-auto">
         <button
           type="button"
-          onClick={() => onSendMessage('Kiểm tra các khoản giao dịch gần đây')}
+          onClick={() => onSendMessage(t.promptCheckRecent)}
           disabled={isTyping}
-          className="action-chip text-xs shrink-0 cursor-pointer disabled:opacity-50"
+          className="action-chip text-xs shrink-0 disabled:opacity-50"
         >
-          <Search className="w-3.5 h-3.5 text-cyan-400" />
-          <span>Kiểm tra giao dịch</span>
+          <Search className="w-3.5 h-3.5" />
+          <span>{t.chipCheckTx}</span>
         </button>
         <button
           type="button"
           onClick={onOpenVerifyModal}
           disabled={isTyping}
-          className="action-chip text-xs shrink-0 bg-purple-500/10 border-purple-500/30 text-purple-200 cursor-pointer disabled:opacity-50"
+          className="action-chip text-xs shrink-0 disabled:opacity-50"
         >
-          <ShieldAlert className="w-3.5 h-3.5 text-purple-400" />
-          <span>Kiểm tra ảnh thanh toán</span>
+          <ShieldAlert className="w-3.5 h-3.5 text-[#FC6508]" />
+          <span>{t.chipCheckImage}</span>
         </button>
         <button
           type="button"
-          onClick={() => onSendMessage('Kiểm tra email nhận tiền')}
+          onClick={() => onSendMessage(language === 'vi' ? 'Có khoản Payout nào từ Amazon hay Stripe bị trễ không?' : 'Are there any overdue payouts from Amazon or Stripe?')}
           disabled={isTyping}
-          className="action-chip text-xs shrink-0 cursor-pointer disabled:opacity-50"
+          className="action-chip text-xs shrink-0 disabled:opacity-50"
         >
-          <Mail className="w-3.5 h-3.5 text-emerald-400" />
-          <span>Kiểm tra email</span>
+          <span>{language === 'vi' ? 'Quét Payout trễ > 14 ngày' : 'Overdue Payout Radar'}</span>
         </button>
         <button
           type="button"
-          onClick={() => onSendMessage('Kiểm tra các khoản trừ đúp trên thẻ')}
+          onClick={() => onSendMessage(t.promptCheckDup)}
           disabled={isTyping}
-          className="action-chip text-xs shrink-0 cursor-pointer disabled:opacity-50"
+          className="action-chip text-xs shrink-0 disabled:opacity-50"
         >
-          <CreditCard className="w-3.5 h-3.5 text-amber-400" />
-          <span>Kiểm tra khoản trừ</span>
+          <CreditCard className="w-3.5 h-3.5" />
+          <span>{t.chipCheckDup}</span>
         </button>
         <button
           type="button"
-          onClick={() => onSendMessage('Đối soát 3 nguồn tài khoản - ví - thẻ')}
+          onClick={() => onSendMessage(language === 'vi' ? 'Tình hình kinh doanh và lợi nhuận dòng tiền thế nào, có nên tiếp tục chạy ad không?' : 'What is my current business cash flow health, should I continue scaling ads?')}
           disabled={isTyping}
-          className="action-chip text-xs shrink-0 cursor-pointer disabled:opacity-50"
+          className="action-chip text-xs shrink-0 disabled:opacity-50"
         >
-          <Repeat className="w-3.5 h-3.5 text-purple-400" />
-          <span>Đối soát giao dịch</span>
+          <span>{language === 'vi' ? 'Tư vấn ROAS & Dòng tiền Ads' : 'ROAS & Cashflow Advisory'}</span>
         </button>
       </div>
 
       {/* Chat Input Box & Fixed Safety Disclaimer */}
-      <div className="p-4 bg-[#090e1a] border-t border-[rgba(255,255,255,0.08)] space-y-2.5">
+      <div className="p-4 bg-[var(--bg-sidebar)] border-t border-[var(--border-subtle)] space-y-2">
         <form
           onSubmit={handleSubmit}
-          className="flex items-center gap-2 bg-[#060913] border border-[rgba(255,255,255,0.12)] focus-within:border-purple-500 rounded-2xl px-4 py-2 shadow-inner"
+          className="flex items-center gap-2.5 bg-[var(--bg-input)] border border-[var(--border-default)] focus-within:border-[#FC6508] rounded-xl px-4 py-2 transition-colors"
         >
           <button
             type="button"
             onClick={onOpenVerifyModal}
-            className="text-[#64748b] hover:text-purple-400 transition-colors p-1"
-            title="Tải lên ảnh chụp màn hình / biên lai cần kiểm tra"
+            className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors p-1"
+            title={t.uploadTooltip}
           >
             <Upload className="w-4 h-4" />
           </button>
           <input
-            id="chat-input-field"
             type="text"
             value={inputMsg}
             onChange={(e) => setInputMsg(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                if (inputMsg.trim() && !isTyping) {
-                  onSendMessage(inputMsg);
-                }
-              }
-            }}
-            placeholder={isTyping ? "Guardian đang suy nghĩ và tổng hợp dữ liệu..." : "Hỏi Guardian bất cứ điều gì về tài chính của bạn..."}
             disabled={isTyping}
-            className="flex-1 bg-transparent border-none outline-none text-sm text-white placeholder-[#64748b] disabled:opacity-60"
+            placeholder={t.inputPlaceholder}
+            className="flex-1 bg-transparent border-none outline-none text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] font-medium disabled:opacity-50"
           />
           <button
-            id="chat-send-btn"
             type="submit"
             disabled={!inputMsg.trim() || isTyping}
-            className="w-8 h-8 rounded-xl bg-purple-600 hover:bg-purple-500 disabled:opacity-30 disabled:hover:bg-purple-600 text-white flex items-center justify-center transition-all shadow-md shadow-purple-600/30 cursor-pointer disabled:cursor-not-allowed"
+            className="w-7 h-7 rounded-lg bg-[#FC6508] hover:opacity-90 disabled:opacity-30 text-white flex items-center justify-center transition-all shrink-0"
           >
-            {isTyping ? (
-              <Loader2 className="w-4 h-4 animate-spin text-purple-200" />
-            ) : (
-              <Send className="w-4 h-4" />
-            )}
+            {isTyping ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
           </button>
         </form>
 
         {/* Permanent Fixed Safety Disclaimer */}
-        <p className="text-[11px] text-[#64748b] text-center leading-relaxed">
-          {language === 'vi'
-            ? 'Công cụ này chỉ hỗ trợ bạn rà soát tài chính. Kết quả để tham khảo, không phải kết luận chính thức của Wealify. Nếu thấy giao dịch lạ, hãy liên hệ hỗ trợ ngay — thời hạn khiếu nại ở Mỹ là 60 ngày kể từ ngày ngân hàng gửi sao kê.'
-            : 'This tool only assists you in reviewing your finances. Results are for reference only and are not an official determination by Wealify. If you notice an unfamiliar transaction, contact support promptly — dispute period is 60 days from bank statement date.'}
+        <p className="text-[11px] text-[var(--text-muted)] text-center leading-relaxed">
+          {t.disclaimer}
         </p>
       </div>
     </div>

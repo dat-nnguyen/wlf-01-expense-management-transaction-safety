@@ -32,7 +32,13 @@ class IntentPlanner:
             )
 
         # 2. Check Disallowed Mutating Actions (Imperative commands)
-        if re.search(r"^(?:hãy\s+|vui lòng\s+|tự\s+)?chuyển\s+(?:\$?\d+|tiền|khoản|qua)\s+(?:cho|tới|vào|sang)|transfer\s+\$?\d+\s+to|send\s+\$?\d+\s+to|(?:hãy\s+|tự\s+)?(?:huỷ|hủy)\s+(?:subscription|gói|dịch vụ|netflix|adobe)|cancel\s+(?:subscription|membership|netflix|adobe)|chargeback|(?:hãy\s+|tự\s+)?(?:khóa|khoá)\s+thẻ|lock\s+card|block\s+card", msg, re.IGNORECASE):
+        if (
+            re.search(r"(?:hãy\s+|vui lòng\s+|tự\s+|hộ\s+)?(?:chuyển|bắn|gửi|rút|nạp|pay|transfer|send|wire)\s+.*(?:tiền|\$|\d+|sang|tới|vào|cho|tài khoản|stk|account|wallet|ví)", msg, re.IGNORECASE)
+            or re.search(r"(?:chuyển|transfer|send|wire)\s+\$?\d+", msg, re.IGNORECASE)
+            or re.search(r"(?:hãy\s+|tự\s+|vui lòng\s+)?(?:huỷ|hủy|dừng|ngắt|cancel|unsubscribe)\s+(?:subscription|gói|dịch vụ|membership|netflix|adobe|spotify)", msg, re.IGNORECASE)
+            or re.search(r"chargeback|đòi tiền lại ngay|tự hoàn tiền trực tiếp|tự động hoàn tiền", msg, re.IGNORECASE)
+            or re.search(r"(?:hãy\s+|tự\s+|vui lòng\s+)?(?:khóa|khoá|block|freeze|lock)\s+thẻ|lock\s+card|block\s+card", msg, re.IGNORECASE)
+        ):
             return ExecutionPlan(
                 intent="DISALLOWED_MUTATION",
                 target_tool=None,
