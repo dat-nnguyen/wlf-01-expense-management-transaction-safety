@@ -49,7 +49,14 @@ jobs:
 
       - name: 🛡️ Financial Guardrail & Anti-Mutation Security Audit
         run: |
-          python -c "from packages.agent.guardrails.input import InputGuardrail; res = InputGuardrail.validate_user_message('Chuyển $500 vào tài khoản Nam'); assert res.policy_allowed is False; assert res.intent == 'DISALLOWED_MUTATION'; print('✅ Deterministic Read-Only Guardrail verification PASSED!')"
+          python -c '
+          from packages.agent.guardrails.input import InputGuardrail
+          from packages.policy.permissions import ActionType
+          is_safe, action, _ = InputGuardrail.validate_user_message("Chuyển tiền $500 cho Nam")
+          assert is_safe is False, "Security violation: Mutation allowed!"
+          assert action == ActionType.TRANSFER_MONEY, "Action must be TRANSFER_MONEY"
+          print("✅ Deterministic Read-Only Guardrail verification PASSED!")
+          '
 
   # =========================================================================
   # 2. FRONTEND CI: Type Safety, ESLint & Production Build Verification
