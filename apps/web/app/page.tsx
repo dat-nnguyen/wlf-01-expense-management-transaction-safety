@@ -552,9 +552,37 @@ Wealify Guardian Financial Safety Team`,
       <EmailConfirmationModal
         emailModal={emailModal}
         onClose={() => setEmailModal((prev) => ({ ...prev, isOpen: false }))}
-        onConfirmSend={() => {
-          setEmailModal((prev) => ({ ...prev, isOpen: false }));
-          showToast(language === 'vi' ? 'Đã gửi báo cáo qua email thành công' : 'Report email sent successfully');
+        onConfirmSend={async (targetEmail) => {
+          try {
+            let apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+            if (!apiUrl) {
+              if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+                apiUrl = 'http://127.0.0.1:8000';
+              } else {
+                apiUrl = 'https://wealify-guardian-api.onrender.com';
+              }
+            }
+            apiUrl = apiUrl.replace(/\/+$/, '');
+
+            const res = await fetch(`${apiUrl}/api/v1/notifications/send-report`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                recipient_email: targetEmail.trim(),
+                period: '2026-08',
+              }),
+            });
+
+            if (res.ok) {
+              showToast(language === 'vi' ? `Đã gửi báo cáo thành công tới ${targetEmail} qua SMTP!` : `Report email sent to ${targetEmail} via SMTP!`);
+            } else {
+              showToast(language === 'vi' ? 'Lỗi gửi email máy chủ' : 'Failed to send email');
+            }
+          } catch {
+            showToast(language === 'vi' ? 'Không thể kết nối máy chủ gửi email' : 'Could not connect to email server');
+          } finally {
+            setEmailModal((prev) => ({ ...prev, isOpen: false }));
+          }
         }}
         language={language}
       />

@@ -428,6 +428,157 @@ class EmailAlertDispatcher:
         return html
 
     @classmethod
+    def generate_html_forensic_report(
+        cls,
+        forensic_data: Dict[str, Any],
+        user_name: str = "Quý khách hàng Wealify",
+    ) -> str:
+        """Generates a professional Forensic Investigation Report HTML email for evidence verification."""
+        claimed_amount = forensic_data.get("claimed_amount", 2500.0)
+        reference = forensic_data.get("reference", "WF-839291")
+        conflict_score = forensic_data.get("conflict_score", 92)
+        risk_level = "NGUY CƠ CAO (HIGH RISK)" if conflict_score > 50 else "HỢP LỆ (VERIFIED)"
+        score_color = "#f43f5e" if conflict_score > 50 else "#10b981"
+        summary = forensic_data.get(
+            "summary",
+            "Hệ thống đã đối soát toàn bộ sổ cái kế toán và hộp thư. Không tìm thấy lệnh chuyển tiền tương ứng với mã số giao dịch được cung cấp. Khuyến nghị bạn không thực hiện bàn giao dịch vụ/hàng hoá trước khi tiền thực tế vào tài khoản.",
+        )
+        dimensions = forensic_data.get("dimensions", [
+            {"name": "Mã tham chiếu (Reference)", "matched": False, "detail": f"Mã '{reference}' không tồn tại trong hệ thống sổ cái Wealify Core Banking."},
+            {"name": "Số tiền & Sổ cái (Ledger)", "matched": False, "detail": f"Không có biến động số dư +${claimed_amount:,.2f} USD vào ngày giao dịch."},
+            {"name": "Ví điện tử (Wallet)", "matched": False, "detail": "Không có giao dịch nạp tiền hoặc nhận chuyển khoản tương ứng."},
+            {"name": "Hộp thư xác nhận (Email)", "matched": False, "detail": "Không có thông báo xác nhận chuyển khoản từ ngân hàng gửi về email."},
+        ])
+
+        dim_rows = ""
+        for dim in dimensions:
+            icon = "✓" if dim.get("matched") else "✗"
+            color = "#10b981" if dim.get("matched") else "#f43f5e"
+            status_txt = "KHỚP" if dim.get("matched") else "KHÔNG KHỚP"
+            dim_rows += f"""
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.06);">
+              <td style="padding: 12px; font-size: 13px; color: #f8fafc; font-weight: 600;">
+                <span style="color: {color}; font-weight: bold; margin-right: 6px;">[{icon}]</span>
+                {dim.get('name')}
+              </td>
+              <td style="padding: 12px; font-size: 12px; color: {color}; font-weight: bold; font-family: monospace;">
+                {status_txt}
+              </td>
+              <td style="padding: 12px; font-size: 12px; color: #cbd5e1; line-height: 1.5;">
+                {dim.get('detail')}
+              </td>
+            </tr>
+            """
+
+        html = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Báo Cáo Giám Định Bằng Chứng Giao Dịch — Wealify Guardian</title>
+        </head>
+        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #070b14; color: #f8fafc; margin: 0; padding: 24px;">
+          <div style="max-width: 650px; margin: 0 auto; background-color: #0d1322; border-radius: 16px; padding: 32px; border: 1px solid rgba(255, 255, 255, 0.1);">
+            
+            <!-- Header -->
+            <div style="border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 16px; margin-bottom: 24px;">
+              <div style="font-size: 20px; font-weight: 800; color: #fc6508;">WEALIFY GUARDIAN</div>
+              <div style="font-size: 13px; color: #94a3b8; margin-top: 4px;">Trung Tâm Giám Định Bằng Chứng & Phòng Chống Gian Lận Tài Chính</div>
+            </div>
+
+            <div style="font-size: 16px; font-weight: 700; color: #ffffff; margin-bottom: 8px;">
+              Kính gửi {user_name},
+            </div>
+            <div style="font-size: 14px; color: #94a3b8; line-height: 1.6; margin-bottom: 24px;">
+              Hệ thống Wealify Guardian đã hoàn tất phiên giám định kỹ thuật số chuyên sâu đối với bằng chứng giao dịch (ảnh chụp biên lai/chứng từ chuyển tiền) được yêu cầu tra soát:
+            </div>
+
+            <!-- Risk Banner -->
+            <div style="background-color: #131b2e; border: 2px solid {score_color}; border-radius: 12px; padding: 20px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <div style="font-size: 12px; color: #94a3b8; text-transform: uppercase; font-weight: 700;">Chỉ Số Bất Thường / Xung Đột</div>
+                <div style="font-size: 28px; font-weight: 900; color: {score_color}; font-family: monospace; margin-top: 4px;">{conflict_score}/100</div>
+                <div style="font-size: 13px; color: {score_color}; font-weight: bold; margin-top: 4px;">Mức độ: {risk_level}</div>
+              </div>
+              <div style="text-align: right;">
+                <div style="font-size: 12px; color: #94a3b8;">Số tiền khiếu nại:</div>
+                <div style="font-size: 20px; font-weight: bold; color: #ffffff; font-family: monospace;">${claimed_amount:,.2f} USD</div>
+                <div style="font-size: 12px; color: #38bdf8; font-family: monospace; margin-top: 4px;">Mã GD: {reference}</div>
+              </div>
+            </div>
+
+            <!-- 4-Way Cross Check Table -->
+            <div style="font-size: 14px; font-weight: 700; color: #f8fafc; margin-bottom: 12px;">Kết Quả Đối Soát Chéo 4 Chiều (4-Way Forensic Cross-Check):</div>
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px; background-color: #131b2e; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08);">
+              <thead>
+                <tr style="background-color: #1a243b; text-align: left;">
+                  <th style="padding: 10px 12px; font-size: 11px; color: #94a3b8; text-transform: uppercase;">Chiều Đối Soát</th>
+                  <th style="padding: 10px 12px; font-size: 11px; color: #94a3b8; text-transform: uppercase;">Trạng Thái</th>
+                  <th style="padding: 10px 12px; font-size: 11px; color: #94a3b8; text-transform: uppercase;">Chi Tiết Xác Thực</th>
+                </tr>
+              </thead>
+              <tbody>
+                {dim_rows}
+              </tbody>
+            </table>
+
+            <!-- AI Forensic Summary -->
+            <div style="font-size: 14px; font-weight: 700; color: #f8fafc; margin-bottom: 8px;">Kết Luận Giám Định Wealify Guardian:</div>
+            <div style="background-color: #131b2e; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 16px; margin-bottom: 24px; font-size: 13px; color: #cbd5e1; line-height: 1.7;">
+              {summary}
+            </div>
+
+            <!-- Legal Disclaimer Footer -->
+            <div style="border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 16px; font-size: 11px; color: #64748b; line-height: 1.6;">
+              🛡️ <em>Công cụ này chỉ hỗ trợ bạn rà soát tài chính. Kết quả để tham khảo, không phải kết luận chính thức của Wealify và không thay cho việc bạn tự kiểm tra. Nếu thấy giao dịch lạ, hãy liên hệ hỗ trợ ngay — ở Mỹ thời hạn khiếu nại theo quy định là 60 ngày kể từ ngày ngân hàng gửi sao kê.</em>
+            </div>
+
+          </div>
+        </body>
+        </html>
+        """
+        return html
+
+    @classmethod
+    def dispatch_forensic_report_email(
+        cls,
+        forensic_data: Dict[str, Any],
+        recipient_email: str = "founder@wealify.io",
+        user_name: str = "Quý khách hàng Wealify",
+    ) -> EmailNotificationLog:
+        """Dispatches structured forensic investigation report email via SMTP."""
+        claimed_amount = forensic_data.get("claimed_amount", 2500.0)
+        reference = forensic_data.get("reference", "WF-839291")
+        conflict_score = forensic_data.get("conflict_score", 92)
+        html = cls.generate_html_forensic_report(forensic_data, user_name)
+        subject = f"[Wealify Guardian] Báo Cáo Giám Định Bằng Chứng Giao Dịch — Mã {reference} (${claimed_amount:,.2f} USD)"
+
+        log = EmailNotificationLog(
+            id=f"for_{uuid.uuid4().hex[:8]}",
+            recipient_email=recipient_email,
+            recipient_role="user",
+            subject=subject,
+            alert_type="FORENSIC_INVESTIGATION",
+            severity="CRITICAL" if conflict_score > 50 else "INFO",
+            html_content=html,
+            summary=f"Kết quả giám định bằng chứng mã {reference}: Điểm xung đột {conflict_score}/100 — {forensic_data.get('summary', '')[:80]}...",
+            sent_at=datetime.now(timezone.utc),
+            status="sent",
+        )
+        cls._SENT_LOGS.insert(0, log)
+        logger.info(f"FORENSIC_REPORT_EMAIL_DISPATCHED | notif_id={log.id} | to={recipient_email} | ref={reference}")
+
+        # Send via live SMTP
+        cls.send_smtp_email(
+            to_email=recipient_email,
+            subject=subject,
+            html_body=html,
+            text_body=f"Báo Cáo Giám Định Bằng Chứng Giao Dịch\nMã tham chiếu: {reference}\nSố tiền khiếu nại: ${claimed_amount:,.2f} USD\nĐiểm xung đột: {conflict_score}/100\n\n{forensic_data.get('summary', '')}",
+        )
+
+        return log
+
+    @classmethod
     def dispatch_report_email(
         cls,
         summary_data: Dict[str, Any],

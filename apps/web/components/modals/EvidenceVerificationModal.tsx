@@ -37,7 +37,10 @@ export const EvidenceVerificationModal: React.FC<EvidenceVerificationModalProps>
   });
   const [claimedAmount, setClaimedAmount] = useState<number>(2500);
   const [claimedRef, setClaimedRef] = useState<string>('WF-839291');
+  const [recipientEmail, setRecipientEmail] = useState<string>('masewtricker.contact.06@gmail.com');
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
+  const [isSendingEmail, setIsSendingEmail] = useState<boolean>(false);
+  const [emailStatusMessage, setEmailStatusMessage] = useState<string | null>(null);
   const [analysisResult, setAnalysisResult] = useState<any>({
     conflictScore: 92,
     riskLevel: 'HIGH',
@@ -121,6 +124,53 @@ export const EvidenceVerificationModal: React.FC<EvidenceVerificationModalProps>
       console.warn('Fallback analysis used:', e);
     } finally {
       setIsAnalyzing(false);
+    }
+  };
+
+  const handleSendForensicEmail = async () => {
+    if (!recipientEmail || !recipientEmail.includes('@')) {
+      setEmailStatusMessage(language === 'vi' ? 'Vui lòng nhập đúng địa chỉ email nhận' : 'Please enter a valid recipient email');
+      return;
+    }
+    setIsSendingEmail(true);
+    setEmailStatusMessage(null);
+    try {
+      let apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+      if (!apiUrl) {
+        if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+          apiUrl = 'http://127.0.0.1:8000';
+        } else {
+          apiUrl = 'https://wealify-guardian-api.onrender.com';
+        }
+      }
+      apiUrl = apiUrl.replace(/\/+$/, '');
+
+      const res = await fetch(`${apiUrl}/api/v1/security/send-forensic-report`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          recipient_email: recipientEmail.trim(),
+          claimed_amount: claimedAmount,
+          reference: claimedRef,
+          conflict_score: analysisResult.conflictScore,
+          summary: analysisResult.summary,
+          dimensions: analysisResult.dimensions,
+        }),
+      });
+
+      if (res.ok) {
+        setEmailStatusMessage(
+          language === 'vi'
+            ? `Đã gửi báo cáo giám định tới ${recipientEmail.trim()} qua SMTP!`
+            : `Forensic report sent successfully to ${recipientEmail.trim()} via SMTP!`
+        );
+      } else {
+        setEmailStatusMessage(language === 'vi' ? 'Lỗi gửi email máy chủ' : 'Failed sending email');
+      }
+    } catch {
+      setEmailStatusMessage(language === 'vi' ? 'Lỗi kết nối máy chủ' : 'Connection error');
+    } finally {
+      setIsSendingEmail(false);
     }
   };
 
@@ -284,6 +334,40 @@ export const EvidenceVerificationModal: React.FC<EvidenceVerificationModalProps>
           <p className="text-[var(--text-secondary)] bg-[var(--bg-secondary)] p-3 rounded-xl border border-[var(--border-subtle)] text-xs leading-relaxed">
             {analysisResult.summary}
           </p>
+        </div>
+
+        {/* Live SMTP Recipient Box */}
+        <div className="p-3.5 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-subtle)] space-y-2.5">
+          <div className="flex items-center justify-between">
+            <label className="text-[11px] font-bold text-[var(--text-secondary)] flex items-center gap-1.5">
+              <Mail className="w-3.5 h-3.5 text-[#FC6508]" />
+              <span>{language === 'vi' ? 'Email nhận báo cáo kết quả giám định (Live SMTP):' : 'Recipient Email for Forensic Report:'}</span>
+            </label>
+            <span className="text-[10px] text-emerald-400 font-mono">SMTP Connected</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="email"
+              value={recipientEmail}
+              onChange={(e) => setRecipientEmail(e.target.value)}
+              placeholder="masewtricker.contact.06@gmail.com"
+              className="flex-1 bg-[var(--bg-card)] border border-[var(--border-subtle)] px-3 py-2 rounded-lg text-xs font-mono text-[var(--text-primary)] focus:outline-none focus:border-[#FC6508]"
+            />
+            <button
+              onClick={handleSendForensicEmail}
+              disabled={isSendingEmail}
+              className="btn-wealify text-xs shrink-0 flex items-center gap-1.5 px-3.5 py-2 font-medium"
+            >
+              {isSendingEmail ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Mail className="w-3.5 h-3.5" />}
+              <span>{isSendingEmail ? (language === 'vi' ? 'Đang gửi...' : 'Sending...') : (language === 'vi' ? 'Gửi kết quả qua Email' : 'Send via SMTP')}</span>
+            </button>
+          </div>
+
+          {emailStatusMessage && (
+            <div className={`p-2.5 rounded-lg text-xs font-medium ${emailStatusMessage.includes('thành công') || emailStatusMessage.includes('successfully') ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'}`}>
+              {emailStatusMessage}
+            </div>
+          )}
         </div>
 
         {/* Footer Actions */}

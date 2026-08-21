@@ -129,3 +129,41 @@ async def review_security_case(case_id: str, payload: UpdateCaseStatusRequest):
 async def get_security_stats():
     """Retrieve aggregate security statistics for the Security Center Overview dashboard."""
     return authenticity_engine.get_security_stats()
+
+
+class SendForensicReportRequest(BaseModel):
+    recipient_email: str = Field(default="founder@wealify.io", description="Recipient to receive forensic report")
+    claimed_amount: float = Field(default=2500.0)
+    reference: str = Field(default="WF-839291")
+    conflict_score: int = Field(default=92)
+    summary: Optional[str] = Field(default=None)
+    dimensions: Optional[List[Dict[str, Any]]] = Field(default=None)
+
+
+@router.post("/send-forensic-report")
+async def send_forensic_report_endpoint(req: SendForensicReportRequest):
+    """
+    Dispatches formatted forensic verification report directly to the specified recipient email via live SMTP.
+    """
+    from packages.connectors.email_dispatcher import EmailAlertDispatcher
+
+    forensic_data = {
+        "claimed_amount": req.claimed_amount,
+        "reference": req.reference,
+        "conflict_score": req.conflict_score,
+        "summary": req.summary or "Hệ thống đã đối soát toàn bộ sổ cái kế toán và hộp thư. Không tìm thấy lệnh chuyển tiền tương ứng với mã số giao dịch được cung cấp.",
+        "dimensions": req.dimensions,
+    }
+
+    log = EmailAlertDispatcher.dispatch_forensic_report_email(
+        forensic_data=forensic_data,
+        recipient_email=req.recipient_email,
+    )
+
+    return {
+        "success": True,
+        "notification_id": log.id,
+        "recipient": req.recipient_email,
+        "subject": log.subject,
+        "summary": log.summary,
+    }

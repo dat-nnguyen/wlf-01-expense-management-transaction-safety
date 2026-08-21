@@ -1,12 +1,12 @@
-import React from 'react';
-import { Mail, AlertTriangle, Check } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Mail, AlertTriangle, Check, Loader2 } from 'lucide-react';
 import { EmailModalState, Language } from '../../types';
 import { TRANSLATIONS } from '../../data/translations';
 
 interface EmailConfirmationModalProps {
   emailModal: EmailModalState;
   onClose: () => void;
-  onConfirmSend: () => void;
+  onConfirmSend: (recipientEmail: string) => Promise<void> | void;
   language: Language;
 }
 
@@ -18,6 +18,23 @@ export const EmailConfirmationModal: React.FC<EmailConfirmationModalProps> = ({
 }) => {
   if (!emailModal.isOpen) return null;
   const t = TRANSLATIONS[language];
+  const [recipient, setRecipient] = useState<string>(emailModal.to || 'masewtricker.contact.06@gmail.com');
+  const [isSending, setIsSending] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (emailModal.to) {
+      setRecipient(emailModal.to);
+    }
+  }, [emailModal.to]);
+
+  const handleSend = async () => {
+    setIsSending(true);
+    try {
+      await onConfirmSend(recipient);
+    } finally {
+      setIsSending(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn">
@@ -33,9 +50,15 @@ export const EmailConfirmationModal: React.FC<EmailConfirmationModalProps> = ({
         </div>
 
         <div className="space-y-2.5 text-xs">
-          <div className="p-3 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-subtle)] space-y-0.5">
-            <div className="text-[var(--text-muted)] font-medium">{t.recipientLabel}</div>
-            <div className="font-bold text-[var(--text-primary)] text-xs font-mono">{emailModal.to}</div>
+          <div className="p-3 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-subtle)] space-y-1.5">
+            <label className="text-[var(--text-muted)] font-medium block">{t.recipientLabel} (Live SMTP):</label>
+            <input
+              type="email"
+              value={recipient}
+              onChange={(e) => setRecipient(e.target.value)}
+              placeholder="masewtricker.contact.06@gmail.com"
+              className="w-full bg-[var(--bg-card)] border border-[var(--border-subtle)] px-3 py-1.5 rounded-lg text-xs font-mono text-[var(--text-primary)] focus:outline-none focus:border-[#FC6508]"
+            />
           </div>
 
           <div className="p-3 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-subtle)] space-y-0.5">
@@ -59,15 +82,17 @@ export const EmailConfirmationModal: React.FC<EmailConfirmationModalProps> = ({
           <button
             onClick={onClose}
             className="btn-secondary text-xs"
+            disabled={isSending}
           >
             {t.cancel}
           </button>
           <button
-            onClick={onConfirmSend}
-            className="btn-wealify text-xs"
+            onClick={handleSend}
+            disabled={isSending}
+            className="btn-wealify text-xs flex items-center gap-1.5"
           >
-            <Check className="w-3.5 h-3.5" />
-            <span>{t.confirmAndSend}</span>
+            {isSending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+            <span>{isSending ? (language === 'vi' ? 'Đang gửi qua SMTP...' : 'Sending via SMTP...') : t.confirmAndSend}</span>
           </button>
         </div>
       </div>
