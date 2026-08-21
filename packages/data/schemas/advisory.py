@@ -1,7 +1,7 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class HealthRating(str, Enum):
@@ -17,17 +17,21 @@ class HITLActionStatus(str, Enum):
 
 
 class HITLActionItem(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: str = Field(..., description="Action ID")
     title: str
     description: str
     action_type: str = Field(..., description="E.g., pause_ad_campaign, draft_payout_ticket, dispute_charge")
     payload: Dict[str, Any] = Field(default_factory=dict)
     status: HITLActionStatus = Field(default=HITLActionStatus.PENDING)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     resolved_at: Optional[datetime] = None
 
 
 class UnitEconomicsMetrics(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     total_ad_spend: float = 0.0
     total_payout_received: float = 0.0
     total_payout_pending: float = 0.0
@@ -40,6 +44,8 @@ class UnitEconomicsMetrics(BaseModel):
 
 
 class BusinessHealthReport(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     account_id: str
     rating: HealthRating
     health_score: int = Field(ge=0, le=100, description="0 to 100 health score")
@@ -48,4 +54,4 @@ class BusinessHealthReport(BaseModel):
     insights: List[str] = Field(default_factory=list)
     action_recommendations: List[str] = Field(default_factory=list)
     hitl_actions: List[HITLActionItem] = Field(default_factory=list)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

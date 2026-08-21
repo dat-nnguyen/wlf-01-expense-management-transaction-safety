@@ -62,6 +62,42 @@ async def verify_transaction_claim(payload: VerifyClaimRequest):
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
+@router.post("/verify-image", response_model=AuthenticityVerificationResult)
+async def verify_transaction_image(
+    file: Optional[Any] = None,
+    image_base64: Optional[str] = None,
+    account_id: str = "acc_main",
+):
+    """
+    Multimodal Vision OCR Verification:
+    Takes an uploaded receipt or transaction screenshot, performs OCR and visual forgery inspection,
+    and cross-checks the extracted figures against Wealify trusted records.
+    """
+    try:
+        image_bytes = b""
+        filename = "receipt.png"
+        mime_type = "image/png"
+
+        if file and hasattr(file, "read"):
+            image_bytes = await file.read()
+            filename = getattr(file, "filename", "receipt.png")
+            mime_type = getattr(file, "content_type", "image/png")
+        elif image_base64:
+            import base64
+            clean_b64 = image_base64.split(",")[-1]
+            image_bytes = base64.b64decode(clean_b64)
+
+        claim = await authenticity_engine.parse_claim_from_image(
+            image_bytes=image_bytes,
+            filename=filename,
+            mime_type=mime_type,
+        )
+        return authenticity_engine.verify_claim(claim, account_id=account_id)
+    except Exception as e:
+        logger.error(f"Error in verify_transaction_image: {e}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
 @router.get("/cases", response_model=List[SecurityCase])
 async def list_security_cases():
     """List all active and historical security anomaly cases for Wealify Operations Console."""

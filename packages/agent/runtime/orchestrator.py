@@ -1,8 +1,8 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from packages.agent.guardrails.input import InputGuardrail
 from packages.agent.guardrails.output import OutputGuardrail
@@ -34,13 +34,17 @@ class AgentState(str, Enum):
 
 
 class ExecutionStep(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     step_name: str
     status: str
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     details: Dict[str, Any] = Field(default_factory=dict)
 
 
 class AgentRunResult(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     run_id: str
     session_id: str
     user_message: str
@@ -55,7 +59,7 @@ class AgentRunResult(BaseModel):
     email_dispatched: bool = False
     dispatched_email_id: Optional[str] = None
     steps: List[ExecutionStep] = Field(default_factory=list)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class AgentOrchestrator:

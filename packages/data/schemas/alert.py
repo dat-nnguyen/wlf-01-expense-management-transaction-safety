@@ -1,7 +1,7 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class AlertStatus(str, Enum):
@@ -22,6 +22,8 @@ class AlertType(str, Enum):
 
 class Alert(BaseModel):
     """Canonical Alert Model adhering to 3 standard statuses."""
+    model_config = ConfigDict(from_attributes=True)
+
     id: str = Field(..., description="Alert ID")
     alert_type: AlertType
     title: str
@@ -39,7 +41,4 @@ class Alert(BaseModel):
     transaction_ids: List[str] = Field(default_factory=list)
     evidence_ids: List[str] = Field(default_factory=list)
     metadata: Dict[str, Any] = Field(default_factory=dict)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-
-    class Config:
-        from_attributes = True
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

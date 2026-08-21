@@ -1,5 +1,5 @@
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Union
 from pathlib import Path
 from packages.data.schemas.email import EmailEvidence, EmailType
@@ -21,11 +21,11 @@ def parse_emails_json(source_content: Union[str, Path, bytes, list]) -> List[Ema
     for item in raw:
         email_id = item.get("id", f"em_{len(emails)+1}")
         date_str = item.get("date") or item.get("received_at")
-        date_val = datetime.utcnow()
+        date_val = datetime.now(timezone.utc)
         if date_str:
             for fmt in ("%Y-%m-%d", "%Y-%m-%d %H:%M:%S", "%Y-%m-%dT%H:%M:%S"):
                 try:
-                    date_val = datetime.strptime(date_str, fmt)
+                    date_val = datetime.strptime(date_str, fmt).replace(tzinfo=timezone.utc)
                     break
                 except ValueError:
                     continue

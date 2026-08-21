@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 from packages.data.schemas.transaction import Transaction, TransactionDirection, TransactionType
 from packages.data.schemas.email import EmailEvidence
@@ -163,5 +163,5 @@ class BusinessAdvisor:
             insights=insights,
             action_recommendations=recommendations,
             hitl_actions=hitl_actions,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(timezone.utc),
         )

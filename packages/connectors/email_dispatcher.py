@@ -1,12 +1,14 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from packages.data.schemas.alert import Alert, AlertType, AlertStatus
 from packages.observability.logging import logger
 
 
 class EmailNotificationLog(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: str = Field(..., description="Notification ID")
     recipient_email: str
     recipient_role: str = Field(default="user", description="user | ceo | support_team")
@@ -15,7 +17,7 @@ class EmailNotificationLog(BaseModel):
     severity: str = "HIGH"
     html_content: str
     summary: str
-    sent_at: datetime = Field(default_factory=datetime.utcnow)
+    sent_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     status: str = "sent"
 
 
@@ -227,7 +229,7 @@ class EmailAlertDispatcher:
             severity="CRITICAL" if alert.alert_type in [AlertType.OVERDUE_PAYOUT, AlertType.DUPLICATE] else "WARNING",
             html_content=html,
             summary=summary,
-            sent_at=datetime.utcnow(),
+            sent_at=datetime.now(timezone.utc),
             status="sent",
         )
         cls._SENT_LOGS.insert(0, log)

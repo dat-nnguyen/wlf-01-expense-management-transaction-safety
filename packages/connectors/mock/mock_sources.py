@@ -1,6 +1,6 @@
 import os
 import re
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 import pandas as pd
 
@@ -16,6 +16,17 @@ from packages.data.schemas.transaction import (
 from packages.data.schemas.email import EmailEvidence, EmailType
 from packages.observability.logging import logger
 from packages.data.datasets.wealify_real_dataset import get_canonical_transactions
+
+
+def _ensure_tz(dt: Any) -> datetime:
+    if isinstance(dt, str):
+        try:
+            dt = datetime.fromisoformat(dt)
+        except Exception:
+            dt = datetime.now(timezone.utc)
+    if isinstance(dt, datetime):
+        return dt if dt.tzinfo is not None else dt.replace(tzinfo=timezone.utc)
+    return datetime.now(timezone.utc)
 
 
 class MockTransactionSource(BaseTransactionSource):
@@ -321,6 +332,9 @@ class MockTransactionSource(BaseTransactionSource):
             except Exception as e:
                 logger.error(f"Error loading Transaction_history.xlsx: {e}")
 
+        for t in txs:
+            t.occurred_at = _ensure_tz(t.occurred_at)
+
         self._data = sorted(txs, key=lambda x: x.occurred_at, reverse=True)
         logger.info(f"Loaded {len(self._data)} official transactions across all sources.")
 
@@ -348,7 +362,7 @@ class MockEmailSource(BaseEmailSource):
         self._demo_records: List[EmailEvidence] = [
             EmailEvidence(
                 id="em_stp_002",
-                date=datetime.utcnow(),
+                date=datetime.now(timezone.utc),
                 sender="support@stripe.com",
                 subject="Payout of $1,890.00 is on its way to your account",
                 merchant="Stripe",

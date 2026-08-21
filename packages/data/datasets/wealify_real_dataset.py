@@ -12,7 +12,7 @@ Accurately models the real Wealify Dashboard structure (from live production scr
   * Spending Surge: Weekly baseline ($200) vs this week ($1,050.00, +425% spike from Meta Ads & AWS)
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Any
 
 from packages.data.schemas.transaction import (
@@ -23,7 +23,7 @@ from packages.data.schemas.transaction import (
 )
 
 # Reference Base Time
-NOW = datetime.utcnow()
+NOW = datetime.now(timezone.utc)
 
 # ==============================================================================
 # 1. WALLET & VIRTUAL CARD MASTER RECORDS
@@ -108,7 +108,7 @@ REAL_VIRTUAL_ACCOUNTS = [
 
 def get_canonical_transactions() -> List[Transaction]:
     txs: List[Transaction] = []
-    NOW = datetime.utcnow()
+    NOW = datetime.now(timezone.utc)
 
     # --- A. Live Screenshot Transactions (Current Week) ---
 

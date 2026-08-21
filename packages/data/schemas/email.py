@@ -1,7 +1,7 @@
 from datetime import datetime
 from enum import Enum
 from typing import Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class EmailType(str, Enum):
@@ -15,6 +15,8 @@ class EmailType(str, Enum):
 
 class EmailEvidence(BaseModel):
     """Canonical Email Evidence Model extracted from user mailbox."""
+    model_config = ConfigDict(from_attributes=True)
+
     id: str = Field(..., description="Unique message ID")
     date: datetime = Field(..., description="Email received timestamp")
     sender: str = Field(..., description="Sender email or name")
@@ -26,6 +28,3 @@ class EmailEvidence(BaseModel):
     email_type: EmailType = Field(default=EmailType.RECEIPT)
     payout_ref: Optional[str] = Field(default=None, description="Extracted payout / transfer reference code")
     expected_settlement_days: int = Field(default=3, description="Expected settlement SLA days (e.g. 2-3 business days)")
-
-    class Config:
-        from_attributes = True

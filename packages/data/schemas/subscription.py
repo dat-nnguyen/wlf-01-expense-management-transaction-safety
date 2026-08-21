@@ -1,7 +1,7 @@
 from datetime import datetime
 from enum import Enum
 from typing import List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class SubscriptionCadence(str, Enum):
@@ -12,6 +12,8 @@ class SubscriptionCadence(str, Enum):
 
 class Subscription(BaseModel):
     """Detected recurring subscription information."""
+    model_config = ConfigDict(from_attributes=True)
+
     id: str = Field(..., description="Subscription ID")
     merchant: str = Field(..., description="Normalized merchant name")
     amount: float = Field(..., description="Latest billed amount")
@@ -24,6 +26,3 @@ class Subscription(BaseModel):
     previous_amount: Optional[float] = None
     transaction_ids: List[str] = Field(default_factory=list)
     status: str = Field(default="active")
-
-    class Config:
-        from_attributes = True

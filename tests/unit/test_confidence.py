@@ -1,11 +1,11 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from packages.data.schemas.transaction import Transaction
 from packages.data.schemas.email import EmailEvidence, EmailType
 from packages.evidence.confidence import compute_transaction_email_confidence
 
 
 def test_confidence_perfect_match():
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     tx = Transaction(
         id="t1",
         occurred_at=now,
@@ -31,7 +31,7 @@ def test_confidence_perfect_match():
 def test_confidence_no_email():
     tx = Transaction(
         id="t1",
-        occurred_at=datetime.utcnow(),
+        occurred_at=datetime.now(timezone.utc),
         amount=9.99,
         merchant_raw="Unknown Merchant",
         merchant_normalized="Unknown Merchant",

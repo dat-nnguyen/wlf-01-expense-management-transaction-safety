@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Optional, Tuple
 from packages.data.schemas.email import EmailEvidence, EmailType
 from packages.data.schemas.transaction import Transaction, TransactionDirection
@@ -23,7 +23,10 @@ class PayoutRadar:
         grace_period_days: int = 3,
     ) -> List[Alert]:
         alerts: List[Alert] = []
-        now = current_time or datetime.utcnow()
+        now = current_time or datetime.now(timezone.utc)
+
+        def _to_tz(dt: datetime) -> datetime:
+            return dt if dt.tzinfo is not None else dt.replace(tzinfo=timezone.utc)
 
         # Filter emails that represent seller disbursements / payout confirmations
         seller_emails = [
@@ -46,7 +49,7 @@ class PayoutRadar:
                 # Match by amount and proximity (after payout date)
                 amount_match = abs(tx.amount - em.amount) < 0.01
                 # Must occur after or near email date
-                is_after_email = tx.occurred_at >= em.date - timedelta(days=1)
+                is_after_email = _to_tz(tx.occurred_at) >= _to_tz(em.date) - timedelta(days=1)
                 merchant_sim = (
                     em.merchant.lower() in (tx.merchant_normalized or tx.merchant_raw).lower()
                     or any(k in (tx.merchant_normalized or tx.merchant_raw).lower() for k in ["payout", "settlement", "disbursement", "stripe", "amazon", "shopify"])
@@ -58,7 +61,7 @@ class PayoutRadar:
 
             if not matched_tx:
                 # Calculate elapsed days & overdue status
-                elapsed_days = max(0, (now.date() - em.date.date()).days)
+                elapsed_days = max(0, (_to_tz(now).date() - _to_tz(em.date).date()).days)
                 expected_days = em.expected_settlement_days or grace_period_days
                 
                 # Check if it has exceeded expected SLA

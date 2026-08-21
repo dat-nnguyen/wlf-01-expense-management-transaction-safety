@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from packages.data.schemas.evidence import Evidence, EvidenceType
 from packages.data.schemas.transaction import Transaction
@@ -26,7 +26,7 @@ class EvidenceBuilder:
                 "direction": tx.direction.value,
             },
             confidence_weight=1.0,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(timezone.utc),
         )
 
     @staticmethod
@@ -47,7 +47,7 @@ class EvidenceBuilder:
                 "snippet": email.body_snippet,
             },
             confidence_weight=0.9,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(timezone.utc),
         )
 
     @staticmethod
@@ -65,5 +65,5 @@ class EvidenceBuilder:
                 "amounts": [t.amount for t in history],
             },
             confidence_weight=0.95,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(timezone.utc),
         )

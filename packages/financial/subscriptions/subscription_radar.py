@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Tuple
 from collections import defaultdict
 from packages.data.schemas.transaction import Transaction
@@ -109,7 +109,7 @@ class SubscriptionRadar:
                             "new_amount": latest_tx.amount,
                             "annual_increase": annual_increase,
                         },
-                        created_at=datetime.utcnow(),
+                        created_at=datetime.now(timezone.utc),
                     )
                 )
 

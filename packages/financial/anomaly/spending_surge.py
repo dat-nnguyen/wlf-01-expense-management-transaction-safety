@@ -4,7 +4,7 @@ Compares current spending window (e.g. weekly/monthly) against historical baseli
 calculates category-wise attribution breakdowns, and explains root cause anomalies.
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, Field
 
@@ -33,7 +33,7 @@ class SpendingSurgeReport(BaseModel):
     category_breakdowns: List[CategoryAttribution]
     explanation_vi: str
     explanation_en: str
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class SpendingSurgeRadar:
@@ -65,9 +65,12 @@ class SpendingSurgeRadar:
         window_days: int = 7,
         threshold_growth_pct: float = 50.0,
     ) -> SpendingSurgeReport:
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         current_cutoff = now - timedelta(days=window_days)
         historical_cutoff = now - timedelta(days=window_days * 4)  # 3 prior periods for baseline
+
+        def _to_tz(dt: datetime) -> datetime:
+            return dt if dt.tzinfo is not None else dt.replace(tzinfo=timezone.utc)
 
         # Only evaluate actual expenses/spend (exclude internal asset transfers to own bank accounts)
         expense_txs = [
@@ -76,11 +79,11 @@ class SpendingSurgeRadar:
             and tx.transaction_type not in [TransactionType.TRANSFER_TO_CARD, TransactionType.TRANSFER]
             and "withdrawal" not in (tx.merchant_raw or "").lower()
             and "rút về" not in (tx.merchant_raw or "").lower()
-            and tx.occurred_at >= historical_cutoff
+            and _to_tz(tx.occurred_at) >= historical_cutoff
         ]
 
-        current_txs = [tx for tx in expense_txs if tx.occurred_at >= current_cutoff]
-        historical_txs = [tx for tx in expense_txs if tx.occurred_at < current_cutoff]
+        current_txs = [tx for tx in expense_txs if _to_tz(tx.occurred_at) >= current_cutoff]
+        historical_txs = [tx for tx in expense_txs if _to_tz(tx.occurred_at) < current_cutoff]
 
         current_total = sum(tx.amount for tx in current_txs)
         

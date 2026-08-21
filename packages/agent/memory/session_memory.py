@@ -1,14 +1,16 @@
 """Multi-turn Conversation Memory for Wealify Guardian Agent."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ChatMessage(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     role: str  # 'user', 'assistant', 'system'
     content: str
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     intent: Optional[str] = None
     tool_called: Optional[str] = None
 

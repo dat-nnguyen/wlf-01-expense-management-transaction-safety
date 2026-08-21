@@ -22,6 +22,7 @@ from apps.api.routes import (
     notifications_router,
     security_router,
     audit_router,
+    disputes_router,
 )
 
 
@@ -70,6 +71,7 @@ app.include_router(hitl_router)
 app.include_router(notifications_router)
 app.include_router(security_router)
 app.include_router(audit_router)
+app.include_router(disputes_router)
 
 
 @app.get("/")

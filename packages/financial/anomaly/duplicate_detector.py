@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Tuple
 from packages.data.schemas.transaction import Transaction, TransactionDirection
 from packages.data.schemas.alert import Alert, AlertStatus, AlertType
@@ -101,7 +101,7 @@ class DuplicateDetector:
                             "card_id": tx1.card_id,
                             "bank_name": tx1.bank_name,
                         },
-                        created_at=datetime.utcnow(),
+                        created_at=datetime.now(timezone.utc),
                     )
                     results.append((tx1, tx2, alert))
 

@@ -12,6 +12,7 @@ from apps.api.routes.hitl import router as hitl_router
 from apps.api.routes.notifications import router as notifications_router
 from apps.api.routes.security import router as security_router
 from apps.api.routes.audit import router as audit_router
+from apps.api.routes.disputes import router as disputes_router
 
 __all__ = [
     "health_router",
@@ -28,4 +29,5 @@ __all__ = [
     "notifications_router",
     "security_router",
     "audit_router",
+    "disputes_router",
 ]

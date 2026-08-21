@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import pytest
 from packages.data.schemas.transaction import Transaction, TransactionDirection, TransactionSource, TransactionType
 from packages.data.schemas.email import EmailEvidence, EmailType
@@ -13,7 +13,7 @@ from packages.financial.classification.classifier import classify_transaction
 def test_classify_transaction():
     tx_sub = Transaction(
         id="t1",
-        occurred_at=datetime.utcnow(),
+        occurred_at=datetime.now(timezone.utc),
         amount=9.99,
         merchant_raw="NETFLIX.COM PAYMENT",
         merchant_normalized="Netflix",
@@ -22,7 +22,7 @@ def test_classify_transaction():
 
     tx_fee = Transaction(
         id="t2",
-        occurred_at=datetime.utcnow(),
+        occurred_at=datetime.now(timezone.utc),
         amount=2.50,
         merchant_raw="ATM Service Fee",
         merchant_normalized="Atm Service Fee",
@@ -31,7 +31,7 @@ def test_classify_transaction():
 
 
 def test_duplicate_detector_virtual_cards():
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     tx1 = Transaction(
         id="tx1",
         occurred_at=now,
@@ -71,7 +71,7 @@ def test_duplicate_detector_virtual_cards():
 
 
 def test_subscription_radar_detection_and_price_hike():
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     tx_june = Transaction(
         id="tx_sub_1",
         occurred_at=now - timedelta(days=60),
@@ -146,7 +146,7 @@ def test_payout_radar_overdue_detection():
 
 
 def test_business_advisor_unit_economics():
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     txs = [
         # Ad Spend on Virtual Cards
         Transaction(

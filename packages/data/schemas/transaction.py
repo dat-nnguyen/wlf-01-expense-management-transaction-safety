@@ -1,7 +1,7 @@
 from datetime import datetime
 from enum import Enum
 from typing import List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class TransactionDirection(str, Enum):
@@ -31,6 +31,8 @@ class TransactionSource(str, Enum):
 
 class Transaction(BaseModel):
     """Canonical Transaction Model across all data sources."""
+    model_config = ConfigDict(from_attributes=True)
+
     id: str = Field(..., description="Unique transaction ID")
     account_id: str = Field(default="acc_default", description="Associated account identifier")
     occurred_at: datetime = Field(..., description="Timestamp of transaction occurrence")
@@ -48,7 +50,3 @@ class Transaction(BaseModel):
     alert_status_label: Optional[str] = Field(default=None, description="Tri-state alert classification label")
     tags: List[str] = Field(default_factory=list, description="Categorization tags like ads, saas, payout")
     status: str = Field(default="completed")
-
-    class Config:
-        from_attributes = True
-
