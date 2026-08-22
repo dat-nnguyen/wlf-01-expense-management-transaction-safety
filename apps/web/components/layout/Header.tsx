@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldCheck, Sun, Moon, Globe, Lock, AlertTriangle, Settings, Check, RefreshCw, Server } from 'lucide-react';
+import { ShieldCheck, Sun, Moon, Globe, Lock, AlertTriangle, Settings, Check, RefreshCw, Server, Github } from 'lucide-react';
 import { Language } from '../../types';
 import { TRANSLATIONS } from '../../data/translations';
 import { getApiUrl, setCustomApiUrl } from '../../utils/apiConfig';
@@ -116,13 +116,25 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
 
-        {/* Right Controls: FX Rate, Theme Toggle, VI/EN */}
+        {/* Right Controls: FX Rate, GitHub Repo, Theme Toggle, VI/EN */}
         <div className="flex items-center gap-2.5">
           {/* FX Reference Badge */}
           <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[var(--bg-card)] border border-[var(--border-subtle)] text-xs font-mono text-[var(--text-secondary)]">
             <Globe className="w-3 h-3 text-[var(--text-muted)]" />
             <span>$1 = 25,400₫</span>
           </div>
+
+          {/* GitHub Repository Link */}
+          <a
+            href="https://github.com/dat-nnguyen/wlf-01-expense-management-transaction-safety"
+            target="_blank"
+            rel="noopener noreferrer"
+            title={language === 'vi' ? 'Xem mã nguồn trên GitHub' : 'View Source Code on GitHub'}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] border border-[var(--border-subtle)] text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all group"
+          >
+            <Github className="w-4 h-4 text-[var(--text-muted)] group-hover:text-[var(--text-primary)] transition-colors" />
+            <span className="hidden lg:inline font-medium">GitHub</span>
+          </a>
 
           {/* Dark / Light Mode Toggle Button */}
           <button

@@ -8,6 +8,7 @@ import {
   Eye,
   EyeOff,
   ShieldCheck,
+  Github,
 } from 'lucide-react';
 import { Language } from '../../types';
 import { TRANSLATIONS } from '../../data/translations';
@@ -92,24 +93,39 @@ export const UserSidebar: React.FC<UserSidebarProps> = ({
         </div>
       </div>
 
-      {/* Account Balance Widget */}
-      <div className="p-3.5 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-subtle)] space-y-2 mt-4">
-        <div className="flex items-center justify-between text-xs text-[var(--text-muted)]">
-          <span>{language === 'vi' ? 'Số dư khả dụng Wealify' : 'Available Balance'}</span>
-          <button
-            onClick={() => setIsBalanceMasked(!isBalanceMasked)}
-            className="text-[var(--text-muted)] hover:text-[var(--text-primary)] cursor-pointer"
-          >
-            {isBalanceMasked ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-          </button>
+      {/* Bottom Section: Balance Widget & GitHub Link */}
+      <div className="space-y-2.5 mt-4">
+        {/* Account Balance Widget */}
+        <div className="p-3.5 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-subtle)] space-y-2">
+          <div className="flex items-center justify-between text-xs text-[var(--text-muted)]">
+            <span>{language === 'vi' ? 'Số dư khả dụng Wealify' : 'Available Balance'}</span>
+            <button
+              onClick={() => setIsBalanceMasked(!isBalanceMasked)}
+              className="text-[var(--text-muted)] hover:text-[var(--text-primary)] cursor-pointer"
+            >
+              {isBalanceMasked ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+            </button>
+          </div>
+          <div className="text-base font-bold font-mono text-[var(--text-primary)]">
+            {isBalanceMasked ? '••••••••' : '$12,450.00 USD'}
+          </div>
+          <div className="flex items-center gap-1.5 text-[10px] text-emerald-400 font-medium pt-1 border-t border-[var(--border-subtle)]">
+            <ShieldCheck className="w-3 h-3" />
+            <span>{language === 'vi' ? 'Bảo vệ số dư 24/7' : '24/7 Balance Protection'}</span>
+          </div>
         </div>
-        <div className="text-base font-bold font-mono text-[var(--text-primary)]">
-          {isBalanceMasked ? '••••••••' : '$12,450.00 USD'}
-        </div>
-        <div className="flex items-center gap-1.5 text-[10px] text-emerald-400 font-medium pt-1 border-t border-[var(--border-subtle)]">
-          <ShieldCheck className="w-3 h-3" />
-          <span>{language === 'vi' ? 'Bảo vệ số dư 24/7' : '24/7 Balance Protection'}</span>
-        </div>
+
+        {/* GitHub Repository Link */}
+        <a
+          href="https://github.com/dat-nnguyen/wlf-01-expense-management-transaction-safety"
+          target="_blank"
+          rel="noopener noreferrer"
+          title="GitHub Repository"
+          className="flex items-center justify-center gap-2 p-2.5 rounded-xl bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] border border-[var(--border-subtle)] text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all group shadow-sm"
+        >
+          <Github className="w-4 h-4 text-[var(--text-muted)] group-hover:text-[var(--text-primary)] transition-colors" />
+          <span className="font-semibold">{language === 'vi' ? 'Mã Nguồn (GitHub)' : 'Source Code (GitHub)'}</span>
+        </a>
       </div>
     </aside>
   );
