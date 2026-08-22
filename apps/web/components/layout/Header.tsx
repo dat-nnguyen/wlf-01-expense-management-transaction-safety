@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldCheck, Sun, Moon, Globe, Lock, AlertTriangle, Settings, Check, RefreshCw, Server, Github } from 'lucide-react';
+import { ShieldCheck, Sun, Moon, Globe, Lock, AlertTriangle, Settings, Check, RefreshCw, Server, Github, Menu, X } from 'lucide-react';
 import { Language } from '../../types';
 import { TRANSLATIONS } from '../../data/translations';
 import { getApiUrl, setCustomApiUrl } from '../../utils/apiConfig';
@@ -9,6 +9,8 @@ interface HeaderProps {
   setLanguage: (lang: Language) => void;
   theme: 'dark' | 'light';
   setTheme: (theme: 'dark' | 'light') => void;
+  isMobileMenuOpen?: boolean;
+  onToggleMobileMenu?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -16,6 +18,8 @@ export const Header: React.FC<HeaderProps> = ({
   setLanguage,
   theme,
   setTheme,
+  isMobileMenuOpen = false,
+  onToggleMobileMenu,
 }) => {
   const t = TRANSLATIONS[language];
   const [apiStatus, setApiStatus] = useState<'online' | 'offline' | 'checking'>('checking');
@@ -57,26 +61,36 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <div className="w-full z-40 sticky top-0">
-      {/* 1. Mandatory Fixed Warning Banner (Requirement 16: Non-dismissible, persistent) */}
-      <div className="w-full bg-gradient-to-r from-amber-500/20 via-orange-500/20 to-amber-500/20 border-b border-amber-500/30 px-4 py-2 text-center text-xs text-amber-200 backdrop-blur-md flex items-center justify-center gap-2 font-medium leading-tight">
-        <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
-        <span className="max-w-5xl">
+      {/* 1. Mandatory Fixed Warning Banner */}
+      <div className="w-full bg-gradient-to-r from-amber-500/20 via-orange-500/20 to-amber-500/20 border-b border-amber-500/30 px-2.5 sm:px-4 py-1.5 text-center text-[10px] sm:text-xs text-amber-200 backdrop-blur-md flex items-center justify-center gap-1.5 sm:gap-2 font-medium leading-tight">
+        <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+        <span className="max-w-5xl line-clamp-1 sm:line-clamp-none">
           {t.fixedWarningBanner}
         </span>
       </div>
 
       {/* 2. Top Navigation Bar */}
-      <header className="h-14 border-b border-[var(--border-subtle)] bg-[var(--bg-header)] backdrop-blur-md px-6 flex items-center justify-between transition-colors">
-        {/* Left: Wealify Brand Logo & Status */}
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 shrink-0 flex items-center justify-center">
+      <header className="h-14 border-b border-[var(--border-subtle)] bg-[var(--bg-header)] backdrop-blur-md px-3 sm:px-6 flex items-center justify-between transition-colors">
+        {/* Left: Mobile Menu Button + Wealify Brand Logo & Status */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          {/* Mobile Hamburger Toggle */}
+          <button
+            onClick={onToggleMobileMenu}
+            className="md:hidden p-1.5 rounded-lg bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+            title="Menu"
+            aria-label="Toggle navigation menu"
+          >
+            {isMobileMenuOpen ? <X className="w-4 h-4 text-[#FC6508]" /> : <Menu className="w-4 h-4" />}
+          </button>
+
+          <div className="w-7 h-7 sm:w-8 sm:h-8 shrink-0 flex items-center justify-center">
             <img src="/logo.png" alt="Wealify Guardian Logo" className="w-full h-full object-contain" />
           </div>
-          <div className="flex items-center gap-2">
-            <span className="font-bold text-sm tracking-tight text-[var(--text-primary)]">
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <span className="font-bold text-xs sm:text-sm tracking-tight text-[var(--text-primary)]">
               WEALIFY <span className="text-[#FC6508]">GUARDIAN</span>
             </span>
-            <span className="text-[10px] text-[var(--text-muted)] font-mono border border-[var(--border-subtle)] px-1.5 py-0.2 rounded">
+            <span className="text-[9px] sm:text-[10px] text-[var(--text-muted)] font-mono border border-[var(--border-subtle)] px-1 py-0.2 rounded">
               v2.5
             </span>
           </div>

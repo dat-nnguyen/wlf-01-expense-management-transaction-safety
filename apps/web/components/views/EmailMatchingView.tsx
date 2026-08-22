@@ -88,43 +88,56 @@ export const EmailMatchingView: React.FC<EmailMatchingViewProps> = ({ language }
   };
 
   return (
-    <div className="p-6 space-y-6 overflow-y-auto max-w-7xl mx-auto w-full">
+    <div className="p-3.5 sm:p-6 space-y-4 sm:space-y-6 overflow-y-auto max-w-7xl mx-auto w-full">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h2 className="text-lg font-bold text-[var(--text-primary)] flex items-center gap-2">
+          <h2 className="text-base sm:text-lg font-bold text-[var(--text-primary)] flex items-center gap-2">
             <Mail className="w-5 h-5 text-[#FC6508]" />
-            <span>{language === 'vi' ? 'Đối Soát Giao Dịch ↔ Hộp Thư Email (Email Reconciliation)' : 'Email Receipt Reconciliation'}</span>
+            <span>{language === 'vi' ? 'Đối Soát Biên Lai & Email (Receipt & Invoice Matcher)' : 'Receipt & Email Invoice Matcher'}</span>
           </h2>
-          <p className="text-xs text-[var(--text-muted)]">
+          <p className="text-xs text-[var(--text-muted)] mt-0.5">
             {language === 'vi'
-              ? 'Tự động bóc tách biên lai, hóa đơn điện tử và thông báo ngân hàng từ Mailbox để đối chiếu từng giao dịch.'
-              : 'Cross-checks transactions against mailbox receipts, payment confirmations, and bank notifications.'}
+              ? 'Tự động quét hộp thư Gmail/Outlook, bóc tách hóa đơn VAT và biên lai PDF/PNG khớp với từng giao dịch.'
+              : 'Autonomous OCR & Mailbox ingestion cross-checking invoices against transaction ledger.'}
           </p>
         </div>
 
         <button
           onClick={fetchEmailMatches}
-          className="px-3.5 py-2 rounded-xl bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] border border-[var(--border-subtle)] text-xs font-semibold text-[var(--text-primary)] transition-all flex items-center gap-1.5 shadow-sm"
+          className="px-3.5 py-2 rounded-xl bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] border border-[var(--border-subtle)] text-xs font-semibold text-[var(--text-primary)] transition-all flex items-center gap-1.5 shadow-sm self-start md:self-auto"
         >
           <RefreshCw className={`w-3.5 h-3.5 text-[#FC6508] ${loading ? 'animate-spin' : ''}`} />
-          <span>{language === 'vi' ? 'Quét lại Mailbox' : 'Rescan Mailbox'}</span>
+          <span>{language === 'vi' ? 'Quét lại hòm thư' : 'Sync Mailbox'}</span>
         </button>
       </div>
 
-      {/* Filter Tabs & Search */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-[var(--bg-card)] p-3 rounded-xl border border-[var(--border-subtle)]">
-        <div className="flex items-center bg-[var(--bg-input)] p-1 rounded-lg border border-[var(--border-subtle)] w-full sm:w-auto overflow-x-auto">
+      {/* Filter & Search Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 bg-[var(--bg-card)] p-3 rounded-2xl border border-[var(--border-subtle)]">
+        {/* Search */}
+        <div className="relative flex-1 min-w-0">
+          <Search className="w-4 h-4 text-[var(--text-muted)] absolute left-3 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder={language === 'vi' ? 'Tìm merchant, mã TX, tiêu đề email...' : 'Search merchant, ref, subject...'}
+            className="w-full pl-9 pr-4 py-2 bg-[var(--bg-input)] border border-[var(--border-default)] rounded-xl text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] outline-none focus:border-[#FC6508]"
+          />
+        </div>
+
+        {/* Status Filter */}
+        <div className="flex items-center gap-1 overflow-x-auto scrollbar-none self-start sm:self-auto">
           {[
-            { id: 'all', label: language === 'vi' ? 'Tất cả kết quả' : 'All Results' },
-            { id: 'Có email khớp', label: language === 'vi' ? 'Có email khớp' : 'Matched Email' },
-            { id: 'Không tìm thấy email', label: language === 'vi' ? 'Không tìm thấy' : 'Not Found' },
-            { id: 'Email nghi giả', label: language === 'vi' ? 'Email nghi giả' : 'Suspicious Fake' },
+            { id: 'all', label: language === 'vi' ? 'Tất cả' : 'All' },
+            { id: 'Có email khớp', label: language === 'vi' ? 'Khớp hoàn toàn' : 'Matched' },
+            { id: 'Thiếu hóa đơn/email', label: language === 'vi' ? 'Thiếu biên lai' : 'Missing Receipt' },
+            { id: 'Lệch số tiền', label: language === 'vi' ? 'Lệch tiền' : 'Mismatch' },
           ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => setFilterStatus(tab.id)}
-              className={`px-3 py-1 rounded text-xs font-semibold transition-all whitespace-nowrap ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
                 filterStatus === tab.id
                   ? 'bg-[#FC6508] text-white shadow-sm'
                   : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
@@ -133,17 +146,6 @@ export const EmailMatchingView: React.FC<EmailMatchingViewProps> = ({ language }
               {tab.label}
             </button>
           ))}
-        </div>
-
-        <div className="relative w-full sm:w-72">
-          <Search className="w-4 h-4 text-[var(--text-muted)] absolute left-3 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder={language === 'vi' ? 'Tìm theo merchant, email...' : 'Search merchant, email...'}
-            className="w-full pl-9 pr-3 py-1.5 rounded-lg bg-[var(--bg-input)] border border-[var(--border-subtle)] text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[#FC6508]"
-          />
         </div>
       </div>
 

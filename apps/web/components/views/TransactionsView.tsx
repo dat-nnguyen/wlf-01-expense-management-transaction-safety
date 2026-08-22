@@ -153,58 +153,67 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({ language }) 
   };
 
   return (
-    <div className="p-6 space-y-6 overflow-y-auto max-w-7xl mx-auto w-full">
+    <div className="p-3.5 sm:p-6 space-y-4 sm:space-y-6 overflow-y-auto max-w-7xl mx-auto w-full">
       {/* Header & Controls */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h2 className="text-lg font-bold text-[var(--text-primary)] flex items-center gap-2">
+          <h2 className="text-base sm:text-lg font-bold text-[var(--text-primary)] flex items-center gap-2">
             <Receipt className="w-5 h-5 text-[#FC6508]" />
-            <span>{language === 'vi' ? 'Sao Kê & Phân Loại Giao Dịch' : 'Statement Analyzer & Classifications'}</span>
+            <span>{language === 'vi' ? 'Sổ Cái Giao Dịch Đa Nguồn (Transactions Ledger)' : 'Multi-Source Transactions Ledger'}</span>
           </h2>
-          <p className="text-xs text-[var(--text-muted)]">
+          <p className="text-xs text-[var(--text-muted)] mt-0.5">
             {language === 'vi'
-              ? 'Tự động đọc và phân loại sao kê CSV & PDF, chuẩn hóa và diễn giải tên đơn vị thụ hưởng.'
-              : 'Automatically reads CSV/PDF statements, normalizes and explains obscure merchant names.'}
+              ? 'Dữ liệu giao dịch từ 3 nguồn: Bank Account, Wealify Wallet và Virtual Cards với phân loại tự động.'
+              : 'Multi-source ledger covering Bank Accounts, Wealify Wallet, and Virtual Cards.'}
           </p>
         </div>
 
         {/* Upload Statement Button */}
-        <div className="flex items-center gap-2.5">
-          <label className="px-3.5 py-2 rounded-xl bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] border border-[var(--border-subtle)] text-xs font-semibold text-[var(--text-primary)] cursor-pointer transition-all flex items-center gap-1.5 shadow-sm">
-            <Upload className="w-3.5 h-3.5 text-[#FC6508]" />
-            <span>{language === 'vi' ? 'Nạp sao kê (CSV/PDF)' : 'Upload Statement (CSV/PDF)'}</span>
-            <input
-              type="file"
-              accept=".csv,.pdf,.xlsx"
-              className="hidden"
-              onChange={handleFileUpload}
-            />
-          </label>
-        </div>
+        <label className="px-3.5 py-2 rounded-xl bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] border border-[var(--border-subtle)] text-xs font-semibold text-[var(--text-primary)] transition-all cursor-pointer flex items-center gap-2 shadow-sm shrink-0 self-start md:self-auto">
+          <Upload className="w-4 h-4 text-[#FC6508]" />
+          <span>{language === 'vi' ? 'Nhập sao kê (CSV/XLSX)' : 'Upload Statement'}</span>
+          <input
+            type="file"
+            accept=".csv,.xlsx,.xls,.pdf"
+            onChange={handleFileUpload}
+            className="hidden"
+          />
+        </label>
       </div>
 
-      {/* Upload Feedback Toast */}
+      {/* Upload Feedback Banner */}
       {uploadStatus && (
-        <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-400 flex items-center gap-2 animate-fadeIn">
-          <CheckCircle2 className="w-4 h-4 shrink-0" />
-          <span>{uploadStatus}</span>
+        <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-400 font-medium animate-fadeIn">
+          {uploadStatus}
         </div>
       )}
 
-      {/* Filter & Search Bar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-[var(--bg-card)] p-3 rounded-xl border border-[var(--border-subtle)]">
-        {/* Source Switcher */}
-        <div className="flex items-center bg-[var(--bg-input)] p-1 rounded-lg border border-[var(--border-subtle)] w-full sm:w-auto overflow-x-auto">
+      {/* Filters & Search */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 bg-[var(--bg-card)] p-3 rounded-2xl border border-[var(--border-subtle)]">
+        {/* Search */}
+        <div className="relative flex-1 min-w-0">
+          <Search className="w-4 h-4 text-[var(--text-muted)] absolute left-3 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder={language === 'vi' ? 'Tìm theo Merchant, ID giao dịch...' : 'Search merchant, transaction ID...'}
+            className="w-full pl-9 pr-4 py-2 bg-[var(--bg-input)] border border-[var(--border-default)] rounded-xl text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] outline-none focus:border-[#FC6508]"
+          />
+        </div>
+
+        {/* Source Filter */}
+        <div className="flex items-center gap-1 overflow-x-auto scrollbar-none self-start sm:self-auto">
           {[
-            { id: 'all', label: language === 'vi' ? 'Tất cả nguồn' : 'All Sources' },
-            { id: 'account', label: language === 'vi' ? 'Tài khoản (Account)' : 'Account' },
-            { id: 'card', label: language === 'vi' ? 'Thẻ ảo (Card)' : 'Card' },
+            { id: 'all', label: language === 'vi' ? 'Tất cả' : 'All' },
+            { id: 'account', label: language === 'vi' ? 'Tài khoản' : 'Account' },
+            { id: 'card', label: language === 'vi' ? 'Thẻ ảo' : 'Card' },
             { id: 'wallet', label: language === 'vi' ? 'Ví Wealify' : 'Wallet' },
           ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => setFilterSource(tab.id)}
-              className={`px-3 py-1 rounded text-xs font-semibold transition-all whitespace-nowrap ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
                 filterSource === tab.id
                   ? 'bg-[#FC6508] text-white shadow-sm'
                   : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
@@ -213,18 +222,6 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({ language }) 
               {tab.label}
             </button>
           ))}
-        </div>
-
-        {/* Search Input */}
-        <div className="relative w-full sm:w-72">
-          <Search className="w-4 h-4 text-[var(--text-muted)] absolute left-3 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder={language === 'vi' ? 'Tìm merchant, mã giao dịch, số tiền...' : 'Search merchant, ref, amount...'}
-            className="w-full pl-9 pr-3 py-1.5 rounded-lg bg-[var(--bg-input)] border border-[var(--border-subtle)] text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[#FC6508]"
-          />
         </div>
       </div>
 

@@ -31,9 +31,9 @@ export const CopilotChat: React.FC<CopilotChatProps> = ({
   const t = TRANSLATIONS[language];
 
   return (
-    <div className="flex-1 min-h-0 overflow-y-auto p-6 space-y-6">
+    <div className="flex-1 min-h-0 overflow-y-auto p-3 sm:p-6 space-y-4 sm:space-y-6">
       {messages.length === 0 ? (
-        <div className="h-full min-h-[360px] flex flex-col items-center justify-center text-center max-w-md mx-auto space-y-4 px-4 my-auto">
+        <div className="h-full min-h-[360px] flex flex-col items-center justify-center text-center max-w-md mx-auto space-y-4 px-3 sm:px-4 my-auto">
           <div className="w-12 h-12 rounded-xl bg-[#FC6508] flex items-center justify-center text-white shadow-sm">
             <ShieldCheck className="w-6 h-6 stroke-[2.2]" />
           </div>
@@ -45,28 +45,28 @@ export const CopilotChat: React.FC<CopilotChatProps> = ({
               {t.welcomeDesc}
             </p>
           </div>
-          <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+          <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 pt-2">
             <button
               onClick={() => onChipClick(t.promptCheckRecent)}
-              className="action-chip"
+              className="action-chip text-[11px] sm:text-xs"
             >
               {t.quickCheckTx}
             </button>
             <button
               onClick={() => onChipClick(t.promptCheckPayout)}
-              className="action-chip"
+              className="action-chip text-[11px] sm:text-xs"
             >
               {t.quickCheckPayout}
             </button>
             <button
               onClick={() => onChipClick(t.promptCheckDup)}
-              className="action-chip"
+              className="action-chip text-[11px] sm:text-xs"
             >
               {t.quickCheckDup}
             </button>
             <button
               onClick={() => onChipClick(t.promptCheckAdvisory)}
-              className="action-chip"
+              className="action-chip text-[11px] sm:text-xs"
             >
               {t.quickCheckAdvisory}
             </button>
@@ -74,17 +74,17 @@ export const CopilotChat: React.FC<CopilotChatProps> = ({
         </div>
       ) : (
         messages.map((msg) => (
-          <div key={msg.id} className="space-y-4">
+          <div key={msg.id} className="space-y-3 sm:space-y-4">
             {msg.sender === 'user' ? (
               <div className="flex justify-end">
-                <div className="max-w-[75%] p-3.5 px-4 rounded-2xl bg-[var(--bg-chat-user)] border border-[var(--border-subtle)] text-[var(--text-primary)] text-xs font-medium leading-relaxed">
+                <div className="max-w-[88%] sm:max-w-[75%] p-3 sm:p-3.5 px-3.5 sm:px-4 rounded-2xl bg-[var(--bg-chat-user)] border border-[var(--border-subtle)] text-[var(--text-primary)] text-xs font-medium leading-relaxed">
                   {/* Uploaded Image Preview */}
                   {msg.image_preview && (
                     <div className="mb-2.5">
                       <img
                         src={msg.image_preview}
                         alt={msg.image_name || 'Receipt'}
-                        className="max-w-[260px] max-h-[180px] object-cover rounded-xl border border-[var(--border-subtle)] shadow-sm"
+                        className="max-w-full sm:max-w-[260px] max-h-[180px] object-cover rounded-xl border border-[var(--border-subtle)] shadow-sm"
                       />
                       {msg.image_name && (
                         <div className="text-[10px] text-[var(--text-muted)] mt-1 flex items-center gap-1 font-mono">
@@ -102,11 +102,11 @@ export const CopilotChat: React.FC<CopilotChatProps> = ({
                 </div>
               </div>
             ) : (
-              <div className="flex gap-3 max-w-[92%]">
-                <div className="w-8 h-8 rounded-lg bg-[#FC6508] flex items-center justify-center text-white shrink-0 mt-0.5 shadow-sm">
-                  <ShieldCheck className="w-4 h-4 stroke-[2.2]" />
+              <div className="flex gap-2 sm:gap-3 max-w-full sm:max-w-[92%]">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#FC6508] flex items-center justify-center text-white shrink-0 mt-0.5 shadow-sm">
+                  <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.2]" />
                 </div>
-                <div className="space-y-3 flex-1">
+                <div className="space-y-3 flex-1 min-w-0">
                   {/* AI Main Card */}
                   <div className="p-4 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-subtle)] space-y-3 transition-colors">
                     <div className="flex items-center justify-between text-xs text-[var(--text-secondary)]">

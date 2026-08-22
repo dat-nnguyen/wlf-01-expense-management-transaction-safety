@@ -50,15 +50,15 @@ export const ThreeWayReconciliationView: React.FC<ThreeWayReconciliationViewProp
   }, []);
 
   return (
-    <div className="p-6 space-y-6 overflow-y-auto max-w-7xl mx-auto w-full">
+    <div className="p-3.5 sm:p-6 space-y-4 sm:space-y-6 overflow-y-auto max-w-7xl mx-auto w-full">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h2 className="text-lg font-bold text-[var(--text-primary)] flex items-center gap-2">
+          <h2 className="text-base sm:text-lg font-bold text-[var(--text-primary)] flex items-center gap-2">
             <Repeat className="w-5 h-5 text-[#FC6508]" />
             <span>{language === 'vi' ? 'Đối Soát 3 Nguồn (Account ↔ Wallet ↔ Card)' : '3-Way Multi-Source Reconciliation'}</span>
           </h2>
-          <p className="text-xs text-[var(--text-muted)]">
+          <p className="text-xs text-[var(--text-muted)] mt-0.5">
             {language === 'vi'
               ? 'Tự động đối chiếu dòng tiền giữa Sao kê Tài khoản ngân hàng, Sổ cái Ví Wealify và Sao kê Thẻ ảo.'
               : 'Cross-verifies cashflows across Bank Accounts, Wealify Wallet, and Virtual Card statements.'}
@@ -67,7 +67,7 @@ export const ThreeWayReconciliationView: React.FC<ThreeWayReconciliationViewProp
 
         <button
           onClick={fetchReconciliation}
-          className="px-3.5 py-2 rounded-xl bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] border border-[var(--border-subtle)] text-xs font-semibold text-[var(--text-primary)] transition-all flex items-center gap-1.5 shadow-sm"
+          className="px-3.5 py-2 rounded-xl bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] border border-[var(--border-subtle)] text-xs font-semibold text-[var(--text-primary)] transition-all flex items-center gap-1.5 shadow-sm self-start md:self-auto"
         >
           <RefreshCw className={`w-3.5 h-3.5 text-[#FC6508] ${loading ? 'animate-spin' : ''}`} />
           <span>{language === 'vi' ? 'Chạy lại đối soát' : 'Re-run Reconcile'}</span>

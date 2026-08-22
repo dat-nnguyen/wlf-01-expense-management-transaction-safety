@@ -37,10 +37,10 @@ export const EmailConfirmationModal: React.FC<EmailConfirmationModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn">
-      <div className="w-full max-w-lg bg-[var(--bg-modal)] border border-[var(--border-subtle)] rounded-2xl p-5 space-y-4 shadow-xl">
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 z-50 animate-fadeIn">
+      <div className="w-full max-w-lg bg-[var(--bg-modal)] border border-[var(--border-subtle)] rounded-2xl p-4 sm:p-5 space-y-4 shadow-xl max-h-[92vh] overflow-y-auto">
         <div className="flex items-center gap-2.5 border-b border-[var(--border-subtle)] pb-3">
-          <div className="w-8 h-8 rounded-lg bg-[#FC6508] text-white flex items-center justify-center">
+          <div className="w-8 h-8 rounded-lg bg-[#FC6508] text-white flex items-center justify-center shrink-0">
             <Mail className="w-4 h-4" />
           </div>
           <div>

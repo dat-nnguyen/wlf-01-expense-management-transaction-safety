@@ -58,15 +58,15 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ language }) => {
   };
 
   return (
-    <div className="p-6 space-y-6 overflow-y-auto max-w-7xl mx-auto w-full">
+    <div className="p-3.5 sm:p-6 space-y-4 sm:space-y-6 overflow-y-auto max-w-7xl mx-auto w-full">
       {/* Header & Period Switcher */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h2 className="text-lg font-bold text-[var(--text-primary)] flex items-center gap-2">
+          <h2 className="text-base sm:text-lg font-bold text-[var(--text-primary)] flex items-center gap-2">
             <BarChart3 className="w-5 h-5 text-[#FC6508]" />
             <span>{language === 'vi' ? 'Báo Cáo Tài Chính & Dự Báo (Reports & Forecast)' : 'Financial Reports & Multi-Period Forecast'}</span>
           </h2>
-          <p className="text-xs text-[var(--text-muted)]">
+          <p className="text-xs text-[var(--text-muted)] mt-0.5">
             {language === 'vi'
               ? 'Phân tích chi tiết dòng tiền Theo Tháng / Quý / Năm, tổng phí, top khoản chi lớn nhất và dự báo subscription.'
               : 'Multi-period cashflow breakdown, fees analysis, top spending drivers, and annual subscription forecasting.'}
@@ -74,7 +74,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ language }) => {
         </div>
 
         {/* Period Selector Tabs */}
-        <div className="flex items-center bg-[var(--bg-card)] p-1 rounded-xl border border-[var(--border-subtle)]">
+        <div className="flex items-center bg-[var(--bg-card)] p-1 rounded-xl border border-[var(--border-subtle)] overflow-x-auto scrollbar-none self-start md:self-auto">
           {[
             { id: 'month', label: language === 'vi' ? 'Theo Tháng' : 'Monthly' },
             { id: 'quarter', label: language === 'vi' ? 'Theo Quý' : 'Quarterly' },
@@ -83,7 +83,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ language }) => {
             <button
               key={tab.id}
               onClick={() => handlePeriodChange(tab.id as any)}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
                 periodType === tab.id
                   ? 'bg-[#FC6508] text-white shadow-sm'
                   : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'

@@ -78,12 +78,12 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   return (
     <div className="flex flex-col shrink-0 transition-colors">
       {/* Quick Action Chips Bar */}
-      <div className="px-6 py-2 border-t border-[var(--border-subtle)] bg-[var(--bg-header)] flex items-center gap-2 overflow-x-auto">
+      <div className="px-3 sm:px-6 py-2 border-t border-[var(--border-subtle)] bg-[var(--bg-header)] flex items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-none whitespace-nowrap">
         <button
           type="button"
           onClick={() => onSendMessage(t.promptCheckRecent)}
           disabled={isTyping}
-          className="action-chip text-xs shrink-0 disabled:opacity-50"
+          className="action-chip text-[11px] sm:text-xs shrink-0 disabled:opacity-50"
         >
           <Search className="w-3.5 h-3.5" />
           <span>{t.chipCheckTx}</span>
@@ -97,7 +97,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             }
           }}
           disabled={isTyping}
-          className="action-chip text-xs shrink-0 disabled:opacity-50 text-[#FC6508] border-[#FC6508]/30 hover:border-[#FC6508]"
+          className="action-chip text-[11px] sm:text-xs shrink-0 disabled:opacity-50 text-[#FC6508] border-[#FC6508]/30 hover:border-[#FC6508]"
           title={language === 'vi' ? 'Chọn file ảnh chứng từ từ máy tính' : 'Upload receipt file from computer'}
         >
           <ImageIcon className="w-3.5 h-3.5" />
@@ -108,7 +108,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           type="button"
           onClick={onOpenVerifyModal}
           disabled={isTyping}
-          className="action-chip text-xs shrink-0 disabled:opacity-50"
+          className="action-chip text-[11px] sm:text-xs shrink-0 disabled:opacity-50"
         >
           <ShieldAlert className="w-3.5 h-3.5 text-amber-500" />
           <span>{language === 'vi' ? 'Giám định biên lai mẫu' : 'Sample Receipt Forensics'}</span>
@@ -118,7 +118,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           type="button"
           onClick={() => onSendMessage(language === 'vi' ? 'Có khoản Payout nào từ Amazon hay Stripe bị trễ không?' : 'Are there any overdue payouts from Amazon or Stripe?')}
           disabled={isTyping}
-          className="action-chip text-xs shrink-0 disabled:opacity-50"
+          className="action-chip text-[11px] sm:text-xs shrink-0 disabled:opacity-50"
         >
           <RefreshCw className="w-3.5 h-3.5" />
           <span>{language === 'vi' ? 'Quét Payout trễ hạn' : 'Overdue Payout Radar'}</span>
@@ -128,7 +128,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           type="button"
           onClick={() => onSendMessage(t.promptCheckDup)}
           disabled={isTyping}
-          className="action-chip text-xs shrink-0 disabled:opacity-50"
+          className="action-chip text-[11px] sm:text-xs shrink-0 disabled:opacity-50"
         >
           <CreditCard className="w-3.5 h-3.5" />
           <span>{t.chipCheckDup}</span>
@@ -138,7 +138,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           type="button"
           onClick={() => onSendMessage(language === 'vi' ? 'Có tiền nào rời tài khoản ngân hàng nhưng chưa lên thẻ ảo không?' : 'Is there any money transferred from bank account not appearing on cards?')}
           disabled={isTyping}
-          className="action-chip text-xs shrink-0 disabled:opacity-50"
+          className="action-chip text-[11px] sm:text-xs shrink-0 disabled:opacity-50"
         >
           <Layers className="w-3.5 h-3.5" />
           <span>{language === 'vi' ? 'Đối soát 3 nguồn (Bank ↔ Ví ↔ Thẻ)' : '3-Way Reconciliation'}</span>
@@ -146,7 +146,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       </div>
 
       {/* Chat Input Box & Fixed Safety Disclaimer */}
-      <div className="p-4 bg-[var(--bg-sidebar)] border-t border-[var(--border-subtle)] space-y-2">
+      <div className="p-2.5 sm:p-4 bg-[var(--bg-sidebar)] border-t border-[var(--border-subtle)] space-y-2">
         {/* Hidden File Input */}
         <input
           type="file"
@@ -192,13 +192,13 @@ export const ChatInput: React.FC<ChatInputProps> = ({
 
         <form
           onSubmit={handleSubmit}
-          className="flex items-center gap-2.5 bg-[var(--bg-input)] border border-[var(--border-default)] focus-within:border-[#FC6508] rounded-xl px-4 py-2 transition-colors"
+          className="flex items-center gap-2 sm:gap-2.5 bg-[var(--bg-input)] border border-[var(--border-default)] focus-within:border-[#FC6508] rounded-xl px-3 sm:px-4 py-1.5 sm:py-2 transition-colors"
         >
           {/* Real Working Attach File Button */}
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="text-[var(--text-muted)] hover:text-[#FC6508] transition-colors p-1 rounded-lg hover:bg-[var(--bg-secondary)]"
+            className="text-[var(--text-muted)] hover:text-[#FC6508] transition-colors p-1 rounded-lg hover:bg-[var(--bg-secondary)] shrink-0"
             title={language === 'vi' ? 'Đính kèm ảnh chứng từ / biên lai thanh toán (PNG, JPG)' : 'Attach receipt or screenshot (PNG, JPG)'}
           >
             <Paperclip className="w-4 h-4" />
@@ -210,7 +210,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             onChange={(e) => setInputMsg(e.target.value)}
             disabled={isTyping}
             placeholder={attachedFile ? (language === 'vi' ? 'Thêm ghi chú hoặc nhấn gửi để bắt đầu giám định...' : 'Add notes or press send to analyze...') : t.inputPlaceholder}
-            className="flex-1 bg-transparent border-none outline-none text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] font-medium disabled:opacity-50"
+            className="flex-1 bg-transparent border-none outline-none text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] font-medium disabled:opacity-50 min-w-0"
           />
 
           <button
@@ -223,7 +223,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         </form>
 
         {/* Permanent Fixed Safety Disclaimer */}
-        <p className="text-[11px] text-[var(--text-muted)] text-center leading-relaxed">
+        <p className="text-[10px] sm:text-[11px] text-[var(--text-muted)] text-center leading-relaxed">
           {t.disclaimer}
         </p>
       </div>

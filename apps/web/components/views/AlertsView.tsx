@@ -92,14 +92,14 @@ export const AlertsView: React.FC<AlertsViewProps> = ({
   };
 
   return (
-    <div className="p-6 space-y-6 overflow-y-auto max-w-7xl mx-auto w-full">
+    <div className="p-3.5 sm:p-6 space-y-4 sm:space-y-6 overflow-y-auto max-w-7xl mx-auto w-full">
       {/* Header */}
       <div>
-        <h2 className="text-lg font-bold text-[var(--text-primary)] flex items-center gap-2">
+        <h2 className="text-base sm:text-lg font-bold text-[var(--text-primary)] flex items-center gap-2">
           <AlertTriangle className="w-5 h-5 text-[#FC6508]" />
           <span>{language === 'vi' ? 'Trung Tâm Cảnh Báo An Toàn (3 Mức Bắt Buộc)' : 'Financial Safety Alerts (Tri-State System)'}</span>
         </h2>
-        <p className="text-xs text-[var(--text-muted)]">
+        <p className="text-xs text-[var(--text-muted)] mt-0.5">
           {language === 'vi'
             ? 'Mọi cảnh báo bắt buộc tuân thủ 1 trong 3 nhãn chuẩn hóa, đính kèm hạn khiếu nại 60 ngày và căn cứ đối soát.'
             : 'Standardized tri-state classification with 60-day US dispute deadline countdown.'}
@@ -107,7 +107,7 @@ export const AlertsView: React.FC<AlertsViewProps> = ({
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex items-center bg-[var(--bg-card)] p-1.5 rounded-xl border border-[var(--border-subtle)] overflow-x-auto gap-1">
+      <div className="flex items-center bg-[var(--bg-card)] p-1.5 rounded-xl border border-[var(--border-subtle)] overflow-x-auto scrollbar-none gap-1">
         {[
           { id: 'all', label: language === 'vi' ? 'Tất cả mức cảnh báo' : 'All Alerts' },
           { id: 'Định kỳ đã xác định', label: language === 'vi' ? '① Định kỳ đã xác định' : '① Confirmed Recurring' },
@@ -117,7 +117,7 @@ export const AlertsView: React.FC<AlertsViewProps> = ({
           <button
             key={tab.id}
             onClick={() => setFilterLevel(tab.id)}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
               filterLevel === tab.id
                 ? 'bg-[#FC6508] text-white shadow-sm'
                 : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
@@ -129,7 +129,7 @@ export const AlertsView: React.FC<AlertsViewProps> = ({
       </div>
 
       {/* Alert Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
         {filtered.map((a, idx) => (
           <div
             key={idx}

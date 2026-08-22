@@ -62,13 +62,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const isBalanced = recReport?.is_balanced ?? false;
 
   return (
-    <div className="p-6 space-y-6 overflow-y-auto max-w-7xl mx-auto w-full">
+    <div className="p-3.5 sm:p-6 space-y-4 sm:space-y-6 overflow-y-auto max-w-7xl mx-auto w-full">
       {/* Welcome Banner */}
-      <div className="p-5 rounded-2xl bg-gradient-to-r from-[var(--bg-card)] to-[var(--bg-secondary)] border border-[var(--border-subtle)] flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-[var(--bg-card)] to-[var(--bg-secondary)] border border-[var(--border-subtle)] flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-            <h2 className="text-lg font-bold text-[var(--text-primary)]">
+            <h2 className="text-base sm:text-lg font-bold text-[var(--text-primary)]">
               {language === 'vi' ? 'Tổng Quan Tài Chính & An Toàn Giao Dịch' : 'Financial Health & Transaction Safety Overview'}
             </h2>
           </div>

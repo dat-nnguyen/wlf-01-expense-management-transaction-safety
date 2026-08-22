@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import { MessagesSquare, AlertTriangle, BarChart3, Receipt, Cpu } from 'lucide-react';
 import { Header } from '../components/layout/Header';
 import { UserSidebar } from '../components/user/UserSidebar';
 import { CopilotChat } from '../components/user/CopilotChat';
@@ -25,6 +26,7 @@ import { getApiUrl } from '../utils/apiConfig';
 
 export default function Home() {
   const [userNav, setUserNav] = useState('chat');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [language, setLanguage] = useState<Language>('vi');
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const [hasMounted, setHasMounted] = useState(false);
@@ -438,17 +440,21 @@ Wealify Guardian Financial Safety Team`,
         setLanguage={handleLanguageChange}
         theme={theme}
         setTheme={handleThemeChange}
+        isMobileMenuOpen={isMobileMenuOpen}
+        onToggleMobileMenu={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
       />
 
       {/* Main App Layout */}
-      <div className="flex flex-1 overflow-hidden min-h-0">
-        {/* Left Navigation Sidebar */}
+      <div className="flex flex-1 overflow-hidden min-h-0 relative">
+        {/* Left Navigation Sidebar (Desktop + Mobile Slide-over Drawer) */}
         <UserSidebar
           activeNav={userNav}
           setActiveNav={handleNavChange}
           isBalanceMasked={isBalanceMasked}
           setIsBalanceMasked={setIsBalanceMasked}
           language={language}
+          isOpen={isMobileMenuOpen}
+          onClose={() => setIsMobileMenuOpen(false)}
         />
 
         {/* Dynamic View Switcher */}
@@ -521,15 +527,70 @@ Wealify Guardian Financial Safety Team`,
               />
             </main>
 
-            <TransactionDetailPanel
-              copiedId={copiedId}
-              onCopy={handleCopy}
-              onSendMessage={handleSendMessage}
-              language={language}
-            />
+            <div className="hidden xl:flex shrink-0">
+              <TransactionDetailPanel
+                copiedId={copiedId}
+                onCopy={handleCopy}
+                onSendMessage={handleSendMessage}
+                language={language}
+              />
+            </div>
           </>
         )}
       </div>
+
+      {/* Mobile Bottom Navigation Bar (Visible only on mobile screens < md) */}
+      <nav className="md:hidden flex items-center justify-around h-14 bg-[var(--bg-header)] border-t border-[var(--border-subtle)] px-2 z-30 shrink-0 backdrop-blur-md">
+        <button
+          onClick={() => handleNavChange('chat')}
+          className={`flex flex-col items-center justify-center flex-1 py-1 gap-1 transition-colors ${
+            userNav === 'chat' ? 'text-[#FC6508]' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
+          }`}
+        >
+          <MessagesSquare className="w-4 h-4" />
+          <span className="text-[9px] font-medium leading-none">Copilot</span>
+        </button>
+
+        <button
+          onClick={() => handleNavChange('alerts')}
+          className={`flex flex-col items-center justify-center flex-1 py-1 gap-1 transition-colors ${
+            userNav === 'alerts' ? 'text-rose-400' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
+          }`}
+        >
+          <AlertTriangle className="w-4 h-4" />
+          <span className="text-[9px] font-medium leading-none">{language === 'vi' ? 'Tra Soát' : 'Alerts'}</span>
+        </button>
+
+        <button
+          onClick={() => handleNavChange('reports')}
+          className={`flex flex-col items-center justify-center flex-1 py-1 gap-1 transition-colors ${
+            userNav === 'reports' ? 'text-blue-400' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
+          }`}
+        >
+          <BarChart3 className="w-4 h-4" />
+          <span className="text-[9px] font-medium leading-none">{language === 'vi' ? 'Báo Cáo' : 'Reports'}</span>
+        </button>
+
+        <button
+          onClick={() => handleNavChange('transactions')}
+          className={`flex flex-col items-center justify-center flex-1 py-1 gap-1 transition-colors ${
+            userNav === 'transactions' ? 'text-purple-400' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
+          }`}
+        >
+          <Receipt className="w-4 h-4" />
+          <span className="text-[9px] font-medium leading-none">{language === 'vi' ? 'Sổ Cái' : 'Ledger'}</span>
+        </button>
+
+        <button
+          onClick={() => handleNavChange('agent_control')}
+          className={`flex flex-col items-center justify-center flex-1 py-1 gap-1 transition-colors ${
+            userNav === 'agent_control' ? 'text-emerald-400' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
+          }`}
+        >
+          <Cpu className="w-4 h-4" />
+          <span className="text-[9px] font-medium leading-none">{language === 'vi' ? 'Quản Trị' : 'Admin'}</span>
+        </button>
+      </nav>
 
       {/* Evidence Verification Modal */}
       <EvidenceVerificationModal
@@ -575,7 +636,7 @@ Wealify Guardian Financial Safety Team`,
 
       {/* Floating Status Toast */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 px-4 py-2.5 rounded-xl bg-slate-900 border border-[var(--border-subtle)] text-xs text-[var(--text-primary)] shadow-2xl flex items-center gap-2 animate-fadeIn z-50">
+        <div className="fixed bottom-16 md:bottom-6 right-4 sm:right-6 px-4 py-2.5 rounded-xl bg-slate-900 border border-[var(--border-subtle)] text-xs text-[var(--text-primary)] shadow-2xl flex items-center gap-2 animate-fadeIn z-50">
           <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
           <span>{toastMessage}</span>
         </div>

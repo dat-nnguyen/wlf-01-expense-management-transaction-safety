@@ -112,11 +112,11 @@ export const AgentControlView: React.FC<AgentControlViewProps> = ({ language }) 
   };
 
   return (
-    <div className="flex-1 min-h-0 overflow-y-auto p-6 space-y-6">
+    <div className="flex-1 min-h-0 overflow-y-auto p-3.5 sm:p-6 space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-lg font-bold text-[var(--text-primary)] flex items-center gap-2">
+          <h1 className="text-base sm:text-lg font-bold text-[var(--text-primary)] flex items-center gap-2">
             <Cpu className="w-5 h-5 text-[#FC6508]" />
             {language === 'vi' ? 'Bảng Quản Trị & Giám Sát Agent Copilot' : 'Agent Copilot Control & Monitoring Center'}
           </h1>
@@ -126,7 +126,7 @@ export const AgentControlView: React.FC<AgentControlViewProps> = ({ language }) 
               : 'Control AI reasoning models, safety guardrails, and monitor tool calling traces in real time.'}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 self-start sm:self-auto">
           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-semibold border border-emerald-500/20">
             <Radio className="w-3 h-3 animate-pulse text-emerald-400" />
             Google ADK Active
@@ -135,7 +135,7 @@ export const AgentControlView: React.FC<AgentControlViewProps> = ({ language }) 
       </div>
 
       {/* Grid: Model & Guardrails Configuration */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
         {/* Model Selector Card */}
         <div className="p-4 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-subtle)] space-y-4">
           <div className="flex items-center justify-between">
