@@ -16,6 +16,7 @@ import {
   translateEvidenceDimensionName,
   translateEvidenceDimensionDetail,
 } from '../../utils/translationHelper';
+import { getApiUrl } from '../../utils/apiConfig';
 
 interface EvidenceVerificationModalProps {
   isOpen: boolean;
@@ -126,23 +127,16 @@ export const EvidenceVerificationModal: React.FC<EvidenceVerificationModalProps>
   const runAnalysis = async (amount: number, ref: string, fileName?: string) => {
     setIsAnalyzing(true);
     try {
-      let apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
-      if (!apiUrl) {
-        if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
-          apiUrl = 'http://127.0.0.1:8000';
-        } else {
-          apiUrl = 'https://wealify-guardian-api.onrender.com';
-        }
-      }
-      apiUrl = apiUrl.replace(/\/+$/, '');
+      const apiUrl = getApiUrl();
 
-      const res = await fetch(`${apiUrl}/api/v1/forensics/verify-receipt`, {
+      const res = await fetch(`${apiUrl}/api/v1/security/verify-claim`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           claimed_amount: amount,
-          claimed_ref: ref,
-          file_name: fileName || selectedFile?.name || 'receipt.png',
+          reference: ref,
+          raw_text: fileName || selectedFile?.name || 'receipt.png',
+          source_type: 'RECEIPT',
         }),
       });
 
@@ -178,25 +172,16 @@ export const EvidenceVerificationModal: React.FC<EvidenceVerificationModalProps>
     setIsSendingEmail(true);
     setEmailStatusMessage(null);
     try {
-      let apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
-      if (!apiUrl) {
-        if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
-          apiUrl = 'http://127.0.0.1:8000';
-        } else {
-          apiUrl = 'https://wealify-guardian-api.onrender.com';
-        }
-      }
-      apiUrl = apiUrl.replace(/\/+$/, '');
+      const apiUrl = getApiUrl();
 
-      const res = await fetch(`${apiUrl}/api/v1/notifications/send-forensic-report`, {
+      const res = await fetch(`${apiUrl}/api/v1/security/send-forensic-report`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           recipient_email: recipientEmail.trim(),
           claimed_amount: claimedAmount,
-          claimed_ref: claimedRef,
+          reference: claimedRef,
           conflict_score: analysisResult.conflictScore,
-          risk_level: analysisResult.riskLevel,
           summary: analysisResult.summary,
         }),
       });

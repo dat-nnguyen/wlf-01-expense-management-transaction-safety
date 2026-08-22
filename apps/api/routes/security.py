@@ -134,8 +134,10 @@ async def get_security_stats():
 class SendForensicReportRequest(BaseModel):
     recipient_email: str = Field(default="founder@wealify.io", description="Recipient to receive forensic report")
     claimed_amount: float = Field(default=2500.0)
-    reference: str = Field(default="WF-839291")
+    reference: Optional[str] = Field(default=None)
+    claimed_ref: Optional[str] = Field(default=None)
     conflict_score: int = Field(default=92)
+    risk_level: Optional[str] = Field(default="HIGH")
     summary: Optional[str] = Field(default=None)
     dimensions: Optional[List[Dict[str, Any]]] = Field(default=None)
 
@@ -147,9 +149,10 @@ async def send_forensic_report_endpoint(req: SendForensicReportRequest):
     """
     from packages.connectors.email_dispatcher import EmailAlertDispatcher
 
+    ref_value = req.reference or req.claimed_ref or "WF-839291"
     forensic_data = {
         "claimed_amount": req.claimed_amount,
-        "reference": req.reference,
+        "reference": ref_value,
         "conflict_score": req.conflict_score,
         "summary": req.summary or "Hệ thống đã đối soát toàn bộ sổ cái kế toán và hộp thư. Không tìm thấy lệnh chuyển tiền tương ứng với mã số giao dịch được cung cấp.",
         "dimensions": req.dimensions,

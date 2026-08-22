@@ -20,6 +20,7 @@ import { EvidenceVerificationModal } from '../components/modals/EvidenceVerifica
 import { EmailConfirmationModal } from '../components/modals/EmailConfirmationModal';
 import { Message, EmailModalState, Language } from '../types';
 import { TRANSLATIONS } from '../data/translations';
+import { getApiUrl } from '../utils/apiConfig';
 
 export default function Home() {
   const [userNav, setUserNav] = useState('chat');
@@ -167,15 +168,7 @@ Wealify Guardian Financial Safety Team`,
     const timeoutId = setTimeout(() => controller.abort(), 45000);
 
     try {
-      let apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
-      if (!apiUrl) {
-        if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
-          apiUrl = 'http://127.0.0.1:8000';
-        } else {
-          apiUrl = 'https://wealify-guardian-api.onrender.com';
-        }
-      }
-      apiUrl = apiUrl.replace(/\/+$/, '');
+      const apiUrl = getApiUrl();
 
       // Check if image is attached — run authenticity check
       let imageAuthCheckResult: any = null;
@@ -554,15 +547,7 @@ Wealify Guardian Financial Safety Team`,
         onClose={() => setEmailModal((prev) => ({ ...prev, isOpen: false }))}
         onConfirmSend={async (targetEmail) => {
           try {
-            let apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
-            if (!apiUrl) {
-              if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
-                apiUrl = 'http://127.0.0.1:8000';
-              } else {
-                apiUrl = 'https://wealify-guardian-api.onrender.com';
-              }
-            }
-            apiUrl = apiUrl.replace(/\/+$/, '');
+            const apiUrl = getApiUrl();
 
             const res = await fetch(`${apiUrl}/api/v1/notifications/send-report`, {
               method: 'POST',

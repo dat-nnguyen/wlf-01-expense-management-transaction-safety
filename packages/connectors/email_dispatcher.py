@@ -443,12 +443,12 @@ class EmailAlertDispatcher:
             "summary",
             "Hệ thống đã đối soát toàn bộ sổ cái kế toán và hộp thư. Không tìm thấy lệnh chuyển tiền tương ứng với mã số giao dịch được cung cấp. Khuyến nghị bạn không thực hiện bàn giao dịch vụ/hàng hoá trước khi tiền thực tế vào tài khoản.",
         )
-        dimensions = forensic_data.get("dimensions", [
+        dimensions = forensic_data.get("dimensions") or [
             {"name": "Mã tham chiếu (Reference)", "matched": False, "detail": f"Mã '{reference}' không tồn tại trong hệ thống sổ cái Wealify Core Banking."},
             {"name": "Số tiền & Sổ cái (Ledger)", "matched": False, "detail": f"Không có biến động số dư +${claimed_amount:,.2f} USD vào ngày giao dịch."},
             {"name": "Ví điện tử (Wallet)", "matched": False, "detail": "Không có giao dịch nạp tiền hoặc nhận chuyển khoản tương ứng."},
             {"name": "Hộp thư xác nhận (Email)", "matched": False, "detail": "Không có thông báo xác nhận chuyển khoản từ ngân hàng gửi về email."},
-        ])
+        ]
 
         dim_rows = ""
         for dim in dimensions:

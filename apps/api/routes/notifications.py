@@ -113,3 +113,42 @@ async def send_report_endpoint(req: SendReportRequest):
         "subject": log.subject,
         "summary": log.summary,
     }
+
+
+class SendForensicReportNotificationRequest(BaseModel):
+    recipient_email: str = Field(default="founder@wealify.io", description="Recipient to receive forensic report")
+    claimed_amount: float = Field(default=2500.0)
+    reference: Optional[str] = Field(default=None)
+    claimed_ref: Optional[str] = Field(default=None)
+    conflict_score: int = Field(default=92)
+    risk_level: Optional[str] = Field(default="HIGH")
+    summary: Optional[str] = Field(default=None)
+    dimensions: Optional[List[Dict[str, Any]]] = Field(default=None)
+
+
+@router.post("/send-forensic-report")
+async def send_forensic_report_notification_endpoint(req: SendForensicReportNotificationRequest):
+    """
+    Alias for /api/v1/security/send-forensic-report to dispatch forensic reports via SMTP.
+    """
+    ref_value = req.reference or req.claimed_ref or "WF-839291"
+    forensic_data = {
+        "claimed_amount": req.claimed_amount,
+        "reference": ref_value,
+        "conflict_score": req.conflict_score,
+        "summary": req.summary or "Hệ thống đã đối soát toàn bộ sổ cái kế toán và hộp thư. Không tìm thấy lệnh chuyển tiền tương ứng với mã số giao dịch được cung cấp.",
+        "dimensions": req.dimensions,
+    }
+
+    log = EmailAlertDispatcher.dispatch_forensic_report_email(
+        forensic_data=forensic_data,
+        recipient_email=req.recipient_email,
+    )
+
+    return {
+        "success": True,
+        "notification_id": log.id,
+        "recipient": req.recipient_email,
+        "subject": log.subject,
+        "summary": log.summary,
+    }
