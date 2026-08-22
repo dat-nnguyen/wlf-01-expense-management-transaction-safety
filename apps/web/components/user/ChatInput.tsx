@@ -68,8 +68,10 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     e.preventDefault();
     if ((inputMsg.trim() || attachedFile) && !isTyping) {
       const imgPayload = attachedFile ? { base64: attachedFile.base64, filename: attachedFile.filename } : undefined;
-      onSendMessage(inputMsg.trim() || undefined, imgPayload);
+      const text = inputMsg.trim();
+      setInputMsg('');
       setAttachedFile(null);
+      onSendMessage(text || undefined, imgPayload);
     }
   };
 

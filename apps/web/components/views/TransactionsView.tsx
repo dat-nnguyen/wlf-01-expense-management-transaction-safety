@@ -13,6 +13,7 @@ import {
   ArrowUpRight,
 } from 'lucide-react';
 import { Language } from '../../types';
+import { translateMerchantExplanation } from '../../utils/translationHelper';
 
 interface TransactionsViewProps {
   language: Language;
@@ -256,13 +257,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({ language }) 
                       <div className="text-[10px] text-[var(--text-muted)] font-mono truncate max-w-[160px]">{tx.merchant_raw}</div>
                     </td>
                     <td className="py-3 px-4 text-[11px] text-[var(--text-secondary)] max-w-xs">
-                      {language === 'vi'
-                        ? (tx.merchant_explanation || 'Giao dịch thương mại trực tuyến.')
-                        : (tx.merchant_explanation
-                            ? (tx.merchant_explanation.includes('Giao dịch thương mại trực tuyến')
-                                ? 'Online commercial transaction.'
-                                : tx.merchant_explanation)
-                            : 'Online commercial transaction.')}
+                      {translateMerchantExplanation(tx.merchant_explanation || 'Giao dịch thương mại trực tuyến.', language)}
                     </td>
                     <td className="py-3 px-4">
                       <div className={`font-mono font-bold ${isCredit ? 'text-emerald-400' : 'text-[var(--text-primary)]'}`}>

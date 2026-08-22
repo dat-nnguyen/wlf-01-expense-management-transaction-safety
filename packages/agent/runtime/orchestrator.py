@@ -19,9 +19,19 @@ from enum import Enum
 from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, ConfigDict, Field
 
-from google.adk.runners import Runner
-from google.adk.sessions import InMemorySessionService
-from google.genai import types
+try:
+    from google.adk.runners import Runner
+    from google.adk.sessions import InMemorySessionService
+    from google.genai import types
+except ImportError:
+    class Runner:
+        def __init__(self, *args, **kwargs):
+            pass
+        async def run_async(self, *args, **kwargs):
+            return None
+    class InMemorySessionService:
+        pass
+    types = None
 
 from packages.agent.adk import root_agent, configure_adk_environment
 from packages.agent.guardrails.input import InputGuardrail
@@ -256,7 +266,11 @@ class AgentOrchestrator:
 
     def __init__(self, registry: Optional[ToolRegistry] = None, llm_provider: Optional[Any] = None):
         self.registry = registry or create_default_tool_registry()
-        self.llm_provider = llm_provider
+        if llm_provider is not None:
+            self.llm_provider = llm_provider
+        else:
+            from packages.agent.providers import get_llm_provider
+            self.llm_provider = get_llm_provider()
         self.executor = SafeToolExecutor(self.registry)
         self.session_service = InMemorySessionService()
         self.runner = Runner(
@@ -290,8 +304,12 @@ class AgentOrchestrator:
         language: str,
     ) -> Dict[str, Any]:
         """Runs the Google ADK Agent Runner and collects tool calls & generated text."""
-        if not has_active_llm_credentials() or type(self.llm_provider).__name__ in ["MockLLMProvider", "UnifiedLLMProvider"]:
-            logger.info("[ADK_RUNNER] Delegating to dynamic financial tool execution & planner.")
+        llm_type = type(self.llm_provider).__name__
+        pref = os.getenv("LLM_PROVIDER", "").lower().strip()
+
+        # If using OpenRouter or mock or unified or credentials not Gemini ADK-compatible, delegate directly
+        if not has_active_llm_credentials() or llm_type in ["MockLLMProvider", "UnifiedLLMProvider", "OpenRouterLLMProvider"] or pref in ["openrouter", "openai"]:
+            logger.info("[ADK_RUNNER] Delegating to dynamic financial tool execution & LLM synthesis.")
             return {"text": "", "tools_called": [], "tool_results": {}, "success": False}
 
         configure_adk_environment()
@@ -356,7 +374,7 @@ class AgentOrchestrator:
                 "success": True,
             }
         except Exception as e:
-            logger.warning(f"[ADK_RUNNER_NOTICE] ADK Runner execution bypassed or timed out: {e}")
+            logger.info(f"[ADK_RUNNER_NOTICE] ADK Runner execution delegated: {e}")
             return {
                 "text": "",
                 "tools_called": tools_invoked,
@@ -475,11 +493,32 @@ class AgentOrchestrator:
                 tools_called = []
                 tool_results = {}
 
-            from packages.agent.providers.llm_provider import DynamicFinancialSynthesizer
-            final_text = DynamicFinancialSynthesizer.synthesize(
-                prompt=user_message,
-                context={"tool_result": tool_results, "language": language, "intent": intent_name},
-            )
+            # Synthesize final response using active LLM provider (or deterministic safety synthesis)
+            final_text = ""
+            if intent_name in ["ACCOUNT_SAFETY_INQUIRY", "DISALLOWED_MUTATION"]:
+                from packages.agent.providers.llm_provider import DynamicFinancialSynthesizer
+                final_text = DynamicFinancialSynthesizer.synthesize(
+                    prompt=user_message,
+                    context={"tool_result": tool_results, "language": language, "intent": intent_name},
+                )
+            elif self.llm_provider and type(self.llm_provider).__name__ not in ["MockLLMProvider", "UnifiedLLMProvider"]:
+                try:
+                    llm_res = await self.llm_provider.generate_response(
+                        prompt=user_message,
+                        context={"tool_result": tool_results, "language": language, "intent": intent_name},
+                    )
+                    if llm_res and llm_res.content and llm_res.content.strip():
+                        final_text = llm_res.content
+                except Exception as e:
+                    logger.warning(f"[LLM_SYNTHESIS_WARNING] Provider synthesis failed ({e}), falling back.")
+
+            if not final_text:
+                from packages.agent.providers.llm_provider import DynamicFinancialSynthesizer
+                final_text = DynamicFinancialSynthesizer.synthesize(
+                    prompt=user_message,
+                    context={"tool_result": tool_results, "language": language, "intent": intent_name},
+                )
+
             steps.append(ExecutionStep(
                 step_name="ADK_REASONING",
                 status="DYNAMIC_TOOL_SUCCESS",

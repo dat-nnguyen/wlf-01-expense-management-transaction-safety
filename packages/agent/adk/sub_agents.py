@@ -4,7 +4,14 @@ Implements domain-specialized LlmAgents conforming to Google ADK 2.4.0 multi-age
 specifications. Each sub-agent is scoped to its domain tools and safety rules.
 """
 
-from google.adk import Agent
+try:
+    from google.adk import Agent
+except ImportError:
+    class Agent:
+        def __init__(self, *args, **kwargs):
+            self.name = kwargs.get("name", "agent")
+            self.sub_agents = kwargs.get("sub_agents", [])
+            self.tools = kwargs.get("tools", [])
 from packages.agent.adk.config import get_adk_model_name
 from packages.agent.adk.callbacks import (
     guardian_before_tool_callback,

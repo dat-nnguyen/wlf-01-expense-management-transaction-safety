@@ -4,7 +4,14 @@ Implements the central multi-agent orchestrator connecting specialized domain
 sub-agents and dynamic financial tools with strict WLF-01 safety guarantees.
 """
 
-from google.adk import Agent
+try:
+    from google.adk import Agent
+except ImportError:
+    class Agent:
+        def __init__(self, *args, **kwargs):
+            self.name = kwargs.get("name", "agent")
+            self.sub_agents = kwargs.get("sub_agents", [])
+            self.tools = kwargs.get("tools", [])
 from packages.agent.adk.config import get_adk_model_name, GUARDIAN_ROOT_INSTRUCTION
 from packages.agent.adk.callbacks import (
     guardian_before_tool_callback,

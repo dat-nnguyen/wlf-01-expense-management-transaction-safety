@@ -37,7 +37,7 @@ export default function Home() {
 
   const [emailModal, setEmailModal] = useState<EmailModalState>({
     isOpen: false,
-    to: 'support@wealify.io',
+    to: '',
     subject: '[Guardian Report] Báo cáo chi tiêu và đối soát giao dịch',
     body: `Kính gửi Người dùng Wealify,
 
@@ -145,7 +145,7 @@ Wealify Guardian Financial Safety Team`,
     };
 
     setMessages((prev) => [...prev, newMsg]);
-    if (!customText) setInputMsg('');
+    setInputMsg('');
     setIsTyping(true);
 
     const botMessageId = `bot_${Date.now()}`;

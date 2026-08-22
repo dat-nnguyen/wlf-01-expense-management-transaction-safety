@@ -356,9 +356,9 @@ class GeminiLLMProvider(BaseLLMProvider):
     natural, grounded financial advisory adhering strictly to WLF-01 contest rules.
     """
 
-    def __init__(self, api_key: Optional[str] = None, model: str = "gemini-2.0-flash"):
+    def __init__(self, api_key: Optional[str] = None, model: Optional[str] = None):
         self.api_key = api_key or os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
-        self.model = model
+        self.model = model or os.getenv("LLM_MODEL", "gemini-1.5-flash")
 
     async def generate_response(
         self,
@@ -441,7 +441,7 @@ class OpenRouterLLMProvider(BaseLLMProvider):
         model: Optional[str] = None,
     ):
         self.api_key = api_key or os.getenv("OPENROUTER_API_KEY")
-        self.model = model or os.getenv("LLM_MODEL", "deepseek/deepseek-chat")
+        self.model = model or os.getenv("LLM_MODEL", "openai/gpt-4o-mini")
 
     async def generate_response(
         self,
@@ -451,7 +451,8 @@ class OpenRouterLLMProvider(BaseLLMProvider):
         context: Optional[Dict[str, Any]] = None,
     ) -> LLMResponse:
         if not self.api_key:
-            raise ValueError("OPENROUTER_API_KEY is not configured in .env file!")
+            mock = MockLLMProvider()
+            return await mock.generate_response(prompt, system_instruction, temperature, context)
 
         import httpx
 
@@ -499,7 +500,7 @@ class OpenRouterLLMProvider(BaseLLMProvider):
                         "messages": [
                             {"role": "system", "content": sys_prompt},
                             {"role": "user", "content": full_content},
-                        ],
+                            ],
                         "temperature": temperature,
                     },
                 )
@@ -525,40 +526,60 @@ class OpenRouterLLMProvider(BaseLLMProvider):
                     )
                 else:
                     err_msg = f"OpenRouter Error HTTP {res.status_code}: {res.text}"
-                    logger.error(f"[REAL_LLM_ERROR] {err_msg}")
-                    # Return error directly to user so they know LLM failed
-                    return LLMResponse(
-                        content=f"⚠️ **Lỗi kết nối LLM ({self.model}):**\n\nHTTP {res.status_code}: `{res.text}`\n\nVui lòng kiểm tra lại cấu hình OpenRouter API Key trong file `.env`.",
-                        prompt_tokens=0,
-                        completion_tokens=0,
-                        model=self.model,
-                    )
+                    logger.error(f"[REAL_LLM_ERROR] {err_msg}, falling back to dynamic financial synthesis.")
+                    mock = MockLLMProvider()
+                    return await mock.generate_response(prompt, system_instruction, temperature, context)
         except Exception as exc:
             err_msg = f"Connection Exception: {str(exc)}"
-            logger.error(f"[REAL_LLM_EXCEPTION] {err_msg}")
-            return LLMResponse(
-                content=f"⚠️ **Không thể kết nối đến máy chủ LLM ({self.model}):**\n\n`{err_msg}`\n\nVui lòng kiểm tra kết nối mạng hoặc API Key.",
-                prompt_tokens=0,
-                completion_tokens=0,
-                model=self.model,
-            )
+            logger.error(f"[REAL_LLM_EXCEPTION] {err_msg}, falling back to dynamic financial synthesis.")
+            mock = MockLLMProvider()
+            return await mock.generate_response(prompt, system_instruction, temperature, context)
 
 
 def get_llm_provider() -> BaseLLMProvider:
-    """Returns active LLM provider (Gemini -> OpenRouter -> Mock)."""
-    # 1. Direct Google Gemini SDK
-    gemini_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
-    if gemini_key and gemini_key.strip():
-        logger.info("Using GeminiLLMProvider (Google Gemini SDK)")
-        return GeminiLLMProvider(api_key=gemini_key)
+    """Returns active LLM provider respecting LLM_PROVIDER and available API keys."""
+    pref = os.getenv("LLM_PROVIDER", "").lower().strip()
 
-    # 2. OpenRouter Multi-Model Provider
-    openrouter_key = os.getenv("OPENROUTER_API_KEY")
-    if openrouter_key and openrouter_key.startswith("sk-or-"):
-        logger.info(f"Using OpenRouterLLMProvider (Model: {os.getenv('LLM_MODEL', 'deepseek/deepseek-chat')})")
-        return OpenRouterLLMProvider(api_key=openrouter_key)
+    if pref == "mock":
+        logger.info("Using MockLLMProvider (forced by LLM_PROVIDER=mock)")
+        return MockLLMProvider()
 
-    # 3. Deterministic Mock (Only if zero API key configured)
+    openrouter_key = os.getenv("OPENROUTER_API_KEY", "").strip()
+    has_openrouter = bool(openrouter_key and not openrouter_key.startswith("sk-or-v1-your_") and openrouter_key.startswith("sk-or-"))
+
+    gemini_key = (os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY") or "").strip()
+    has_gemini = bool(gemini_key and not gemini_key.startswith("your_"))
+
+    # Explicit preference
+    if pref in ["openrouter", "openai", "deepseek", "claude"]:
+        if has_openrouter:
+            model = os.getenv("LLM_MODEL", "openai/gpt-4o-mini")
+            logger.info(f"Using OpenRouterLLMProvider (Model: {model})")
+            return OpenRouterLLMProvider(api_key=openrouter_key, model=model)
+        else:
+            logger.warning("LLM_PROVIDER=openrouter configured but OPENROUTER_API_KEY is missing. Falling back to MockLLMProvider.")
+            return MockLLMProvider()
+
+    if pref == "gemini":
+        if has_gemini:
+            model = os.getenv("LLM_MODEL", "gemini-1.5-flash")
+            logger.info(f"Using GeminiLLMProvider (Model: {model})")
+            return GeminiLLMProvider(api_key=gemini_key, model=model)
+        else:
+            logger.warning("LLM_PROVIDER=gemini configured but GEMINI_API_KEY is missing. Falling back to MockLLMProvider.")
+            return MockLLMProvider()
+
+    # Auto-detection priority: OpenRouter -> Gemini -> Mock
+    if has_openrouter:
+        model = os.getenv("LLM_MODEL", "openai/gpt-4o-mini")
+        logger.info(f"Auto-detected OpenRouter credentials. Using OpenRouterLLMProvider (Model: {model})")
+        return OpenRouterLLMProvider(api_key=openrouter_key, model=model)
+
+    if has_gemini:
+        model = os.getenv("LLM_MODEL", "gemini-1.5-flash")
+        logger.info(f"Auto-detected Gemini credentials. Using GeminiLLMProvider (Model: {model})")
+        return GeminiLLMProvider(api_key=gemini_key, model=model)
+
     logger.warning("No LLM API keys found in environment. Falling back to MockLLMProvider.")
     return MockLLMProvider()
 

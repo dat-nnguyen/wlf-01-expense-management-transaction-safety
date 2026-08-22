@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   ShieldAlert,
   CheckCircle2,
@@ -12,13 +12,52 @@ import {
 } from 'lucide-react';
 import { Language, SecurityVerificationInfo } from '../../types';
 import { TRANSLATIONS } from '../../data/translations';
+import {
+  translateEvidenceDimensionName,
+  translateEvidenceDimensionDetail,
+} from '../../utils/translationHelper';
 
 interface EvidenceVerificationModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onTriggerEmailReport: () => void;
+  onTriggerEmailReport?: () => void;
   language: Language;
 }
+
+const getInitialDimensions = (lang: Language) => [
+  {
+    name: lang === 'vi' ? 'Mã tham chiếu (Reference)' : 'Reference Code',
+    matched: false,
+    detail:
+      lang === 'vi'
+        ? "Mã 'WF-839291' không tồn tại trong hệ thống sổ cái Wealify Core Banking."
+        : "Reference code 'WF-839291' does not exist in Wealify Core Banking ledger.",
+  },
+  {
+    name: lang === 'vi' ? 'Số tiền & Sổ cái (Ledger)' : 'Amount & Ledger Balance',
+    matched: false,
+    detail:
+      lang === 'vi'
+        ? 'Không có biến động số dư +$2,500.00 USD vào ngày 21/08/2026.'
+        : 'No incoming balance movement of +$2,500.00 USD on 21/08/2026.',
+  },
+  {
+    name: lang === 'vi' ? 'Ví điện tử (Wallet)' : 'E-Wallet Deposit Record',
+    matched: false,
+    detail:
+      lang === 'vi'
+        ? 'Không có giao dịch nạp tiền hoặc nhận chuyển khoản tương ứng.'
+        : 'No matching wallet top-up or incoming payment transfer found.',
+  },
+  {
+    name: lang === 'vi' ? 'Hộp thư xác nhận (Email)' : 'Mailbox Confirmation (Email)',
+    matched: false,
+    detail:
+      lang === 'vi'
+        ? 'Không có thông báo xác nhận chuyển khoản từ ngân hàng gửi về email.'
+        : 'No bank transfer confirmation email received in verified inbox.',
+  },
+];
 
 export const EvidenceVerificationModal: React.FC<EvidenceVerificationModalProps> = ({
   isOpen,
@@ -37,7 +76,7 @@ export const EvidenceVerificationModal: React.FC<EvidenceVerificationModalProps>
   });
   const [claimedAmount, setClaimedAmount] = useState<number>(2500);
   const [claimedRef, setClaimedRef] = useState<string>('WF-839291');
-  const [recipientEmail, setRecipientEmail] = useState<string>('masewtricker.contact.06@gmail.com');
+  const [recipientEmail, setRecipientEmail] = useState<string>('');
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
   const [isSendingEmail, setIsSendingEmail] = useState<boolean>(false);
   const [emailStatusMessage, setEmailStatusMessage] = useState<string | null>(null);
@@ -49,16 +88,24 @@ export const EvidenceVerificationModal: React.FC<EvidenceVerificationModalProps>
     walletMatch: false,
     emailMatch: false,
     refMatch: false,
-    dimensions: [
-      { name: 'Mã tham chiếu (Reference)', matched: false, detail: "Mã 'WF-839291' không tồn tại trong hệ thống sổ cái Wealify Core Banking." },
-      { name: 'Số tiền & Sổ cái (Ledger)', matched: false, detail: 'Không có biến động số dư +$2,500.00 USD vào ngày 21/08/2026.' },
-      { name: 'Ví điện tử (Wallet)', matched: false, detail: 'Không có giao dịch nạp tiền hoặc nhận chuyển khoản tương ứng.' },
-      { name: 'Hộp thư xác nhận (Email)', matched: false, detail: 'Không có thông báo xác nhận chuyển khoản từ ngân hàng gửi về email.' },
-    ],
-    summary: language === 'vi'
-      ? 'Hệ thống đã đối soát toàn bộ số cái kế toán và hộp thư. Không tìm thấy lệnh chuyển tiền tương ứng với mã số giao dịch được cung cấp. Khuyến nghị bạn không thực hiện bàn giao dịch vụ/hàng hoá trước khi tiền thực tế vào tài khoản.'
-      : 'System performed cross-check against accounting ledger and verified mailbox. No incoming transfer found for the claimed reference code. Recommend holding off fulfillment until funds officially settle.',
+    dimensions: getInitialDimensions(language),
+    summary:
+      language === 'vi'
+        ? 'Hệ thống đã đối soát toàn bộ số cái kế toán và hộp thư. Không tìm thấy lệnh chuyển tiền tương ứng với mã số giao dịch được cung cấp. Khuyến nghị bạn không thực hiện bàn giao dịch vụ/hàng hoá trước khi tiền thực tế vào tài khoản.'
+        : 'System performed cross-check against accounting ledger and verified mailbox. No incoming transfer found for the claimed reference code. Recommend holding off fulfillment until funds officially settle.',
   });
+
+  useEffect(() => {
+    setAnalysisResult((prev: any) => ({
+      ...prev,
+      classification: language === 'vi' ? 'Cần bạn tự xác nhận' : 'Needs your confirmation',
+      summary:
+        language === 'vi'
+          ? 'Hệ thống đã đối soát toàn bộ số cái kế toán và hộp thư. Không tìm thấy lệnh chuyển tiền tương ứng với mã số giao dịch được cung cấp. Khuyến nghị bạn không thực hiện bàn giao dịch vụ/hàng hoá trước khi tiền thực tế vào tài khoản.'
+          : 'System performed cross-check against accounting ledger and verified mailbox. No incoming transfer found for the claimed reference code. Recommend holding off fulfillment until funds officially settle.',
+      dimensions: getInitialDimensions(language),
+    }));
+  }, [language]);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -76,7 +123,7 @@ export const EvidenceVerificationModal: React.FC<EvidenceVerificationModalProps>
     reader.readAsDataURL(file);
   };
 
-  const runAnalysis = async (amount: number, ref: string, filename: string) => {
+  const runAnalysis = async (amount: number, ref: string, fileName?: string) => {
     setIsAnalyzing(true);
     try {
       let apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
@@ -89,39 +136,34 @@ export const EvidenceVerificationModal: React.FC<EvidenceVerificationModalProps>
       }
       apiUrl = apiUrl.replace(/\/+$/, '');
 
-      const res = await fetch(`${apiUrl}/api/v1/security/verify-claim`, {
+      const res = await fetch(`${apiUrl}/api/v1/forensics/verify-receipt`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           claimed_amount: amount,
-          reference: ref,
-          currency: 'USD',
-          source_type: 'SCREENSHOT',
-          raw_text: `Biên lai ảnh: ${filename}. Số tiền $${amount} USD, Mã giao dịch ${ref}`,
-          account_id: 'acc_main',
+          claimed_ref: ref,
+          file_name: fileName || selectedFile?.name || 'receipt.png',
         }),
       });
 
       if (res.ok) {
         const data = await res.json();
         setAnalysisResult({
-          conflictScore: data.evidence_conflict_score,
+          conflictScore: data.conflict_score,
           riskLevel: data.risk_level,
-          classification: data.classification,
+          classification: language === 'vi' ? data.classification : 'Needs your confirmation',
           ledgerMatch: data.ledger_match,
           walletMatch: data.wallet_match,
           emailMatch: data.email_match,
-          refMatch: data.reference_match,
-          dimensions: data.dimensions?.map((d: any) => ({
-            name: d.name,
-            matched: d.matched,
-            detail: d.details,
-          })) || [],
-          summary: data.ai_summary,
+          refMatch: data.ref_match,
+          dimensions: data.dimensions || getInitialDimensions(language),
+          summary: language === 'vi' ? data.summary : data.summary_en || (data.conflict_score > 50
+            ? 'System cross-checked ledger and mailbox. No matching payment found for this reference code. Recommend holding fulfillment.'
+            : 'Verified invoice details match ledger transaction records accurately.'),
         });
       }
-    } catch (e) {
-      console.warn('Fallback analysis used:', e);
+    } catch {
+      // Fallback
     } finally {
       setIsAnalyzing(false);
     }
@@ -129,9 +171,10 @@ export const EvidenceVerificationModal: React.FC<EvidenceVerificationModalProps>
 
   const handleSendForensicEmail = async () => {
     if (!recipientEmail || !recipientEmail.includes('@')) {
-      setEmailStatusMessage(language === 'vi' ? 'Vui lòng nhập đúng địa chỉ email nhận' : 'Please enter a valid recipient email');
+      setEmailStatusMessage(language === 'vi' ? 'Vui lòng nhập địa chỉ email hợp lệ' : 'Please enter a valid email address');
       return;
     }
+
     setIsSendingEmail(true);
     setEmailStatusMessage(null);
     try {
@@ -145,69 +188,64 @@ export const EvidenceVerificationModal: React.FC<EvidenceVerificationModalProps>
       }
       apiUrl = apiUrl.replace(/\/+$/, '');
 
-      const res = await fetch(`${apiUrl}/api/v1/security/send-forensic-report`, {
+      const res = await fetch(`${apiUrl}/api/v1/notifications/send-forensic-report`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           recipient_email: recipientEmail.trim(),
           claimed_amount: claimedAmount,
-          reference: claimedRef,
+          claimed_ref: claimedRef,
           conflict_score: analysisResult.conflictScore,
+          risk_level: analysisResult.riskLevel,
           summary: analysisResult.summary,
-          dimensions: analysisResult.dimensions,
         }),
       });
 
       if (res.ok) {
         setEmailStatusMessage(
           language === 'vi'
-            ? `Đã gửi báo cáo giám định tới ${recipientEmail.trim()} qua SMTP!`
-            : `Forensic report sent successfully to ${recipientEmail.trim()} via SMTP!`
+            ? `✅ Đã gửi báo cáo giám định thành công tới ${recipientEmail} qua SMTP!`
+            : `✅ Forensic report successfully sent to ${recipientEmail} via SMTP!`
         );
       } else {
-        setEmailStatusMessage(language === 'vi' ? 'Lỗi gửi email máy chủ' : 'Failed sending email');
+        setEmailStatusMessage(language === 'vi' ? 'Lỗi khi gửi email qua máy chủ' : 'Failed to dispatch email via SMTP server');
       }
     } catch {
-      setEmailStatusMessage(language === 'vi' ? 'Lỗi kết nối máy chủ' : 'Connection error');
+      setEmailStatusMessage(language === 'vi' ? 'Không thể kết nối máy chủ gửi email' : 'Could not connect to SMTP email server');
     } finally {
       setIsSendingEmail(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn">
-      <div className="w-full max-w-2xl bg-[var(--bg-modal)] border border-[var(--border-subtle)] rounded-2xl p-6 space-y-5 max-h-[90vh] overflow-y-auto shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fadeIn">
+      <div className="bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-2xl w-full max-w-2xl p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-[var(--border-subtle)] pb-3.5">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-[#FC6508] flex items-center justify-center text-white shrink-0 shadow-sm">
-              <ShieldCheck className="w-5 h-5 stroke-[2.2]" />
+        <div className="flex items-center justify-between pb-3 border-b border-[var(--border-subtle)]">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-[#FC6508]/15 flex items-center justify-center text-[#FC6508]">
+              <ShieldCheck className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-sm text-[var(--text-primary)] flex items-center gap-2">
-                <span>{t.evidenceModalTitle}</span>
-                <span className="px-2 py-0.5 rounded-md bg-[#FC6508]/15 text-[#FC6508] text-[10px] font-mono font-medium">
-                  AI Forensic OCR
-                </span>
-              </h3>
+              <h3 className="font-bold text-sm text-[var(--text-primary)]">{t.evidenceModalTitle}</h3>
               <p className="text-xs text-[var(--text-muted)]">{t.evidenceModalSubtitle}</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="text-[var(--text-muted)] hover:text-[var(--text-primary)] text-lg font-bold p-1 rounded-lg hover:bg-[var(--bg-secondary)]"
+            className="text-[var(--text-muted)] hover:text-[var(--text-primary)] text-sm font-bold p-1 rounded-lg hover:bg-[var(--bg-secondary)]"
           >
             ✕
           </button>
         </div>
 
-        {/* Upload Dropzone & Sample selector */}
+        {/* Upload Zone & Quick Samples */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <input
             type="file"
             ref={fileInputRef}
-            accept="image/*,.pdf"
             onChange={handleFileUpload}
+            accept="image/*,.pdf"
             className="hidden"
           />
 
@@ -220,7 +258,7 @@ export const EvidenceVerificationModal: React.FC<EvidenceVerificationModalProps>
               {language === 'vi' ? 'Chọn ảnh chứng từ / biên lai' : 'Upload Receipt Screenshot'}
             </div>
             <div className="text-[11px] text-[var(--text-muted)] mt-0.5">
-              PNG, JPG, PDF (Tối đa 15MB)
+              PNG, JPG, PDF ({language === 'vi' ? 'Tối đa 15MB' : 'Max 15MB'})
             </div>
           </div>
 
@@ -239,7 +277,9 @@ export const EvidenceVerificationModal: React.FC<EvidenceVerificationModalProps>
                 }}
                 className="w-full text-left p-2 rounded-lg bg-[var(--bg-card)] border border-[var(--border-subtle)] hover:border-rose-400 text-xs transition-colors flex items-center justify-between"
               >
-                <span className="text-rose-400 font-medium truncate">⚠️ Ảnh chuyển khoản giả ($2,500 USD)</span>
+                <span className="text-rose-400 font-medium truncate">
+                  {language === 'vi' ? '⚠️ Ảnh chuyển khoản giả ($2,500 USD)' : '⚠️ Fake Transfer Receipt ($2,500 USD)'}
+                </span>
                 <span className="text-[10px] text-[var(--text-muted)] font-mono">Ref: WF-839291</span>
               </button>
               <button
@@ -252,7 +292,9 @@ export const EvidenceVerificationModal: React.FC<EvidenceVerificationModalProps>
                 }}
                 className="w-full text-left p-2 rounded-lg bg-[var(--bg-card)] border border-[var(--border-subtle)] hover:border-emerald-400 text-xs transition-colors flex items-center justify-between"
               >
-                <span className="text-emerald-400 font-medium truncate">✓ Hoá đơn Adobe SaaS ($54.99 USD)</span>
+                <span className="text-emerald-400 font-medium truncate">
+                  {language === 'vi' ? '✓ Hoá đơn Adobe SaaS ($54.99 USD)' : '✓ Adobe SaaS Invoice ($54.99 USD)'}
+                </span>
                 <span className="text-[10px] text-[var(--text-muted)] font-mono">Adobe Cloud</span>
               </button>
             </div>
@@ -279,24 +321,41 @@ export const EvidenceVerificationModal: React.FC<EvidenceVerificationModalProps>
         )}
 
         {/* Score & Risk Analysis Box */}
-        <div className={`p-4 rounded-xl border space-y-2 ${analysisResult.conflictScore > 50 ? 'bg-rose-500/10 border-rose-500/30' : 'bg-emerald-500/10 border-emerald-500/30'}`}>
+        <div
+          className={`p-4 rounded-xl border space-y-2 ${
+            analysisResult.conflictScore > 50 ? 'bg-rose-500/10 border-rose-500/30' : 'bg-emerald-500/10 border-emerald-500/30'
+          }`}
+        >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <ShieldAlert className={`w-5 h-5 ${analysisResult.conflictScore > 50 ? 'text-rose-400' : 'text-emerald-400'}`} />
               <span className="text-xs font-bold text-[var(--text-primary)]">{t.conflictScoreLabel}</span>
             </div>
-            <span className={`text-xl font-bold font-mono ${analysisResult.conflictScore > 50 ? 'text-rose-400' : 'text-emerald-400'}`}>
+            <span
+              className={`text-xl font-bold font-mono ${
+                analysisResult.conflictScore > 50 ? 'text-rose-400' : 'text-emerald-400'
+              }`}
+            >
               {analysisResult.conflictScore}/100
             </span>
           </div>
 
           <div className="flex items-center justify-between text-xs pt-1">
-            <span className={`px-2.5 py-0.5 rounded-md font-medium text-[11px] border ${analysisResult.conflictScore > 50 ? 'bg-rose-500/20 text-rose-300 border-rose-500/30' : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'}`}>
-              {analysisResult.conflictScore > 50 ? t.highRiskTag : 'Khớp dữ liệu sổ cái'}
+            <span
+              className={`px-2.5 py-0.5 rounded-md font-medium text-[11px] border ${
+                analysisResult.conflictScore > 50
+                  ? 'bg-rose-500/20 text-rose-300 border-rose-500/30'
+                  : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+              }`}
+            >
+              {analysisResult.conflictScore > 50
+                ? t.highRiskTag
+                : language === 'vi'
+                ? 'Khớp dữ liệu sổ cái'
+                : 'Ledger Match Confirmed'}
             </span>
             <div className="text-[11px] text-[var(--text-muted)]">
-              {t.classificationLabel}{' '}
-              <strong className="text-[var(--text-primary)]">{analysisResult.classification}</strong>
+              {t.classificationLabel} <strong className="text-[var(--text-primary)]">{analysisResult.classification}</strong>
             </div>
           </div>
         </div>
@@ -318,8 +377,12 @@ export const EvidenceVerificationModal: React.FC<EvidenceVerificationModalProps>
                   <XCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
                 )}
                 <div className="space-y-0.5">
-                  <div className="font-bold text-[var(--text-primary)]">{dim.name}</div>
-                  <div className="text-[11px] text-[var(--text-secondary)] leading-relaxed">{dim.detail}</div>
+                  <div className="font-bold text-[var(--text-primary)]">
+                    {translateEvidenceDimensionName(dim.name, language)}
+                  </div>
+                  <div className="text-[11px] text-[var(--text-secondary)] leading-relaxed">
+                    {translateEvidenceDimensionDetail(dim.detail, language)}
+                  </div>
                 </div>
               </div>
             ))}
@@ -350,7 +413,7 @@ export const EvidenceVerificationModal: React.FC<EvidenceVerificationModalProps>
               type="email"
               value={recipientEmail}
               onChange={(e) => setRecipientEmail(e.target.value)}
-              placeholder="masewtricker.contact.06@gmail.com"
+              placeholder={language === 'vi' ? 'Nhập email nhận báo cáo (VD: you@company.com)...' : 'Enter recipient email (e.g. you@company.com)...'}
               className="flex-1 bg-[var(--bg-card)] border border-[var(--border-subtle)] px-3 py-2 rounded-lg text-xs font-mono text-[var(--text-primary)] focus:outline-none focus:border-[#FC6508]"
             />
             <button
@@ -364,20 +427,22 @@ export const EvidenceVerificationModal: React.FC<EvidenceVerificationModalProps>
           </div>
 
           {emailStatusMessage && (
-            <div className={`p-2.5 rounded-lg text-xs font-medium ${emailStatusMessage.includes('thành công') || emailStatusMessage.includes('successfully') ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'}`}>
+            <div
+              className={`p-2.5 rounded-lg text-xs font-medium ${
+                emailStatusMessage.includes('thành công') || emailStatusMessage.includes('successfully')
+                  ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                  : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+              }`}
+            >
               {emailStatusMessage}
             </div>
           )}
         </div>
 
         {/* Footer Actions */}
-        <div className="flex items-center justify-between pt-3 border-t border-[var(--border-subtle)]">
+        <div className="flex items-center justify-end pt-3 border-t border-[var(--border-subtle)]">
           <button onClick={onClose} className="btn-secondary text-xs">
             {t.close}
-          </button>
-          <button onClick={onTriggerEmailReport} className="btn-wealify text-xs">
-            <Mail className="w-3.5 h-3.5" />
-            <span>{t.sendReportToMyEmail}</span>
           </button>
         </div>
       </div>

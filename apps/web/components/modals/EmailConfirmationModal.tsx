@@ -18,7 +18,7 @@ export const EmailConfirmationModal: React.FC<EmailConfirmationModalProps> = ({
 }) => {
   if (!emailModal.isOpen) return null;
   const t = TRANSLATIONS[language];
-  const [recipient, setRecipient] = useState<string>(emailModal.to || 'masewtricker.contact.06@gmail.com');
+  const [recipient, setRecipient] = useState<string>(emailModal.to || '');
   const [isSending, setIsSending] = useState<boolean>(false);
 
   useEffect(() => {
@@ -56,7 +56,7 @@ export const EmailConfirmationModal: React.FC<EmailConfirmationModalProps> = ({
               type="email"
               value={recipient}
               onChange={(e) => setRecipient(e.target.value)}
-              placeholder="masewtricker.contact.06@gmail.com"
+              placeholder={language === 'vi' ? 'Nhập email người nhận (VD: you@company.com)...' : 'Enter recipient email (e.g. you@company.com)...'}
               className="w-full bg-[var(--bg-card)] border border-[var(--border-subtle)] px-3 py-1.5 rounded-lg text-xs font-mono text-[var(--text-primary)] focus:outline-none focus:border-[#FC6508]"
             />
           </div>

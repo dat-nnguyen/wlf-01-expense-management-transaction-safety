@@ -9,6 +9,11 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { Language } from '../../types';
+import {
+  translateStatus,
+  translateConfidence,
+  translateAlertReason,
+} from '../../utils/translationHelper';
 
 interface AuditTrailViewProps {
   language: Language;
@@ -144,15 +149,15 @@ export const AuditTrailView: React.FC<AuditTrailViewProps> = ({ language }) => {
                       ${Number(item.amount || 0).toFixed(2)} USD
                     </td>
                     <td className="py-3 px-4 text-[11px] text-[var(--text-secondary)] max-w-sm leading-relaxed">
-                      {item.reason}
+                      {translateAlertReason(item.reason, language)}
                     </td>
                     <td className="py-3 px-4">
                       <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/15 text-rose-400 border border-rose-500/30">
-                        {item.classification}
+                        {translateStatus(item.classification, language)}
                       </span>
                     </td>
                     <td className="py-3 px-4 text-[11px] font-medium text-emerald-400">
-                      {item.confidence_label}
+                      {translateConfidence(item.confidence_label, language)}
                     </td>
                   </tr>
                 );

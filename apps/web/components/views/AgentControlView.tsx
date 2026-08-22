@@ -31,12 +31,66 @@ export const AgentControlView: React.FC<AgentControlViewProps> = ({ language }) 
   const [wipeSuccess, setWipeSuccess] = useState(false);
 
   const toolsList = [
-    { name: 'verify_transaction_authenticity', desc: 'Thẩm định tính xác thực biên lai & đối soát sổ cái 5 chiều', status: 'ACTIVE', calls: 42, latency: '180ms' },
-    { name: 'find_duplicate_charges', desc: 'Quét giao dịch quẹt trùng thẻ ảo (Meta Ads, Google Ads, Grab) trong 48h', status: 'ACTIVE', calls: 89, latency: '95ms' },
-    { name: 'detect_overdue_payouts', desc: 'Phát hiện tiền giải ngân TMĐT (Amazon, Stripe, Shopify) bị chậm trễ quá hạn', status: 'ACTIVE', calls: 35, latency: '110ms' },
-    { name: 'find_active_subscriptions', desc: 'Phát hiện chu kỳ SaaS định kỳ & cảnh báo âm thầm tăng giá (Price Hike)', status: 'ACTIVE', calls: 64, latency: '120ms' },
-    { name: 'reconcile_3way_transactions', desc: 'Đối soát 3 nguồn Sổ cái ↔ Ví ↔ Sao kê thẻ theo đúng quy chuẩn bất biến', status: 'ACTIVE', calls: 51, latency: '140ms' },
-    { name: 'generate_expense_report', desc: 'Tổng hợp báo cáo thu chi, bóc tách phí ngân hàng & dự thảo email báo cáo', status: 'ACTIVE', calls: 73, latency: '160ms' },
+    {
+      name: 'verify_transaction_authenticity',
+      desc:
+        language === 'vi'
+          ? 'Thẩm định tính xác thực biên lai & đối soát sổ cái 5 chiều'
+          : 'Authenticate receipt proof and perform 5-dimensional ledger audit',
+      status: 'ACTIVE',
+      calls: 42,
+      latency: '180ms',
+    },
+    {
+      name: 'find_duplicate_charges',
+      desc:
+        language === 'vi'
+          ? 'Quét giao dịch quẹt trùng thẻ ảo (Meta Ads, Google Ads, Grab) trong 48h'
+          : 'Detect multi-card duplicate charges (Meta Ads, Google Ads, Grab) within 48h',
+      status: 'ACTIVE',
+      calls: 89,
+      latency: '95ms',
+    },
+    {
+      name: 'detect_overdue_payouts',
+      desc:
+        language === 'vi'
+          ? 'Phát hiện tiền giải ngân TMĐT (Amazon, Stripe, Shopify) bị chậm trễ quá hạn'
+          : 'Identify delayed e-commerce disbursements (Amazon, Stripe, Shopify) exceeding SLA',
+      status: 'ACTIVE',
+      calls: 35,
+      latency: '110ms',
+    },
+    {
+      name: 'find_active_subscriptions',
+      desc:
+        language === 'vi'
+          ? 'Phát hiện chu kỳ SaaS định kỳ & cảnh báo âm thầm tăng giá (Price Hike)'
+          : 'Audit recurring SaaS cadences & alert stealth subscription price hikes',
+      status: 'ACTIVE',
+      calls: 64,
+      latency: '120ms',
+    },
+    {
+      name: 'reconcile_3way_transactions',
+      desc:
+        language === 'vi'
+          ? 'Đối soát 3 nguồn Sổ cái ↔ Ví ↔ Sao kê thẻ theo đúng quy chuẩn bất biến'
+          : 'Reconcile 3-way financial flows (Bank ↔ Wallet ↔ Cards) against invariant rules',
+      status: 'ACTIVE',
+      calls: 51,
+      latency: '140ms',
+    },
+    {
+      name: 'generate_expense_report',
+      desc:
+        language === 'vi'
+          ? 'Tổng hợp báo cáo thu chi, bóc tách phí ngân hàng & dự thảo email báo cáo'
+          : 'Compile income/expense statements, extract bank fees, and draft summary reports',
+      status: 'ACTIVE',
+      calls: 73,
+      latency: '160ms',
+    },
   ];
 
   const handleWipeData = async () => {
@@ -102,12 +156,14 @@ export const AgentControlView: React.FC<AgentControlViewProps> = ({ language }) 
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-[var(--text-primary)] flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-blue-400"></span>
-                  Google Gemini 2.0 Flash (Khuyên Dùng)
+                  Google Gemini 2.0 Flash ({language === 'vi' ? 'Khuyên Dùng' : 'Recommended'})
                 </span>
                 {activeModel === 'gemini' && <CheckCircle2 className="w-4 h-4 text-[#FC6508]" />}
               </div>
               <p className="text-[11px] text-[var(--text-secondary)] mt-1">
-                Tích hợp Google ADK Tool Calling, phản hồi dưới 1.2s, giải thích nguyên nhân gốc rễ (Root Cause) và đối soát đa chiều.
+                {language === 'vi'
+                  ? 'Tích hợp Google ADK Tool Calling, phản hồi dưới 1.2s, giải thích nguyên nhân gốc rễ (Root Cause) và đối soát đa chiều.'
+                  : 'Google ADK tool-calling integration with sub-1.2s latency, root cause explanation, and multi-source cross check.'}
               </p>
             </div>
 
@@ -127,7 +183,9 @@ export const AgentControlView: React.FC<AgentControlViewProps> = ({ language }) 
                 {activeModel === 'hybrid' && <CheckCircle2 className="w-4 h-4 text-[#FC6508]" />}
               </div>
               <p className="text-[11px] text-[var(--text-secondary)] mt-1">
-                Kiểm chứng số liệu 100% khớp sổ cái trước khi trả lời người dùng, loại bỏ hoàn toàn hiện tượng bịa đặt (Zero Hallucination).
+                {language === 'vi'
+                  ? 'Kiểm chứng số liệu 100% khớp sổ cái trước khi trả lời người dùng, loại bỏ hoàn toàn hiện tượng bịa đặt (Zero Hallucination).'
+                  : 'Verifies figures 100% against core ledgers before rendering response, ensuring zero financial hallucinations.'}
               </p>
             </div>
           </div>
@@ -151,7 +209,9 @@ export const AgentControlView: React.FC<AgentControlViewProps> = ({ language }) 
                   {language === 'vi' ? 'Chế Độ Read-Only Tuyệt Đối' : 'Strict Read-Only Mode'}
                 </div>
                 <div className="text-[10px] text-[var(--text-muted)] mt-0.5">
-                  Cấm tự chuyển tiền, huỷ gói, khoá thẻ hoặc chargeback.
+                  {language === 'vi'
+                    ? 'Cấm tự chuyển tiền, huỷ gói, khoá thẻ hoặc chargeback.'
+                    : 'Disallows automated money movement, cancellations, card freezes, or chargebacks.'}
                 </div>
               </div>
               <input
@@ -170,7 +230,9 @@ export const AgentControlView: React.FC<AgentControlViewProps> = ({ language }) 
                   {language === 'vi' ? 'Áp Dụng Điều Khoản 60 Ngày (Regulation E)' : 'Enforce US Regulation E (60-Day Notice)'}
                 </div>
                 <div className="text-[10px] text-[var(--text-muted)] mt-0.5">
-                  Tự động đính kèm mốc hạn khiếu nại luật Mỹ trong mọi cảnh báo.
+                  {language === 'vi'
+                    ? 'Tự động đính kèm mốc hạn khiếu nại luật Mỹ trong mọi cảnh báo.'
+                    : 'Automatically appends statutory 60-day dispute countdowns to financial alerts.'}
                 </div>
               </div>
               <input
@@ -216,11 +278,11 @@ export const AgentControlView: React.FC<AgentControlViewProps> = ({ language }) 
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="border-b border-[var(--border-subtle)] text-[var(--text-muted)]">
-                <th className="pb-2 font-medium">Tool Function</th>
-                <th className="pb-2 font-medium">Mô tả nghiệp vụ</th>
-                <th className="pb-2 font-medium">Trạng thái</th>
-                <th className="pb-2 font-medium text-right">Lượt gọi</th>
-                <th className="pb-2 font-medium text-right">Độ trễ</th>
+                <th className="pb-2 font-medium">{language === 'vi' ? 'Công cụ (Tool)' : 'Tool Function'}</th>
+                <th className="pb-2 font-medium">{language === 'vi' ? 'Mô tả nghiệp vụ' : 'Operational Scope'}</th>
+                <th className="pb-2 font-medium">{language === 'vi' ? 'Trạng thái' : 'Status'}</th>
+                <th className="pb-2 font-medium text-right">{language === 'vi' ? 'Lượt gọi' : 'Invocations'}</th>
+                <th className="pb-2 font-medium text-right">{language === 'vi' ? 'Độ trễ' : 'Avg Latency'}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border-subtle)]">
@@ -250,7 +312,9 @@ export const AgentControlView: React.FC<AgentControlViewProps> = ({ language }) 
             {language === 'vi' ? 'Quản Lý Phiên Làm Việc & Xoá Dữ Liệu Kiểm Thử' : 'Session Memory & Compliance Wipe'}
           </div>
           <p className="text-[11px] text-[var(--text-secondary)] mt-0.5">
-            Xoá bộ nhớ đệm hội thoại tạm thời, đặt lại trạng thái giám sát nền mà không ảnh hưởng tới sổ cái gốc.
+            {language === 'vi'
+              ? 'Xoá bộ nhớ đệm hội thoại tạm thời, đặt lại trạng thái giám sát nền mà không ảnh hưởng tới sổ cái gốc.'
+              : 'Clears conversational context buffer and resets proactive scheduler state without touching base ledgers.'}
           </p>
         </div>
         <button
@@ -260,8 +324,12 @@ export const AgentControlView: React.FC<AgentControlViewProps> = ({ language }) 
         >
           <RefreshCw className={`w-3.5 h-3.5 ${isWiping ? 'animate-spin' : ''}`} />
           {wipeSuccess
-            ? (language === 'vi' ? 'Đã xoá sạch!' : 'Wiped Successfully!')
-            : (language === 'vi' ? 'Xoá Cache Phiên' : 'Wipe Session Cache')}
+            ? language === 'vi'
+              ? 'Đã xoá sạch!'
+              : 'Wiped Successfully!'
+            : language === 'vi'
+            ? 'Xoá Cache Phiên'
+            : 'Wipe Session Cache'}
         </button>
       </div>
     </div>

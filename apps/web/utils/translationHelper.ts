@@ -43,9 +43,9 @@ export function translateConfidence(conf: string | any, lang: Language): string 
   const val = typeof conf === 'string' ? conf : String(conf);
   if (lang === 'vi') return val;
 
-  if (val.includes('cao') || val.includes('High')) return 'High Confidence';
-  if (val.includes('trung bình') || val.includes('Medium')) return 'Medium Confidence';
-  if (val.includes('thấp') || val.includes('Low')) return 'Low Confidence';
+  if (val.includes('cao') || val.includes('High') || val.includes('Mức độ tin cậy cao')) return 'High Confidence';
+  if (val.includes('trung bình') || val.includes('Medium') || val.includes('Mức độ tin cậy trung bình')) return 'Medium Confidence';
+  if (val.includes('thấp') || val.includes('Low') || val.includes('Mức độ tin cậy thấp')) return 'Low Confidence';
   return val;
 }
 
@@ -82,6 +82,8 @@ export function translateFindingExplanation(exp: string, lang: Language): string
   res = res.replace(/Lệch (\$[\d,.]+) giữa Account và Wallet — chưa xác định nguyên nhân\./g, 'Diff of $1 between Account and Wallet — root cause undetermined.');
   res = res.replace(/Lệch (\$[\d,.]+) giữa Wallet balance và tổng transaction — chưa xác định nguyên nhân\./g, 'Diff of $1 between Wallet balance and transaction sum — root cause undetermined.');
   res = res.replace(/Lệch (\$[\d,.]+) giữa Account balance và dòng tiền thực tế — chưa xác định nguyên nhân\./g, 'Diff of $1 between Account balance and actual cashflow — root cause undetermined.');
+  res = res.replace(/Lệch nạp trùng (\$[\d,.]+) trong Wallet — chưa xác định nguyên nhân\./g, 'Duplicate top-up diff of $1 in Wallet — root cause undetermined.');
+  res = res.replace(/Lệch phí (\$[\d,.]+) xuất hiện đồng thời trên Account và Card — chưa xác định nguyên nhân\./g, 'Fee diff of $1 appears simultaneously on Account and Card — root cause undetermined.');
   res = res.replace(/chưa xác định nguyên nhân/g, 'root cause undetermined');
   res = res.replace(/Lệch/g, 'Diff');
   res = res.replace(/giữa/g, 'between');
@@ -128,7 +130,8 @@ export function translateAlertTitle(title: string, lang: Language): string {
 export function translateAlertReason(reason: string, lang: Language): string {
   if (!reason || lang === 'vi') return reason;
 
-  const payoutRegex = /Email xác nhận giải ngân (\$[\d,.]+(?:\s*USD)?) từ ([^ ]+) ngày ([\d/]+) nhưng sau (\d+) ngày vẫn chưa thấy tiền về tài khoản Wealify \(Quy chuẩn xử lý: (\d+) ngày\)\./g;
+  // Handles payout delay alerts: "Email xác nhận giải ngân $2,597.84 USD từ PayPal Payouts ngày 05/06/2026 nhưng sau 78 ngày vẫn chưa thấy tiền về tài khoản Wealify (Quy chuẩn xử lý: 3 ngày)."
+  const payoutRegex = /Email xác nhận giải ngân ([\$\d,.]+(?:\s*USD)?) từ (.+?) ngày ([\d/]+) nhưng sau (\d+) ngày vẫn chưa thấy tiền về tài khoản Wealify \(Quy chuẩn xử lý: (\d+) ngày\)\.?/g;
   if (payoutRegex.test(reason)) {
     return reason.replace(
       payoutRegex,
@@ -138,13 +141,16 @@ export function translateAlertReason(reason: string, lang: Language): string {
 
   if (reason.includes('Phát hiện 2 giao dịch cùng số tiền')) {
     return reason
-      .replace('Phát hiện 2 giao dịch cùng số tiền', 'Detected 2 identical transactions of')
-      .replace('cách nhau', 'spaced')
-      .replace('giây trên thẻ ảo', 'seconds apart on virtual card');
+      .replace(/Phát hiện 2 giao dịch cùng số tiền (\$[\d,.]+) tại ([^ ]+) chỉ cách nhau ([^ ]+) phút \(Thẻ ảo: ([^)]+)\)\./g, 'Detected 2 identical transactions of $1 at $2 spaced $3 mins apart (Virtual Card: $4).')
+      .replace(/Phát hiện 2 giao dịch cùng số tiền/g, 'Detected 2 identical transactions of')
+      .replace(/cách nhau/g, 'spaced')
+      .replace(/giây trên thẻ ảo/g, 'seconds apart on virtual card')
+      .replace(/phút/g, 'mins');
   }
 
   if (reason.includes('Email giải ngân ngày')) {
     return reason
+      .replace(/Email giải ngân ngày ([\d/]+) nhưng tài khoản chưa ghi nhận số dư\./g, 'Disbursement email dated $1 but funds not yet credited to account.')
       .replace('Email giải ngân ngày', 'Disbursement email dated')
       .replace('nhưng tài khoản chưa ghi nhận số dư.', 'but funds not yet credited to account.');
   }
@@ -161,6 +167,12 @@ export function translateActionSuggestion(suggestion: string, lang: Language): s
   if (suggestion.includes('Kiểm tra lại sao kê ngân hàng')) {
     return 'Review bank statement records.';
   }
+  if (suggestion.includes('Liên hệ ngân hàng')) {
+    return 'Contact bank to initiate formal chargeback dispute.';
+  }
+  if (suggestion.includes('Kiểm tra lại')) {
+    return 'Verify details with issuing bank or merchant.';
+  }
   return suggestion;
 }
 
@@ -170,5 +182,59 @@ export function translateReminderNotes(notes: string, lang: Language): string {
   if (notes.includes('Tra soát khoản quẹt đúp 2 lần cách nhau 105 giây trên thẻ ảo Volcano Ads •••• 4812.')) {
     return 'Dispute double charge 105 seconds apart on virtual card Volcano Ads •••• 4812.';
   }
+  if (notes.includes('Email xác nhận giải ngân')) {
+    return translateAlertReason(notes, lang);
+  }
+  if (notes.includes('Giao dịch bất thường')) {
+    return notes.replace('Giao dịch bất thường', 'Anomalous charge flagged for dispute.');
+  }
   return notes;
+}
+
+export function translateMerchantExplanation(exp: string, lang: Language): string {
+  if (!exp || lang === 'vi') return exp;
+
+  const map: Record<string, string> = {
+    'Chi phí quảng cáo số Facebook Ads': 'Facebook Ads digital marketing spend',
+    'Thuê bao phần mềm đồ họa Adobe Creative Cloud': 'Adobe Creative Cloud design subscription',
+    'Dịch vụ máy chủ đám mây AWS': 'AWS cloud server infrastructure',
+    'Dịch vụ xem phim trực tuyến Netflix': 'Netflix streaming subscription',
+    'Dịch vụ thiết kế đồ họa trực tuyến Canva': 'Canva online design subscription',
+    'Chuyến xe di chuyển Grab': 'Grab rides and mobility expense',
+    'Ăn uống qua GrabFood': 'GrabFood food delivery spend',
+    'Chi tiêu cà phê Highlands': 'Highlands Coffee expense',
+    'Cà phê Starbucks': 'Starbucks Coffee expense',
+    'Siêu thị Annam Gourmet': 'Annam Gourmet grocery spend',
+    'Phần mềm ChatGPT Plus': 'OpenAI ChatGPT Plus AI subscription',
+    'Cửa hàng tiện lợi Circle K': 'Circle K convenience store',
+    'Nhà hàng Pizza 4Ps': 'Pizza 4P\'s dining expense',
+    'Giao dịch thương mại trực tuyến.': 'Online commercial transaction.',
+  };
+
+  for (const [k, v] of Object.entries(map)) {
+    if (exp.includes(k)) return exp.replace(k, v);
+  }
+
+  return exp.replace('Giao dịch thương mại trực tuyến.', 'Online commercial transaction.');
+}
+
+export function translateEvidenceDimensionName(name: string, lang: Language): string {
+  if (!name || lang === 'vi') return name;
+
+  if (name.includes('Mã tham chiếu')) return 'Transaction Reference Code';
+  if (name.includes('Số tiền & Sổ cái')) return 'Amount & Ledger Balance';
+  if (name.includes('Ví điện tử')) return 'E-Wallet Balance';
+  if (name.includes('Hộp thư xác nhận')) return 'Mailbox Confirmation (Email)';
+  return name;
+}
+
+export function translateEvidenceDimensionDetail(detail: string, lang: Language): string {
+  if (!detail || lang === 'vi') return detail;
+
+  let res = detail;
+  res = res.replace(/Mã ['"]([^'"]+)['"] không tồn tại trong hệ thống sổ cái Wealify Core Banking\./g, "Reference code '$1' does not exist in Wealify Core Banking ledger.");
+  res = res.replace(/Không có biến động số dư ([+\-\$0-9,.]+) USD vào ngày ([\d/]+)\./g, "No incoming balance movement of $1 USD on $2.");
+  res = res.replace(/Không có giao dịch nạp tiền hoặc nhận chuyển khoản tương ứng\./g, "No matching wallet top-up or incoming payment transfer found.");
+  res = res.replace(/Không có thông báo xác nhận chuyển khoản từ ngân hàng gửi về email\./g, "No bank transfer confirmation email received in verified inbox.");
+  return res;
 }
