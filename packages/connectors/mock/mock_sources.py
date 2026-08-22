@@ -41,9 +41,9 @@ class MockTransactionSource(BaseTransactionSource):
 
     ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
     DEFAULT_EXCEL_PATH = os.path.join(ROOT_DIR, "wlf15_inbox_3users.xlsx")
-    DEFAULT_CARDS_CSV = os.path.join(ROOT_DIR, "data", "cards.csv")
-    DEFAULT_ACCOUNTS_CSV = os.path.join(ROOT_DIR, "data", "accounts.csv")
-    DEFAULT_TX_HISTORY_EXCEL = os.path.join(ROOT_DIR, "data", "Transaction_history.xlsx")
+    DEFAULT_CARDS_CSV = os.path.join(ROOT_DIR, "data", "sample", "card_statements.csv")
+    DEFAULT_ACCOUNTS_CSV = os.path.join(ROOT_DIR, "data", "sample", "account_transactions.csv")
+    DEFAULT_TX_HISTORY_EXCEL = os.path.join(ROOT_DIR, "wlf15_inbox_3users.xlsx")
 
     def __init__(
         self,

@@ -18,6 +18,7 @@ import {
   translateAlertReason,
   translateActionSuggestion,
 } from '../../utils/translationHelper';
+import { getApiUrl } from '../../utils/apiConfig';
 
 interface AlertsViewProps {
   language: Language;
@@ -37,9 +38,9 @@ export const AlertsView: React.FC<AlertsViewProps> = ({
   useEffect(() => {
     const fetchAlerts = async () => {
       try {
-        let apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
-        apiUrl = apiUrl.replace(/\/+$/, '');
-        const res = await fetch(`${apiUrl}/api/v1/alerts`);
+        const apiUrl = getApiUrl();
+        const endpoint = apiUrl ? `${apiUrl}/api/v1/alerts` : '/api/v1/alerts';
+        const res = await fetch(endpoint);
         if (res.ok) {
           const data = await res.json();
           setAlerts(data);

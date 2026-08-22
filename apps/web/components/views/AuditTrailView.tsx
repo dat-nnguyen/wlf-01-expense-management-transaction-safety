@@ -14,6 +14,7 @@ import {
   translateConfidence,
   translateAlertReason,
 } from '../../utils/translationHelper';
+import { getApiUrl } from '../../utils/apiConfig';
 
 interface AuditTrailViewProps {
   language: Language;
@@ -27,9 +28,9 @@ export const AuditTrailView: React.FC<AuditTrailViewProps> = ({ language }) => {
   const fetchLogs = async () => {
     setLoading(true);
     try {
-      let apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
-      apiUrl = apiUrl.replace(/\/+$/, '');
-      const res = await fetch(`${apiUrl}/api/v1/audit/logs`);
+      const apiUrl = getApiUrl();
+      const endpoint = apiUrl ? `${apiUrl}/api/v1/audit/logs` : '/api/v1/audit/logs';
+      const res = await fetch(endpoint);
       if (res.ok) {
         const data = await res.json();
         setLogs(data);
@@ -46,9 +47,9 @@ export const AuditTrailView: React.FC<AuditTrailViewProps> = ({ language }) => {
   }, []);
 
   const handleExport = (format: 'csv' | 'json') => {
-    let apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
-    apiUrl = apiUrl.replace(/\/+$/, '');
-    window.open(`${apiUrl}/api/v1/audit/export?format=${format}`, '_blank');
+    const apiUrl = getApiUrl();
+    const endpoint = apiUrl ? `${apiUrl}/api/v1/audit/export?format=${format}` : `/api/v1/audit/export?format=${format}`;
+    window.open(endpoint, '_blank');
   };
 
   const filtered = logs.filter((item) => {

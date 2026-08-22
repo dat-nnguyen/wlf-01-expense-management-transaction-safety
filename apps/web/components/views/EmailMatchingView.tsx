@@ -16,6 +16,7 @@ import {
   translateEmailReason,
   translateEmailSource,
 } from '../../utils/translationHelper';
+import { getApiUrl } from '../../utils/apiConfig';
 
 interface EmailMatchingViewProps {
   language: Language;
@@ -30,12 +31,12 @@ export const EmailMatchingView: React.FC<EmailMatchingViewProps> = ({ language }
   const fetchEmailMatches = async () => {
     setLoading(true);
     try {
-      let apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
-      apiUrl = apiUrl.replace(/\/+$/, '');
-      const res = await fetch(`${apiUrl}/api/v1/email-reconciliation/matches`);
+      const apiUrl = getApiUrl();
+      const base = apiUrl || '';
+      const res = await fetch(`${base}/api/v1/reconciliation/email-matches`);
       if (res.ok) {
         const data = await res.json();
-        setMatches(data.matches || []);
+        setMatches(Array.isArray(data) ? data : data.matches || []);
       }
     } catch (err) {
       console.error('Failed to fetch email matches:', err);

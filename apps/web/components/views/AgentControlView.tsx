@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { Language } from '../../types';
 import { TRANSLATIONS } from '../../data/translations';
+import { getApiUrl } from '../../utils/apiConfig';
 
 interface AgentControlViewProps {
   language: Language;
@@ -96,9 +97,9 @@ export const AgentControlView: React.FC<AgentControlViewProps> = ({ language }) 
   const handleWipeData = async () => {
     setIsWiping(true);
     try {
-      let apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
-      apiUrl = apiUrl.replace(/\/+$/, '');
-      const res = await fetch(`${apiUrl}/api/v1/admin/wipe-data`, { method: 'POST' });
+      const apiUrl = getApiUrl();
+      const endpoint = apiUrl ? `${apiUrl}/api/v1/admin/wipe-data` : '/api/v1/admin/wipe-data';
+      const res = await fetch(endpoint, { method: 'POST' });
       if (res.ok) {
         setWipeSuccess(true);
         setTimeout(() => setWipeSuccess(false), 3000);

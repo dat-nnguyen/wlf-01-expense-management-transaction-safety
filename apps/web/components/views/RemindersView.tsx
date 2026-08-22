@@ -10,6 +10,8 @@ import {
   Calendar,
 } from 'lucide-react';
 import { Language } from '../../types';
+import { TRANSLATIONS } from '../../data/translations';
+import { getApiUrl } from '../../utils/apiConfig';
 
 import { translateReminderNotes } from '../../utils/translationHelper';
 
@@ -18,6 +20,7 @@ interface RemindersViewProps {
 }
 
 export const RemindersView: React.FC<RemindersViewProps> = ({ language }) => {
+  const t = TRANSLATIONS[language];
   const [reminders, setReminders] = useState<any[]>([]);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -35,9 +38,9 @@ export const RemindersView: React.FC<RemindersViewProps> = ({ language }) => {
   const fetchReminders = async () => {
     setLoading(true);
     try {
-      let apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
-      apiUrl = apiUrl.replace(/\/+$/, '');
-      const res = await fetch(`${apiUrl}/api/v1/reminders`);
+      const apiUrl = getApiUrl();
+      const endpoint = apiUrl ? `${apiUrl}/api/v1/reminders` : '/api/v1/reminders';
+      const res = await fetch(endpoint);
       if (res.ok) {
         const data = await res.json();
         setReminders(data);
@@ -56,10 +59,10 @@ export const RemindersView: React.FC<RemindersViewProps> = ({ language }) => {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      let apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
-      apiUrl = apiUrl.replace(/\/+$/, '');
+      const apiUrl = getApiUrl();
+      const endpoint = apiUrl ? `${apiUrl}/api/v1/reminders` : '/api/v1/reminders';
 
-      const res = await fetch(`${apiUrl}/api/v1/reminders`, {
+      const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -83,9 +86,9 @@ export const RemindersView: React.FC<RemindersViewProps> = ({ language }) => {
 
   const handleResolve = async (id: string) => {
     try {
-      let apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
-      apiUrl = apiUrl.replace(/\/+$/, '');
-      await fetch(`${apiUrl}/api/v1/reminders/${id}/resolve`, { method: 'POST' });
+      const apiUrl = getApiUrl();
+      const endpoint = apiUrl ? `${apiUrl}/api/v1/reminders/${id}/resolve` : `/api/v1/reminders/${id}/resolve`;
+      await fetch(endpoint, { method: 'POST' });
       fetchReminders();
     } catch (err) {
       console.error('Failed to resolve reminder:', err);
@@ -94,9 +97,9 @@ export const RemindersView: React.FC<RemindersViewProps> = ({ language }) => {
 
   const handleDelete = async (id: string) => {
     try {
-      let apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
-      apiUrl = apiUrl.replace(/\/+$/, '');
-      await fetch(`${apiUrl}/api/v1/reminders/${id}`, { method: 'DELETE' });
+      const apiUrl = getApiUrl();
+      const endpoint = apiUrl ? `${apiUrl}/api/v1/reminders/${id}` : `/api/v1/reminders/${id}`;
+      await fetch(endpoint, { method: 'DELETE' });
       fetchReminders();
     } catch (err) {
       console.error('Failed to delete reminder:', err);

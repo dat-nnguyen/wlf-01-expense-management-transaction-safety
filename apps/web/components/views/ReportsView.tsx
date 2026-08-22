@@ -12,6 +12,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { Language } from '../../types';
+import { getApiUrl } from '../../utils/apiConfig';
 
 interface ReportsViewProps {
   language: Language;
@@ -26,14 +27,14 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ language }) => {
   const fetchReport = async (type: string, value: string) => {
     setLoading(true);
     try {
-      let apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
-      apiUrl = apiUrl.replace(/\/+$/, '');
+      const apiUrl = getApiUrl();
+      const base = apiUrl || '';
 
       let endpoint = `/api/v1/reports/monthly?month=${value}`;
       if (type === 'quarter') endpoint = `/api/v1/reports/quarterly?quarter=${value}`;
       if (type === 'year') endpoint = `/api/v1/reports/yearly?year=${value}`;
 
-      const res = await fetch(`${apiUrl}${endpoint}`);
+      const res = await fetch(`${base}${endpoint}`);
       if (res.ok) {
         const data = await res.json();
         setReport(data);

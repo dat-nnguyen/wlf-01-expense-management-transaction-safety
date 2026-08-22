@@ -20,6 +20,7 @@ import { EvidenceVerificationModal } from '../components/modals/EvidenceVerifica
 import { EmailConfirmationModal } from '../components/modals/EmailConfirmationModal';
 import { Message, EmailModalState, Language } from '../types';
 import { TRANSLATIONS } from '../data/translations';
+import { INITIAL_MESSAGES } from '../data/mockData';
 import { getApiUrl } from '../utils/apiConfig';
 
 export default function Home() {
@@ -28,7 +29,7 @@ export default function Home() {
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const [hasMounted, setHasMounted] = useState(false);
 
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>(INITIAL_MESSAGES);
   const [inputMsg, setInputMsg] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [isVerifyModalOpen, setIsVerifyModalOpen] = useState(false);

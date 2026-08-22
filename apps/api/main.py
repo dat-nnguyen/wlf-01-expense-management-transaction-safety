@@ -5,8 +5,10 @@ from fastapi.middleware.cors import CORSMiddleware
 
 load_dotenv()
 
-from packages.db.session import init_db
+from packages.db.session import init_db, SessionLocal
+from packages.db.models.base import TransactionModel
 from packages.observability.logging import logger
+from scripts.seed_db import seed_database
 from apps.api.routes import (
     health_router,
     chat_router,
@@ -33,8 +35,16 @@ async def lifespan(app: FastAPI):
     try:
         init_db()
         logger.info("Database initialized successfully.")
+        db = SessionLocal()
+        try:
+            if db.query(TransactionModel).count() == 0:
+                logger.info("Database is empty. Auto-seeding canonical dataset...")
+                seed_database()
+                logger.info("Database auto-seeded successfully.")
+        finally:
+            db.close()
     except Exception as e:
-        logger.error(f"Database initialization warning: {e}")
+        logger.error(f"Database initialization/seeding warning: {e}")
     yield
     logger.info("Shutting down API server...")
 

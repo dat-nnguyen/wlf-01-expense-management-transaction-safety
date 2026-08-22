@@ -11,6 +11,7 @@ import {
   Layers,
 } from 'lucide-react';
 import { Language } from '../../types';
+import { getApiUrl } from '../../utils/apiConfig';
 
 interface ProactiveMonitorViewProps {
   language: Language;
@@ -25,12 +26,12 @@ export const ProactiveMonitorView: React.FC<ProactiveMonitorViewProps> = ({ lang
 
   const fetchStatus = async () => {
     try {
-      let apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
-      apiUrl = apiUrl.replace(/\/+$/, '');
+      const apiUrl = getApiUrl();
+      const base = apiUrl || '';
 
       const [statusRes, histRes] = await Promise.all([
-        fetch(`${apiUrl}/api/v1/monitor/status`),
-        fetch(`${apiUrl}/api/v1/monitor/history`),
+        fetch(`${base}/api/v1/monitor/status`),
+        fetch(`${base}/api/v1/monitor/history`),
       ]);
 
       if (statusRes.ok) setMonitorStatus(await statusRes.json());
@@ -49,10 +50,10 @@ export const ProactiveMonitorView: React.FC<ProactiveMonitorViewProps> = ({ lang
   const triggerScan = async () => {
     setIsScanning(true);
     try {
-      let apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
-      apiUrl = apiUrl.replace(/\/+$/, '');
+      const apiUrl = getApiUrl();
+      const base = apiUrl || '';
 
-      const res = await fetch(`${apiUrl}/api/v1/monitor/scan`, { method: 'POST' });
+      const res = await fetch(`${base}/api/v1/monitor/scan`, { method: 'POST' });
       if (res.ok) {
         const data = await res.json();
         setScanResult(data);

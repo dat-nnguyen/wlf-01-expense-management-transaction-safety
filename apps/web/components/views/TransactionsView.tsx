@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { Language } from '../../types';
 import { translateMerchantExplanation } from '../../utils/translationHelper';
+import { getApiUrl } from '../../utils/apiConfig';
 
 interface TransactionsViewProps {
   language: Language;
@@ -29,9 +30,9 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({ language }) 
   useEffect(() => {
     const fetchTransactions = async () => {
       try {
-        let apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
-        apiUrl = apiUrl.replace(/\/+$/, '');
-        const res = await fetch(`${apiUrl}/api/v1/transactions`);
+        const apiUrl = getApiUrl();
+        const endpoint = apiUrl ? `${apiUrl}/api/v1/transactions` : '/api/v1/transactions';
+        const res = await fetch(endpoint);
         if (res.ok) {
           const data = await res.json();
           setTransactions(data);
