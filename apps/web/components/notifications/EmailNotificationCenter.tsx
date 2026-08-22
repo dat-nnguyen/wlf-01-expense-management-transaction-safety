@@ -13,6 +13,7 @@ import {
 import { Language, EmailNotificationLogItem } from '../../types';
 import { TRANSLATIONS } from '../../data/translations';
 import { EMAIL_NOTIFICATION_LOGS } from '../../data/mockData';
+import { getApiUrl } from '../../utils/apiConfig';
 
 interface EmailNotificationCenterProps {
   language: Language;
@@ -36,7 +37,8 @@ export const EmailNotificationCenter: React.FC<EmailNotificationCenterProps> = (
     setScanResultToast(null);
 
     try {
-      const res = await fetch('http://localhost:8000/api/v1/notifications/scan-and-notify', {
+      const apiUrl = getApiUrl();
+      const res = await fetch(`${apiUrl}/api/v1/notifications/scan-and-notify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ recipient_email: 'founder@wealify.io' }),

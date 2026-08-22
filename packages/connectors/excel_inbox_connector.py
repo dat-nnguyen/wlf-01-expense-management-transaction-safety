@@ -15,6 +15,9 @@ from packages.data.schemas.email import EmailEvidence, EmailType
 from packages.observability.logging import logger
 
 
+_GLOBAL_INBOX_CACHE: Dict[str, Dict[str, List[EmailEvidence]]] = {}
+
+
 class ExcelInboxConnector(BaseEmailSource):
     """Parses and indexes email records from wlf15_inbox_3users.xlsx."""
 
@@ -29,7 +32,12 @@ class ExcelInboxConnector(BaseEmailSource):
         self._load_dataset()
 
     def _load_dataset(self) -> None:
-        """Load all sheets from the Excel file if it exists."""
+        """Load all sheets from the Excel file if it exists (using cache if available)."""
+        global _GLOBAL_INBOX_CACHE
+        if self.excel_path in _GLOBAL_INBOX_CACHE:
+            self._user_inboxes = _GLOBAL_INBOX_CACHE[self.excel_path]
+            return
+
         if not os.path.exists(self.excel_path):
             logger.warning(f"Excel inbox file not found at {self.excel_path}")
             return
@@ -105,6 +113,7 @@ class ExcelInboxConnector(BaseEmailSource):
                 clean_user = sheet_name.replace("@yopmail.com", "").strip().lower()
                 self._user_inboxes[clean_user] = emails
                 logger.info(f"Loaded {len(emails)} emails for persona '{clean_user}' from Excel.")
+            _GLOBAL_INBOX_CACHE[self.excel_path] = self._user_inboxes
         except Exception as exc:
             logger.error(f"Error loading Excel inbox: {exc}")
 

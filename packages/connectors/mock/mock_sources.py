@@ -29,6 +29,9 @@ def _ensure_tz(dt: Any) -> datetime:
     return datetime.now(timezone.utc)
 
 
+_GLOBAL_TX_CACHE: Optional[List[Transaction]] = None
+
+
 class MockTransactionSource(BaseTransactionSource):
     """
     Official Transaction Source for Wealify Guardian.
@@ -38,9 +41,9 @@ class MockTransactionSource(BaseTransactionSource):
 
     ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
     DEFAULT_EXCEL_PATH = os.path.join(ROOT_DIR, "wlf15_inbox_3users.xlsx")
-    DEFAULT_TX_HISTORY_EXCEL = os.path.join(ROOT_DIR, "Transaction_history.xlsx")
-    DEFAULT_CARDS_CSV = os.path.join(ROOT_DIR, "data", "sample", "card_statements.csv")
-    DEFAULT_ACCOUNTS_CSV = os.path.join(ROOT_DIR, "data", "sample", "account_transactions.csv")
+    DEFAULT_CARDS_CSV = os.path.join(ROOT_DIR, "data", "cards.csv")
+    DEFAULT_ACCOUNTS_CSV = os.path.join(ROOT_DIR, "data", "accounts.csv")
+    DEFAULT_TX_HISTORY_EXCEL = os.path.join(ROOT_DIR, "data", "Transaction_history.xlsx")
 
     def __init__(
         self,
@@ -57,65 +60,49 @@ class MockTransactionSource(BaseTransactionSource):
         self._load_all_sources()
 
 
-    def _normalize_merchant(self, raw: str) -> str:
-        s = (raw or "").lower()
+    def _normalize_merchant(self, text: str) -> str:
+        s = (text or "").lower()
+        if "meta" in s or "facebook" in s:
+            return "Facebook Ads"
+        if "google" in s:
+            return "Google Ads"
+        if "tiktok" in s:
+            return "TikTok Ads"
+        if "amazon" in s:
+            return "Amazon"
+        if "etsy" in s:
+            return "Etsy"
+        if "paddle" in s:
+            return "Paddle.net"
         if "netflix" in s:
             return "Netflix"
-        elif "adobe" in s:
+        if "adobe" in s:
             return "Adobe"
-        elif "grab" in s or "transport" in s:
+        if "grab" in s or "transport" in s:
             return "Grab"
-        elif "facebook" in s or "meta" in s:
-            return "Facebook Ads"
-        elif "google" in s:
-            return "Google"
-        elif "spotify" in s:
+        if "spotify" in s:
             return "Spotify"
-        elif "openai" in s or "chatgpt" in s:
+        if "openai" in s or "chatgpt" in s:
             return "OpenAI"
-        elif "paddle" in s:
-            return "Paddle.net"
-        elif "aws" in s or "amazon web services" in s:
-            return "Amazon Web Services"
-        elif "amazon" in s:
-            return "Amazon"
-        elif "stripe" in s:
+        if "stripe" in s:
             return "Stripe"
-        elif "payoneer" in s:
+        if "payoneer" in s:
             return "Payoneer"
-        elif "paypal" in s:
+        if "paypal" in s:
             return "PayPal"
-        elif "pingpong" in s:
+        if "pingpong" in s:
             return "PingPong"
-        return raw.strip() if raw else "Unknown Merchant"
+        if "wea1ify" in s or "fake" in s:
+            return "Wealify Phishing Actor"
+        if "volcano" in s:
+            return "Volcano Ads (Virtual Card)"
+        return text.strip() if text else "General Expense"
 
-    def _parse_merchant_info(self, sender: str, subject: str, body: str) -> tuple[str, str]:
-        sender_lower = (sender or "").lower()
-        subject_lower = (subject or "").lower()
-
-        if "netflix" in sender_lower or "netflix" in subject_lower:
-            return "Netflix", "NETFLIX.COM* PAYMENT"
-        elif "adobe" in sender_lower or "adobe" in subject_lower:
-            return "Adobe", "ADOBE *CREATIVE CLOUD"
-        elif "openai" in sender_lower or "openai" in subject_lower or "chatgpt" in subject_lower:
-            return "OpenAI", "OPENAI *CHATGPT PLUS"
-        elif "google" in sender_lower or "google" in subject_lower:
-            return "Google Ads", "GOOGLE *ADS 991823"
-        elif "facebook" in sender_lower or "meta" in sender_lower:
-            return "Facebook Ads", "FACEBK *ADS 83921948"
-        elif "paddle" in sender_lower or "paddle" in subject_lower:
-            return "Paddle.net", "Subscription PADDLE.NET* VIRTUAL TOOL"
-        elif "amazon" in sender_lower or "aws" in sender_lower:
-            return "Amazon Web Services", "AMAZON WEB SERVICES AWS.AMAZON.COM"
-        elif "stripe" in sender_lower or "stripe" in subject_lower:
-            return "Stripe", "Stripe Payout Settlement"
-        elif "payoneer" in sender_lower or "payoneer" in subject_lower:
-            return "Payoneer", "Payoneer Direct Deposit"
-        elif "paypal" in sender_lower or "paypal" in subject_lower:
-            return "PayPal", "PayPal Transfer Settlement"
-        elif "pingpong" in sender_lower or "pingpong" in subject_lower:
-            return "PingPong", "PingPong Global Payout"
-        
+    def _parse_merchant_info(self, sender: str, subject: str, body: str):
+        full = f"{sender} {subject} {body}"
+        norm = self._normalize_merchant(full)
+        if norm != "General Expense":
+            return norm, sender or norm
         m_from = re.search(r"@([a-zA-Z0-9.-]+)", sender or "")
         domain = m_from.group(1).split(".")[0].capitalize() if m_from else "Unknown"
         return domain, sender or "External Payment"
@@ -139,6 +126,11 @@ class MockTransactionSource(BaseTransactionSource):
             return 0.0
 
     def _load_all_sources(self) -> None:
+        global _GLOBAL_TX_CACHE
+        if _GLOBAL_TX_CACHE is not None:
+            self._data = list(_GLOBAL_TX_CACHE)
+            return
+
         txs: List[Transaction] = []
         seen_ids = set()
 
@@ -336,6 +328,7 @@ class MockTransactionSource(BaseTransactionSource):
             t.occurred_at = _ensure_tz(t.occurred_at)
 
         self._data = sorted(txs, key=lambda x: x.occurred_at, reverse=True)
+        _GLOBAL_TX_CACHE = self._data
         logger.info(f"Loaded {len(self._data)} official transactions across all sources.")
 
     async def get_transactions(
