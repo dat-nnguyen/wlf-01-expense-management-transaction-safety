@@ -1,3 +1,12 @@
+const normalizeUrl = (raw: string): string => {
+  let u = (raw || '').trim().replace(/\/+$/, '');
+  if (!u) return '';
+  if (!u.startsWith('http://') && !u.startsWith('https://')) {
+    u = `https://${u}`;
+  }
+  return u;
+};
+
 /**
  * Centralized API URL resolver for local development and cloud production (Vercel + Railway).
  * Supports:
@@ -10,13 +19,13 @@ export const getApiUrl = (): string => {
   if (typeof window !== 'undefined') {
     const customUrl = localStorage.getItem('WEALIFY_API_URL');
     if (customUrl && customUrl.trim()) {
-      return customUrl.trim().replace(/\/+$/, '');
+      return normalizeUrl(customUrl);
     }
   }
 
   // 2. Build-time environment variable
   if (process.env.NEXT_PUBLIC_API_URL) {
-    return process.env.NEXT_PUBLIC_API_URL.trim().replace(/\/+$/, '');
+    return normalizeUrl(process.env.NEXT_PUBLIC_API_URL);
   }
 
   // 3. Localhost fallback
@@ -35,8 +44,9 @@ export const setCustomApiUrl = (url: string): void => {
     if (!url || !url.trim()) {
       localStorage.removeItem('WEALIFY_API_URL');
     } else {
-      localStorage.setItem('WEALIFY_API_URL', url.trim().replace(/\/+$/, ''));
+      localStorage.setItem('WEALIFY_API_URL', normalizeUrl(url));
     }
   }
 };
+
 
